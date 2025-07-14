@@ -1,9 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import BookshopLanding from './BookshopLanding';
-import ProductPageLayout from './ProductPageLayout';
-// import BaseLayoutDemo from './BaseLayoutDemo';
+import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import App from './App';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -16,12 +15,10 @@ if (typeof document !== 'undefined') {
 
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<BookshopLanding />} />
-        <Route path="/book/:id" element={<ProductPageLayout />} />
-        {/* <Route path="/base-layout" element={<BaseLayoutDemo />} /> */}
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </AuthProvider>
   </React.StrictMode>
 );
