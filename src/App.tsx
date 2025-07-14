@@ -4,7 +4,10 @@ import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Product from './pages/Product';
-import Orders from './pages/Orders';
+import Buy from './pages/Buy';
+import Sell from './pages/Sell';
+import Books from './pages/Books';
+import Account from './pages/Account';
 
 const theme = createTheme({
   typography: {
@@ -25,7 +28,7 @@ const App: React.FC = () => {
   const location = useLocation();
   
   // Determine if current page should show subheader
-  const showSubheader = location.pathname === '/' || location.pathname === '/orders';
+  const showSubheader = location.pathname === '/' || location.pathname === '/buy' || location.pathname === '/sell' || location.pathname === '/books';
   
   // State for subheader functionality (only used on landing page)
   const [search, setSearch] = useState('');
@@ -70,7 +73,10 @@ const App: React.FC = () => {
             } 
           />
           <Route path="/book/:id" element={<Product />} />
-          <Route path="/orders" element={<Orders />} />
+          <Route path="/buy" element={<Buy search={search} onSearchChange={setSearch} />} />
+          <Route path="/sell" element={<Sell search={search} onSearchChange={setSearch} />} />
+          <Route path="/books" element={<Books search={search} onSearchChange={setSearch} />} />
+          <Route path="/account" element={<Account />} />
         </Routes>
       </Layout>
     </ThemeProvider>

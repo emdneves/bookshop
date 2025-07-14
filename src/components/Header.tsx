@@ -4,8 +4,10 @@ import { useAuth } from '../context/AuthContext';
 import AuthModal from './AuthModal';
 import UserMenu from './UserMenu';
 import { Link } from 'react-router-dom';
-import HandshakeIcon from '@mui/icons-material/Handshake';
-import StorefrontIcon from '@mui/icons-material/Storefront';
+import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
+import StoreOutlinedIcon from '@mui/icons-material/StoreOutlined';
+import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
+import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 
 import { getCardsPerRow } from '../utils/helpers';
 
@@ -69,8 +71,8 @@ const Header: React.FC = () => {
                     width: '100%',
                   }}
                 >
-                  Bookshop
-                </Typography>
+        Bookshop
+      </Typography>
               </Link>
             </Box>
           );
@@ -92,8 +94,11 @@ const Header: React.FC = () => {
             >
               {isAuthenticated ? (
                 <>
-                  <Tooltip title="Propostas de compra" arrow>
-                    <Link to="/orders" style={{ display: 'flex' }}>
+                  <Tooltip title="Compras" arrow>
+                    <Link to="/buy" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
+                      <Typography variant="caption" sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#222', mb: 0.5 }}>
+                        Buy
+                      </Typography>
                       <IconButton
                         color="inherit"
                         sx={{
@@ -101,66 +106,137 @@ const Header: React.FC = () => {
                           background: 'none',
                           borderRadius: '50%',
                           transition: 'border 0.2s',
-                          '&:hover svg': { color: '#d32f2f' },
                           outline: 'none',
                           boxShadow: 'none',
                           '&:focus': {
                             outline: 'none',
                             boxShadow: 'none',
+                            background: 'none',
                           },
                           '&:active': {
                             outline: 'none',
                             boxShadow: 'none',
+                            background: 'none',
                           },
+                          '& svg': {
+                            color: '#222',
+                            transition: 'color 0.2s',
+                          },
+                          '&:hover svg': { color: '#d32f2f' },
                         }}
                       >
-                        <HandshakeIcon />
+                        <ShoppingCartOutlinedIcon />
                       </IconButton>
                     </Link>
                   </Tooltip>
-                  <Tooltip title="Livros à venda" arrow>
-                    <IconButton
-                      color="inherit"
-                      sx={{
+                  <Tooltip title="Vendas" arrow>
+                    <Link to="/sell" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
+                      <Typography variant="caption" sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#222', mb: 0.5 }}>
+                        Sell
+                      </Typography>
+                      <IconButton
+                        color="inherit"
+                        sx={{
+                          border: '0.5px dashed #d32f2f',
+                          background: 'none',
+                          borderRadius: '50%',
+                          transition: 'border 0.2s',
+                          outline: 'none',
+                          boxShadow: 'none',
+                          '&:focus': {
+                            outline: 'none',
+                            boxShadow: 'none',
+                            background: 'none',
+                          },
+                          '&:active': {
+                            outline: 'none',
+                            boxShadow: 'none',
+                            background: 'none',
+                          },
+                          '& svg': {
+                            color: '#222',
+                            transition: 'color 0.2s',
+                          },
+                          '&:hover svg': { color: '#d32f2f' },
+                        }}
+                      >
+                        <StoreOutlinedIcon />
+                      </IconButton>
+                    </Link>
+                  </Tooltip>
+                  <Tooltip title="Ofertas" arrow>
+                    <Link to="/books" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
+                      <Typography variant="caption" sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#222', mb: 0.5 }}>
+                        MyBooks
+                      </Typography>
+                      <IconButton
+                        color="inherit"
+                        sx={{
+                          border: '0.5px dashed #d32f2f',
+                          background: 'none',
+                          borderRadius: '50%',
+                          transition: 'border 0.2s',
+                          outline: 'none',
+                          boxShadow: 'none',
+                          '&:focus': {
+                            outline: 'none',
+                            boxShadow: 'none',
+                            background: 'none',
+                          },
+                          '&:active': {
+                            outline: 'none',
+                            boxShadow: 'none',
+                            background: 'none',
+                          },
+                          '& svg': {
+                            color: '#222',
+                            transition: 'color 0.2s',
+                          },
+                          '&:hover svg': { color: '#d32f2f' },
+                        }}
+                      >
+                        <MenuBookOutlinedIcon />
+                      </IconButton>
+                    </Link>
+                  </Tooltip>
+                  <Tooltip title="Account" arrow>
+                    <Box style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <Typography variant="caption" sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#222', mb: 0.5 }}>
+                        Account
+                      </Typography>
+                      <Box sx={{
                         border: '0.5px dashed #d32f2f',
                         background: 'none',
                         borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                         transition: 'border 0.2s',
-                        '&:hover svg': { color: '#d32f2f' },
-                      }}
-                    >
-                      <StorefrontIcon />
-                    </IconButton>
+                        width: 40,
+                        height: 40,
+                        '&:hover': { borderColor: '#d32f2f' },
+                      }}>
+                        <UserMenu user={user} onLogout={logout} />
+                      </Box>
+                    </Box>
                   </Tooltip>
-                  <Box sx={{
-                    border: '0.5px dashed #d32f2f',
-                    background: 'none',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    transition: 'border 0.2s',
-                    p: 0.5,
-                    '&:hover svg': { color: '#d32f2f' },
-                  }}>
-                    <UserMenu user={user} onLogout={logout} />
-                  </Box>
-                </>
-              ) : (
-                <Button
-                  variant="contained"
-                  size="small"
-                  onClick={() => setAuthModalOpen(true)}
-                  sx={{
-                    bgcolor: '#d32f2f',
-                    fontWeight: 600,
-                    '&:hover': { bgcolor: '#b71c1c' },
-                  }}
-                >
-                  Login / Register
-                </Button>
-              )}
+          </>
+        ) : (
+          <Button
+            variant="contained"
+            size="small"
+            onClick={() => setAuthModalOpen(true)}
+            sx={{
+              bgcolor: '#d32f2f',
+              fontWeight: 600,
+              '&:hover': { bgcolor: '#b71c1c' },
+            }}
+          >
+            Login / Register
+          </Button>
+        )}
               <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
-            </Box>
+      </Box>
           );
         }
         // Other center columns: empty, no border

@@ -3,6 +3,7 @@ import { Box, Skeleton, Button, Modal, TextField, Alert, Snackbar, Typography, T
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AuthModal from '../components/AuthModal';
+import { API_BASE_URL } from '../config/api';
 
 
 const theme = createTheme({
@@ -242,7 +243,7 @@ const Product: React.FC = () => {
   const fetchOrders = async () => {
     if (!id) return;
     try {
-      const response = await fetch('http://localhost:3000/content/list', {
+      const response = await fetch(`${API_BASE_URL}/content/list`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -283,7 +284,7 @@ const Product: React.FC = () => {
 
     setSubmittingOffer(true);
     try {
-      const response = await fetch('http://localhost:3000/content/create', {
+      const response = await fetch(`${API_BASE_URL}/content/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -294,7 +295,8 @@ const Product: React.FC = () => {
           data: {
             book: id,
             price: price,
-            status: 'received'
+            status: 'received',
+            counter: null
           }
         }),
       });
@@ -337,7 +339,7 @@ const Product: React.FC = () => {
     const fetchData = async () => {
       try {
         // Fetch book data
-        const bookResponse = await fetch('http://localhost:3000/content/read', {
+        const bookResponse = await fetch(`${API_BASE_URL}/content/read`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id }),

@@ -11,6 +11,7 @@ import {
 import Skeleton from '@mui/material/Skeleton';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config/api';
 
 
 // Remove the old BookCard interface and replace with a new one for API data
@@ -217,7 +218,7 @@ const Home: React.FC<HomeProps> = ({
   // Fetch orders
   const fetchOrders = async () => {
     try {
-      const response = await fetch('http://localhost:3000/content/list', {
+      const response = await fetch(`${API_BASE_URL}/content/list`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -247,7 +248,7 @@ const Home: React.FC<HomeProps> = ({
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch('http://localhost:3000/content/list', {
+        const response = await fetch(`${API_BASE_URL}/content/list`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -469,7 +470,7 @@ const Home: React.FC<HomeProps> = ({
                                     }}
                                   >
                                     Original: {cell.originalPrice ? `$${cell.originalPrice}` : '-'}
-                                  </span>
+                                    </span>
                                   {/* Publisher (left) and Highest offer (right): row 4 */}
                                   <span
                                     style={{
@@ -486,7 +487,7 @@ const Home: React.FC<HomeProps> = ({
                                     title={String(cell.publisher)}
                                   >
                                     {cell.publisher}
-                                  </span>
+                                    </span>
                                   <span
                                     style={{
                                       fontSize: '0.85rem',
@@ -502,7 +503,7 @@ const Home: React.FC<HomeProps> = ({
                                     }}
                                   >
                                     {cell.highestOffer && cell.highestOffer > 0 ? `Highest: $${cell.highestOffer}` : 'No offers yet'}
-                                  </span>
+                                    </span>
                                 </div>
                               </TextSection>
                               <ImageSection>

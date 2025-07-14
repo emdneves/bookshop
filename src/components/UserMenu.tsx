@@ -1,23 +1,37 @@
-import React, { useState } from 'react';
-import { Box, Button, Menu, MenuItem, ListItemIcon, ListItemText, Divider } from '@mui/material';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import LockIcon from '@mui/icons-material/Lock';
-import SettingsIcon from '@mui/icons-material/Settings';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import React, { useState, useRef, useEffect } from 'react';
+import { Box, Button, MenuItem, ListItemIcon, ListItemText, Divider } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import LogoutIcon from '@mui/icons-material/Logout';
+import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 
 const UserMenu: React.FC<{ user: string | null; onLogout: () => void }> = ({ user, onLogout }) => {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
-  const username = user ? user.split('@')[0] : 'I';
-  const initial = username.charAt(0).toUpperCase();
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
-  const handleClick = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
-  const handleClose = () => setAnchorEl(null);
-  const handleLogout = () => { handleClose(); onLogout(); };
+  const handleClick = () => setIsOpen(!isOpen);
+  const handleClose = () => setIsOpen(false);
+  
+  const handleLogout = () => { 
+    handleClose(); 
+    onLogout(); 
+    navigate('/');
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
-    <>
+    <Box ref={dropdownRef} sx={{ position: 'relative' }}>
       <Button
         onClick={handleClick}
         sx={{
@@ -30,70 +44,82 @@ const UserMenu: React.FC<{ user: string | null; onLogout: () => void }> = ({ use
           outline: 'none',
           lineHeight: 1,
           borderRadius: '50%',
-          '&:hover .user-initial, &:focus .user-initial': {
-            color: '#d32f2f',
-            borderColor: '#d32f2f'
+          width: '100%',
+          height: '100%',
+          '&:hover': {
+            background: 'none',
           },
         }}
         disableRipple
         disableFocusRipple
       >
-        <Box
-          className="user-initial"
+        <AccountCircleOutlinedIcon 
           sx={{
-            width: 40,
-            height: 40,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: '0.5px dashed #d32f2f',
-            borderRadius: '50%',
             color: '#222',
-            fontWeight: 700,
-            fontSize: 24,
-            background: 'none',
-            transition: 'color 0.2s, border-color 0.2s',
+            transition: 'color 0.2s',
+            '&:hover': { color: '#d32f2f' },
+          }}
+        />
+      </Button>
+      
+      {isOpen && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '100%',
+            right: 0,
+            mt: 1,
+            minWidth: 200,
+            borderRadius: 2,
+            p: 1,
+            border: '1px dashed #d32f2f',
+            background: 'rgba(255, 255, 255, 0.95)',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            zIndex: 1000,
           }}
         >
-          {initial}
+          <Box
+            onClick={handleClose}
+            sx={{
+              borderRadius: 1,
+              mb: 0.5,
+              p: 1,
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: 'rgba(211, 47, 47, 0.04)',
+              },
+            }}
+          >
+            <Box sx={{ fontWeight: 600, color: '#222', fontSize: '0.9rem' }}>
+              {user || 'User'}
+            </Box>
+          </Box>
+          
+          <Divider sx={{ my: 1, borderColor: '#d32f2f' }} />
+          
+          <Box
+            onClick={handleLogout}
+            sx={{
+              borderRadius: 1,
+              p: 1,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1,
+              '&:hover': {
+                backgroundColor: 'rgba(211, 47, 47, 0.04)',
+              },
+            }}
+          >
+            <LogoutIcon fontSize="small" sx={{ color: '#d32f2f' }} />
+            <Box sx={{ fontWeight: 700, color: '#d32f2f', fontSize: '0.9rem' }}>
+              Logout
+            </Box>
+          </Box>
         </Box>
-      </Button>
-      <Menu
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleClose}
-        PaperProps={{
-          sx: { mt: 1, minWidth: 240, borderRadius: 3, p: 1 }
-        }}
-      >
-        <MenuItem onClick={handleClose}>
-          <ListItemIcon><ShoppingCartIcon fontSize="medium" /></ListItemIcon>
-          <ListItemText primary="Os teus pedidos" primaryTypographyProps={{ fontWeight: 600 }} />
-        </MenuItem>
-        <MenuItem onClick={handleClose}>
-          <ListItemIcon><LockIcon fontSize="medium" /></ListItemIcon>
-          <ListItemText primary="Perfil e segurança" primaryTypographyProps={{ fontWeight: 600 }} />
-        </MenuItem>
-        <MenuItem onClick={handleClose}>
-          <ListItemIcon><SettingsIcon fontSize="medium" /></ListItemIcon>
-          <ListItemText primary="Definições" primaryTypographyProps={{ fontWeight: 600 }} />
-        </MenuItem>
-        <MenuItem onClick={handleClose}>
-          <ListItemIcon><HelpOutlineIcon fontSize="medium" /></ListItemIcon>
-          <ListItemText primary="Ajuda" primaryTypographyProps={{ fontWeight: 600 }} />
-        </MenuItem>
-        <Divider sx={{ my: 1 }} />
-        <MenuItem onClick={handleLogout} sx={{ justifyContent: 'center' }}>
-          <ListItemIcon>
-            <LogoutIcon fontSize="medium" sx={{ color: '#d32f2f' }} />
-          </ListItemIcon>
-          <ListItemText
-            primary="Terminar sessão"
-            primaryTypographyProps={{ fontWeight: 700, color: '#d32f2f', textAlign: 'center' }}
-          />
-        </MenuItem>
-      </Menu>
-    </>
+      )}
+    </Box>
   );
 };
 
