@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, IconButton, Tooltip } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import AuthModal from './AuthModal';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
 import StoreOutlinedIcon from '@mui/icons-material/StoreOutlined';
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
@@ -13,6 +13,7 @@ import { getCardsPerRow } from '../utils/helpers';
 
 const Header: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [cardsPerRow, setCardsPerRow] = useState(getCardsPerRow());
 
@@ -21,6 +22,11 @@ const Header: React.FC = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   const gridTemplateColumns = cardsPerRow === 1 ? '0.125fr 0.75fr 0.125fr' : `0.5fr repeat(${cardsPerRow}, 1fr) 0.5fr`;
 
@@ -175,7 +181,7 @@ const Header: React.FC = () => {
                       {createNavIcon('/account', 'Account', <AccountCircleOutlinedIcon />, 'Account', true)}
                       <Tooltip title="Logout" arrow>
                         <Box 
-                          onClick={logout}
+                          onClick={handleLogout}
                           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
                         >
                           <Typography variant="caption" sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#222', mb: 0.25 }}>
@@ -243,7 +249,7 @@ const Header: React.FC = () => {
                   {createNavIcon('/account', 'Account', <AccountCircleOutlinedIcon />, 'Account', false)}
                   <Tooltip title="Logout" arrow>
                     <Box 
-                      onClick={logout}
+                      onClick={handleLogout}
                       style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
                     >
                       <Typography variant="caption" sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#222', mb: 0.5 }}>
