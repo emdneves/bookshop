@@ -12,6 +12,9 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Copy .env file for Vite build
+COPY .env .env
+
 # Build the application
 RUN npm run build
 
@@ -28,4 +31,4 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 
 # Start nginx
-CMD ["nginx", "-g", "daemon off;"] 
+CMD ["nginx", "-g", "daemon off;"]
