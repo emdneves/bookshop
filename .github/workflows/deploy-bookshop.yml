@@ -24,57 +24,46 @@ jobs:
         key: ${{ secrets.VPS_SSH_KEY }}
         port: ${{ secrets.VPS_PORT }}
         script: |
-          # Navigate to bookshop directory
           cd /root/deployment/bookshop
-          
+
           echo "🚀 Starting Bookshop Frontend deployment..."
-          
-          # Check if directory exists
-          if [ ! -d "/root/deployment/bookshop" ]; then
-            echo "❌ Directory /root/deployment/bookshop does not exist"
-            exit 1
-          fi
-          
-          # Pull latest bookshop code
-          echo "📥 Pulling latest bookshop code..."
-          git pull origin main
-          
-          # Stop and remove bookshop container
-          echo "🛑 Stopping bookshop container..."
-          docker-compose stop bookshop || true
-          docker-compose rm -f bookshop || true
-          
-          # Build bookshop container
-          echo "🔨 Building bookshop container..."
+
+          # Ensure we're on the correct branch and pull the latest code
+          git fetch origin
+          git checkout master
+          git reset --hard origin/master
+
+          # Stop and remove any running bookshop containers
+          echo "🛑 Stopping and removing old bookshop containers..."
+          docker-compose down
+
+          # Remove any containers with the same name (just in case)
+          docker rm -f bookshop-app || true
+
+          # Remove old images (optional, for disk space)
+          docker image prune -f
+
+          # Build the new image
+          echo "🔨 Building new bookshop image..."
           docker-compose build --no-cache bookshop
-          
-          # Start bookshop container
-          echo "▶️ Starting bookshop container..."
+
+          # Start the new container
+          echo "▶️ Starting new bookshop container..."
           docker-compose up -d bookshop
-          
-          # Wait for bookshop to start
-          echo "⏳ Waiting for bookshop to start..."
-          sleep 15
-          
-          # Check bookshop container status
-          echo "📊 Bookshop container status:"
+
+          # Wait for the container to start
+          sleep 10
+
+          # Show status
           docker ps --filter name=bookshop-app
-          
-          # Health check for bookshop frontend (check both ports)
-          echo "🏥 Running bookshop health check..."
-          if curl -f http://localhost:3001/health || curl -f http://localhost:80/health; then
+
+          # Health check
+          if curl -f http://localhost:3001/health || curl -f http://localhost/health; then
             echo "✅ Bookshop frontend is healthy"
           else
             echo "❌ Bookshop frontend health check failed"
-            echo "📋 Container logs:"
             docker logs bookshop-app
-            echo "🔍 Checking if container is running:"
-            docker ps -a --filter name=bookshop-app
             exit 1
           fi
-          
-          echo "🎉 Bookshop Frontend deployment completed successfully!"
-          
-          # Show final status
-          echo "📈 Final bookshop status:"
-          docker ps --filter name=bookshop-app --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 
+
+          echo "🎉 Bookshop Frontend deployment completed successfully!" 
