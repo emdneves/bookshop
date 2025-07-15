@@ -25,9 +25,15 @@ jobs:
         port: ${{ secrets.VPS_PORT }}
         script: |
           # Navigate to bookshop directory
-          cd /root/bookshop
+          cd /root/deployment/bookshop
           
           echo "🚀 Starting Bookshop Frontend deployment..."
+          
+          # Check if directory exists
+          if [ ! -d "/root/deployment/bookshop" ]; then
+            echo "❌ Directory /root/deployment/bookshop does not exist"
+            exit 1
+          fi
           
           # Pull latest bookshop code
           echo "📥 Pulling latest bookshop code..."
@@ -35,8 +41,8 @@ jobs:
           
           # Stop and remove bookshop container
           echo "🛑 Stopping bookshop container..."
-          docker-compose stop bookshop
-          docker-compose rm -f bookshop
+          docker-compose stop bookshop || true
+          docker-compose rm -f bookshop || true
           
           # Build bookshop container
           echo "🔨 Building bookshop container..."
@@ -48,19 +54,22 @@ jobs:
           
           # Wait for bookshop to start
           echo "⏳ Waiting for bookshop to start..."
-          sleep 10
+          sleep 15
           
           # Check bookshop container status
           echo "📊 Bookshop container status:"
           docker ps --filter name=bookshop-app
           
-          # Health check for bookshop frontend
+          # Health check for bookshop frontend (check both ports)
           echo "🏥 Running bookshop health check..."
-          if curl -f http://localhost:80/health; then
+          if curl -f http://localhost:3001/health || curl -f http://localhost:80/health; then
             echo "✅ Bookshop frontend is healthy"
           else
             echo "❌ Bookshop frontend health check failed"
+            echo "📋 Container logs:"
             docker logs bookshop-app
+            echo "🔍 Checking if container is running:"
+            docker ps -a --filter name=bookshop-app
             exit 1
           fi
           
