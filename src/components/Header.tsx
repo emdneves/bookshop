@@ -158,8 +158,8 @@ const Header: React.FC = () => {
                     fontSize: cardsPerRow === 1 ? '2rem' : '2.125rem', // Increased from 1.5rem to 2rem for mobile
                   }}
                 >
-                  Bookshop
-                </Typography>
+        Bookshop
+      </Typography>
               </Link>
               
               {/* Icons for mobile - show beneath title */}
@@ -255,7 +255,7 @@ const Header: React.FC = () => {
                       <Typography variant="caption" sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#222', mb: 0.5 }}>
                         Logout
                       </Typography>
-                      <IconButton 
+                      <IconButton
                         {...desktopIconStyle}
                         sx={{
                           ...desktopIconStyle.sx,
@@ -273,11 +273,11 @@ const Header: React.FC = () => {
                       </IconButton>
                     </Box>
                   </Tooltip>
-                </>
-              ) : (
+          </>
+        ) : (
                 <Tooltip title="Login" arrow>
                   <Box 
-                    onClick={() => setAuthModalOpen(true)}
+            onClick={() => setAuthModalOpen(true)}
                     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
                   >
                     <Typography variant="caption" sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#222', mb: 0.5 }}>
@@ -289,7 +289,7 @@ const Header: React.FC = () => {
                   </Box>
                 </Tooltip>
               )}
-            </Box>
+      </Box>
           );
         }
         // Other center columns: empty, no border

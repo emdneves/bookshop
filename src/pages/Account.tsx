@@ -267,8 +267,8 @@ const Account: React.FC = () => {
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Typography variant="h4" sx={{ fontWeight: 700, color: '#d32f2f' }}>
-            Account Profile
-          </Typography>
+          Account Profile
+        </Typography>
           {userData && (
             <Button
               variant="outlined"

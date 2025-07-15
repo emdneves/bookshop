@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
+import { HelmetProvider } from 'react-helmet-async';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Product from './pages/Product';
@@ -45,41 +46,43 @@ const App: React.FC = () => {
   const filterOpen = Boolean(filterAnchorEl);
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Layout
-        showSubheader={showSubheader}
-        subheaderProps={{
-          search,
-          onSearchChange: setSearch,
-          filterAnchorEl,
-          onFilterClick: handleFilterClick,
-          onFilterClose: handleFilterClose,
-          filterOpen,
-        }}
-      >
-        <Routes>
-          <Route 
-            path="/" 
-            element={
-              <Home 
-                search={search}
-                onSearchChange={setSearch}
-                filterAnchorEl={filterAnchorEl}
-                onFilterClick={handleFilterClick}
-                onFilterClose={handleFilterClose}
-                filterOpen={filterOpen}
-              />
-            } 
-          />
-          <Route path="/book/:id" element={<Product />} />
-          <Route path="/buy" element={<Buy search={search} onSearchChange={setSearch} />} />
-          <Route path="/sell" element={<Sell search={search} onSearchChange={setSearch} />} />
-          <Route path="/books" element={<Books search={search} onSearchChange={setSearch} />} />
-          <Route path="/account" element={<Account />} />
-        </Routes>
-      </Layout>
-    </ThemeProvider>
+    <HelmetProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Layout
+          showSubheader={showSubheader}
+          subheaderProps={{
+            search,
+            onSearchChange: setSearch,
+            filterAnchorEl,
+            onFilterClick: handleFilterClick,
+            onFilterClose: handleFilterClose,
+            filterOpen,
+          }}
+        >
+          <Routes>
+            <Route 
+              path="/" 
+              element={
+                <Home 
+                  search={search}
+                  onSearchChange={setSearch}
+                  filterAnchorEl={filterAnchorEl}
+                  onFilterClick={handleFilterClick}
+                  onFilterClose={handleFilterClose}
+                  filterOpen={filterOpen}
+                />
+              } 
+            />
+            <Route path="/book/:id" element={<Product />} />
+            <Route path="/buy" element={<Buy search={search} onSearchChange={setSearch} />} />
+            <Route path="/sell" element={<Sell search={search} onSearchChange={setSearch} />} />
+            <Route path="/books" element={<Books search={search} onSearchChange={setSearch} />} />
+            <Route path="/account" element={<Account />} />
+          </Routes>
+        </Layout>
+      </ThemeProvider>
+    </HelmetProvider>
   );
 };
 

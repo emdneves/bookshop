@@ -12,6 +12,7 @@ import Skeleton from '@mui/material/Skeleton';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config/api';
+import SEO from '../components/SEO';
 
 
 // Remove the old BookCard interface and replace with a new one for API data
@@ -339,12 +340,20 @@ const Home: React.FC<HomeProps> = ({
   // grid.push(Array(totalColumns).fill(null));
 
   return (
-    <PageWrapper cardsPerRow={cardsPerRow}
-      sx={{
-        gridTemplateColumns: cardsPerRow === 1 ? '0.125fr 0.75fr 0.125fr' : `0.5fr repeat(${cardsPerRow}, 1fr) 0.5fr`,
-        gridTemplateRows: `repeat(${mainRows}, 1fr)`,
-      }}
-    >
+    <>
+      <SEO 
+        title="Bookshop - Buy and Sell Books Online | Modern Book Marketplace"
+        description="Discover, buy, and sell books in our modern marketplace. Connect with book lovers, find rare editions, and build your personal library. Join thousands of readers and sellers today."
+        keywords="books, bookshop, buy books, sell books, online bookstore, rare books, used books, book marketplace, reading, literature"
+        url="https://209.74.83.122"
+        type="website"
+      />
+      <PageWrapper cardsPerRow={cardsPerRow}
+        sx={{
+          gridTemplateColumns: cardsPerRow === 1 ? '0.125fr 0.75fr 0.125fr' : `0.5fr repeat(${cardsPerRow}, 1fr) 0.5fr`,
+          gridTemplateRows: `repeat(${mainRows}, 1fr)`,
+        }}
+      >
           <GridContainer cardsPerRow={cardsPerRow} sx={{
             gridColumn: '1 / -1',
             gridRow: '1 / -1',
@@ -530,6 +539,7 @@ const Home: React.FC<HomeProps> = ({
             )}
                   </GridContainer>
       </PageWrapper>
+    </>
   );
 };
 

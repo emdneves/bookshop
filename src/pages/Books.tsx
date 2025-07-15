@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { getCardsPerRow } from '../utils/helpers';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config/api';
+import SEO from '../components/SEO';
 
 const BOOKS_CONTENT_TYPE_ID = '481a065c-8733-4e97-9adf-dc64acacf5fb';
 const ORDERS_CONTENT_TYPE_ID = 'cec824c6-1e37-4b1f-8cf6-b69cd39e52b2';
@@ -88,11 +89,26 @@ const Books: React.FC<BooksProps> = ({ search, onSearchChange }) => {
   });
 
   if (!isAuthenticated) {
-    return <Alert severity="warning">You must be logged in to view your books for sale.</Alert>;
+    return (
+      <>
+        <SEO 
+          title="My Books - Bookshop"
+          description="Manage your books for sale. View, edit, and track offers on your listed books."
+          url="https://209.74.83.122/books"
+        />
+        <Alert severity="warning">You must be logged in to view your books for sale.</Alert>
+      </>
+    );
   }
 
   return (
-    <Box
+    <>
+      <SEO 
+        title="My Books - Bookshop"
+        description="Manage your books for sale. View, edit, and track offers on your listed books."
+        url="https://209.74.83.122/books"
+      />
+      <Box
       sx={{
         width: '100%',
         display: 'grid',
@@ -222,6 +238,7 @@ const Books: React.FC<BooksProps> = ({ search, onSearchChange }) => {
       {/* Side column right */}
       <Box sx={{ borderLeft: '0.5px dashed #d32f2f', height: '100%' }} />
     </Box>
+    </>
   );
 };
 
