@@ -8,38 +8,68 @@ import {
   Grid, 
   Chip,
   Skeleton,
-  Alert
+  Alert,
+  Button,
+  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormControlLabel,
+  Switch
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { getCardsPerRow } from '../utils/helpers';
+import { API_BASE_URL } from '../config/api';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
+import EditIcon from '@mui/icons-material/Edit';
+import SaveIcon from '@mui/icons-material/Save';
 
-// Mock user data
-const mockUserData = {
-  "success": true,
-  "user": {
-    "id": 1,
-    "email": "emanueldneves@gmail.com",
-    "first_name": "Emanuel",
-    "last_name": "Neves",
-    "role": "user",
-    "is_active": true,
-    "created_at": "2025-01-15T10:30:00.000Z",
-    "updated_at": "2025-07-14T19:01:47.660Z",
-    "last_login": "2025-07-14T19:01:47.660Z"
-  }
-};
+interface UserData {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  last_login: string;
+}
 
 const Account: React.FC = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, token, role } = useAuth();
   const [cardsPerRow, setCardsPerRow] = useState(getCardsPerRow());
   const [loading, setLoading] = useState(true);
-  const [userData, setUserData] = useState(mockUserData.user);
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+
+  // Form state for editing
+  const [editForm, setEditForm] = useState({
+    email: '',
+    first_name: '',
+    last_name: '',
+    role: '',
+    is_active: true
+  });
+
+  const isAdmin = role === 'admin';
 
   useEffect(() => {
     const handleResize = () => setCardsPerRow(getCardsPerRow());
@@ -47,13 +77,151 @@ const Account: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Simulate loading
   useEffect(() => {
-    const timer = setTimeout(() => {
+    if (isAuthenticated && token) {
+      fetchUserData();
+    }
+  }, [isAuthenticated, token]);
+
+  const fetchUserData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Extract user ID from JWT token
+      // The token contains the user ID in the payload
+      const tokenPayload = JSON.parse(atob(token!.split('.')[1]));
+      const userId = tokenPayload.id;
+      
+      console.log('Token payload:', tokenPayload);
+      console.log('User ID from token:', userId);
+      console.log('Making API call to:', `${API_BASE_URL}/users/${userId}`);
+      
+      const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log('Error response:', errorText);
+        
+        if (response.status === 403) {
+          // API endpoint is still admin-only, use mock data for now
+          console.log('API endpoint is admin-only, using mock data');
+          setError('API endpoint requires admin access. Using demo data for now.');
+          
+          // Use mock data based on the token payload
+          const mockUserData = {
+            id: userId,
+            email: tokenPayload.email,
+            first_name: 'Demo',
+            last_name: 'User',
+            role: tokenPayload.role,
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            last_login: new Date().toISOString()
+          };
+          setUserData(mockUserData);
+          return;
+        } else if (response.status === 401) {
+          throw new Error('Authentication required');
+        } else {
+          throw new Error(`Failed to fetch user data: ${response.status} ${errorText}`);
+        }
+      }
+
+      const data = await response.json();
+      console.log('Success response:', data);
+      setUserData(data.user);
+    } catch (err) {
+      console.error('Fetch error:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
       setLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
+    }
+  };
+
+  const handleEditClick = () => {
+    if (userData) {
+      setEditForm({
+        email: userData.email,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        role: userData.role,
+        is_active: userData.is_active
+      });
+      setEditDialogOpen(true);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      // Extract user ID from JWT token
+      const tokenPayload = JSON.parse(atob(token!.split('.')[1]));
+      const userId = tokenPayload.id;
+      
+      const updateData: any = {
+        email: editForm.email,
+        first_name: editForm.first_name,
+        last_name: editForm.last_name
+      };
+
+      // Only include role and is_active if user is admin
+      if (isAdmin) {
+        updateData.role = editForm.role;
+        updateData.is_active = editForm.is_active;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateData)
+      });
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          // API endpoint is still admin-only
+          setSnackbar({
+            open: true,
+            message: 'Profile update not available yet. API endpoints are being updated.',
+            severity: 'info'
+          });
+          setEditDialogOpen(false);
+          return;
+        } else if (response.status === 400) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Validation error');
+        } else {
+          throw new Error('Failed to update profile');
+        }
+      }
+
+      const data = await response.json();
+      setUserData(data.user);
+      setEditDialogOpen(false);
+      setSnackbar({
+        open: true,
+        message: 'Profile updated successfully!',
+        severity: 'success'
+      });
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: err instanceof Error ? err.message : 'Failed to update profile',
+        severity: 'error'
+      });
+    }
+  };
 
   const totalColumns = cardsPerRow + 2;
 
@@ -97,9 +265,31 @@ const Account: React.FC = () => {
           }),
         }}
       >
-        <Typography variant="h4" sx={{ mb: 3, fontWeight: 700, color: '#d32f2f' }}>
-          Account Profile
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: '#d32f2f' }}>
+            Account Profile
+          </Typography>
+          {userData && (
+            <Button
+              variant="outlined"
+              startIcon={<EditIcon />}
+              onClick={handleEditClick}
+              sx={{ 
+                borderColor: '#d32f2f', 
+                color: '#d32f2f',
+                '&:hover': { borderColor: '#b71c1c', backgroundColor: 'rgba(211, 47, 47, 0.04)' }
+              }}
+            >
+              Edit Profile
+            </Button>
+          )}
+        </Box>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        )}
 
         {loading ? (
           <Box>
@@ -107,7 +297,7 @@ const Account: React.FC = () => {
             <Skeleton variant="rectangular" width="100%" height={100} sx={{ mb: 2 }} />
             <Skeleton variant="rectangular" width="100%" height={100} />
           </Box>
-        ) : (
+        ) : userData ? (
           <Grid container spacing={3}>
             {/* Profile Header */}
             <Grid item xs={12}>
@@ -273,11 +463,102 @@ const Account: React.FC = () => {
               </Paper>
             </Grid>
           </Grid>
+        ) : (
+          <Alert severity="info">No user data available.</Alert>
         )}
       </Box>
       
       {/* Side column right */}
       <Box sx={{ borderLeft: '0.5px dashed #d32f2f', height: '100%' }} />
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ color: '#d32f2f', fontWeight: 700 }}>
+          Edit Profile
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+            <TextField
+              label="Email Address"
+              value={editForm.email}
+              onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+              fullWidth
+              required
+            />
+            <TextField
+              label="First Name"
+              value={editForm.first_name}
+              onChange={(e) => setEditForm({ ...editForm, first_name: e.target.value })}
+              fullWidth
+              required
+            />
+            <TextField
+              label="Last Name"
+              value={editForm.last_name}
+              onChange={(e) => setEditForm({ ...editForm, last_name: e.target.value })}
+              fullWidth
+              required
+            />
+            
+            {/* Admin-only fields */}
+            {isAdmin && (
+              <>
+                <FormControl fullWidth>
+                  <InputLabel>Role</InputLabel>
+                  <Select
+                    value={editForm.role}
+                    onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                    label="Role"
+                  >
+                    <MenuItem value="user">User</MenuItem>
+                    <MenuItem value="admin">Admin</MenuItem>
+                  </Select>
+                </FormControl>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={editForm.is_active}
+                      onChange={(e) => setEditForm({ ...editForm, is_active: e.target.checked })}
+                    />
+                  }
+                  label="Active Account"
+                />
+              </>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDialogOpen(false)}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSaveProfile}
+            variant="contained"
+            startIcon={<SaveIcon />}
+            sx={{ 
+              backgroundColor: '#d32f2f',
+              '&:hover': { backgroundColor: '#b71c1c' }
+            }}
+          >
+            Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert 
+          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          severity={snackbar.severity as 'success' | 'error' | 'info'}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

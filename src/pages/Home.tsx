@@ -163,7 +163,7 @@ const ImageSection = styled(Box)({
 const TextSection = styled(Box)({
   flex: '1 1 0%',
   width: '100%',
-  padding: '0 4px 12px 4px', // 4px left/right, 12px bottom
+  padding: '0 4px 24px 4px', // Increased bottom padding from 12px to 20px for more space
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'flex-start',

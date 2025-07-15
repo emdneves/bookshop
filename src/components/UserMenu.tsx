@@ -3,6 +3,7 @@ import { Box, Button, MenuItem, ListItemIcon, ListItemText, Divider } from '@mui
 import { useNavigate } from 'react-router-dom';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
+import PersonIcon from '@mui/icons-material/Person';
 
 const UserMenu: React.FC<{ user: string | null; onLogout: () => void }> = ({ user, onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -16,6 +17,11 @@ const UserMenu: React.FC<{ user: string | null; onLogout: () => void }> = ({ use
     handleClose(); 
     onLogout(); 
     navigate('/');
+  };
+
+  const handleAccountClick = () => {
+    handleClose();
+    navigate('/account');
   };
 
   // Close dropdown when clicking outside
@@ -92,6 +98,30 @@ const UserMenu: React.FC<{ user: string | null; onLogout: () => void }> = ({ use
           >
             <Box sx={{ fontWeight: 600, color: '#222', fontSize: '0.9rem' }}>
               {user || 'User'}
+            </Box>
+          </Box>
+          
+          <Divider sx={{ my: 1, borderColor: '#d32f2f' }} />
+          
+          <Box
+            onClick={handleAccountClick}
+            sx={{
+              borderRadius: 1,
+              p: 1,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1,
+              mb: 0.5,
+              '&:hover': {
+                backgroundColor: 'rgba(211, 47, 47, 0.04)',
+              },
+            }}
+          >
+            <PersonIcon fontSize="small" sx={{ color: '#d32f2f' }} />
+            <Box sx={{ fontWeight: 700, color: '#d32f2f', fontSize: '0.9rem' }}>
+              Account
             </Box>
           </Box>
           

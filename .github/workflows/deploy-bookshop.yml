@@ -1,0 +1,71 @@
+name: Deploy Bookshop Frontend
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  deploy-bookshop:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Deploy Bookshop Frontend to VPS
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        port: ${{ secrets.VPS_PORT }}
+        script: |
+          # Navigate to bookshop directory
+          cd /root/bookshop
+          
+          echo "🚀 Starting Bookshop Frontend deployment..."
+          
+          # Pull latest bookshop code
+          echo "📥 Pulling latest bookshop code..."
+          git pull origin main
+          
+          # Stop and remove bookshop container
+          echo "🛑 Stopping bookshop container..."
+          docker-compose stop bookshop
+          docker-compose rm -f bookshop
+          
+          # Build bookshop container
+          echo "🔨 Building bookshop container..."
+          docker-compose build --no-cache bookshop
+          
+          # Start bookshop container
+          echo "▶️ Starting bookshop container..."
+          docker-compose up -d bookshop
+          
+          # Wait for bookshop to start
+          echo "⏳ Waiting for bookshop to start..."
+          sleep 10
+          
+          # Check bookshop container status
+          echo "📊 Bookshop container status:"
+          docker ps --filter name=bookshop-app
+          
+          # Health check for bookshop frontend
+          echo "🏥 Running bookshop health check..."
+          if curl -f http://localhost:80/health; then
+            echo "✅ Bookshop frontend is healthy"
+          else
+            echo "❌ Bookshop frontend health check failed"
+            docker logs bookshop-app
+            exit 1
+          fi
+          
+          echo "🎉 Bookshop Frontend deployment completed successfully!"
+          
+          # Show final status
+          echo "📈 Final bookshop status:"
+          docker ps --filter name=bookshop-app --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 
