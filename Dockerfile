@@ -17,6 +17,7 @@ COPY .env .env
 
 # Build the application
 RUN npm run build
+RUN cp -a public/. dist/
 
 # Stage 2: Production
 FROM nginx:alpine
