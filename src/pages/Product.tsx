@@ -461,7 +461,7 @@ const Product: React.FC = () => {
       sx={{
         display: 'grid',
         width: '100vw',
-        minHeight: '100vh',
+        height: 'fit-content',
         gridTemplateColumns: `calc(0.5 * ${squareSize}) repeat(${columns}, ${squareSize}) calc(0.5 * ${squareSize})`,
         gridTemplateRows: gridTemplateRows,
       }}
