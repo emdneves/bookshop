@@ -1,33 +1,25 @@
 import React from 'react';
-import { Box, TextField, IconButton, Popover, Button, Typography, Breadcrumbs, Link } from '@mui/material';
+import { Box, TextField, IconButton, Popover, Button, Typography } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-import HomeIcon from '@mui/icons-material/Home';
 
 interface SubheaderProps {
   cardsPerRow: number;
-  mode?: 'search' | 'breadcrumbs';
-  // Search mode props
-  search?: string;
-  onSearchChange?: (value: string) => void;
-  filterAnchorEl?: null | HTMLElement;
-  onFilterClick?: (event: React.MouseEvent<HTMLElement>) => void;
-  onFilterClose?: () => void;
-  filterOpen?: boolean;
-  // Breadcrumbs mode props
-  breadcrumbs?: Array<{ label: string; href?: string }>;
+  search: string;
+  onSearchChange: (value: string) => void;
+  filterAnchorEl: null | HTMLElement;
+  onFilterClick: (event: React.MouseEvent<HTMLElement>) => void;
+  onFilterClose: () => void;
+  filterOpen: boolean;
 }
 
 const Subheader: React.FC<SubheaderProps> = ({
   cardsPerRow,
-  mode = 'search',
-  search = '',
-  onSearchChange = () => {},
-  filterAnchorEl = null,
-  onFilterClick = () => {},
-  onFilterClose = () => {},
-  filterOpen = false,
-  breadcrumbs = [],
+  search,
+  onSearchChange,
+  filterAnchorEl,
+  onFilterClick,
+  onFilterClose,
+  filterOpen,
 }) => {
   const totalColumns = cardsPerRow + 2;
   const gridTemplateColumns = cardsPerRow === 1 ? '0.125fr 0.75fr 0.125fr' : `0.5fr repeat(${cardsPerRow}, 1fr) 0.5fr`;
@@ -75,58 +67,7 @@ const Subheader: React.FC<SubheaderProps> = ({
         <Box sx={{ borderRight: '0.5px dashed #d32f2f', height: '100%' }} />
         {/* Center columns */}
         {Array.from({ length: cardsPerRow }).map((_, i) => {
-          // Breadcrumbs mode
-          if (mode === 'breadcrumbs') {
-            return (
-              <Box
-                key={i}
-                sx={{
-                  px: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  height: '100%',
-                  minHeight: 40,
-                  maxHeight: 40,
-                  borderRight: '0.5px dashed #d32f2f',
-                }}
-              >
-                <Breadcrumbs
-                  separator={<NavigateNextIcon fontSize="small" sx={{ color: '#d32f2f' }} />}
-                  sx={{
-                    '& .MuiBreadcrumbs-separator': {
-                      color: '#d32f2f',
-                    },
-                  }}
-                >
-                  {breadcrumbs.map((crumb, index) => (
-                    <Link
-                      key={index}
-                      href={crumb.href}
-                      underline="hover"
-                      sx={{
-                        color: index === breadcrumbs.length - 1 ? '#d32f2f' : '#666',
-                        fontWeight: index === breadcrumbs.length - 1 ? 700 : 400,
-                        fontSize: 14,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.5,
-                        textDecoration: 'none',
-                        '&:hover': {
-                          color: '#d32f2f',
-                        },
-                      }}
-                    >
-                      {index === 0 && <HomeIcon sx={{ fontSize: 16 }} />}
-                      {crumb.label}
-                    </Link>
-                  ))}
-                </Breadcrumbs>
-              </Box>
-            );
-          }
-
-          // Search mode - Single column case: both search and filter in one column
+          // Single column case: both search and filter in one column
           if (cardsPerRow === 1) {
             return (
               <Box

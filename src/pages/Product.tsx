@@ -424,8 +424,6 @@ const Product: React.FC = () => {
     fetchData();
   }, [id]);
 
-  // For smallest breakpoint (1 column), use 1/4 width for sides like header
-  const sideWidth = columns === 1 ? '0.125fr' : '0.5fr';
   const mainCol = `calc(100vw / ${columns + 1})`;
   const sCol = `calc(0.5 * 100vw / ${columns + 1})`;
   // Use the same size for both width and height to ensure perfect squares
@@ -434,8 +432,8 @@ const Product: React.FC = () => {
   const rowCount = columns === 1 ? 4 : columns === 2 ? 6 : 4;
 
   const getCellBorder = (col: number, row: number): React.CSSProperties => ({
-    borderRight: col < colCount - 1 ? '0.5px dashed #d32f2f' : 'none',
-    borderBottom: row < rowCount - 1 ? '0.5px dashed #d32f2f' : 'none',
+    borderRight: col < colCount - 1 ? '1px dashed #d32f2f' : 'none',
+    borderBottom: row < rowCount - 1 ? '1px dashed #d32f2f' : 'none',
     borderLeft: 'none',
     borderTop: 'none',
     display: 'flex',
@@ -463,8 +461,8 @@ const Product: React.FC = () => {
       sx={{
         display: 'grid',
         width: '100vw',
-        height: 'fit-content',
-        gridTemplateColumns: `${sideWidth} repeat(${columns}, ${squareSize}) ${sideWidth}`,
+        minHeight: '100vh',
+        gridTemplateColumns: `calc(0.5 * ${squareSize}) repeat(${columns}, ${squareSize}) calc(0.5 * ${squareSize})`,
         gridTemplateRows: gridTemplateRows,
       }}
     >

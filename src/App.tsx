@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useLocation, useParams } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { HelmetProvider } from 'react-helmet-async';
 import Layout from './components/Layout';
@@ -9,34 +9,6 @@ import Buy from './pages/Buy';
 import Sell from './pages/Sell';
 import Books from './pages/Books';
 import Account from './pages/Account';
-
-// Product component with breadcrumbs
-const ProductWithBreadcrumbs: React.FC = () => {
-  const { id } = useParams();
-  const [bookTitle, setBookTitle] = useState('Book Details');
-  
-  // Fetch book title for breadcrumbs (simplified for now)
-  useEffect(() => {
-    // In a real implementation, you'd fetch the book data here
-    // For now, we'll use a placeholder
-    setBookTitle('Book Details');
-  }, [id]);
-
-  return (
-    <Layout
-      showSubheader={true}
-      subheaderProps={{
-        mode: 'breadcrumbs',
-        breadcrumbs: [
-          { label: 'Home', href: '/' },
-          { label: bookTitle, href: undefined }
-        ]
-      }}
-    >
-      <Product />
-    </Layout>
-  );
-};
 
 const theme = createTheme({
   typography: {
@@ -102,7 +74,7 @@ const App: React.FC = () => {
               />
             } 
           />
-          <Route path="/book/:id" element={<ProductWithBreadcrumbs />} />
+          <Route path="/book/:id" element={<Product />} />
           <Route path="/buy" element={<Buy search={search} onSearchChange={setSearch} />} />
           <Route path="/sell" element={<Sell search={search} onSearchChange={setSearch} />} />
           <Route path="/books" element={<Books search={search} onSearchChange={setSearch} />} />
