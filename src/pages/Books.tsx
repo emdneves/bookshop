@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Skeleton, Table, TableBody, TableCell, TableHead, TableRow, Alert } from '@mui/material';
+import { Box, Typography, Skeleton, TableBody, TableCell, TableHead, TableRow, Alert } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { getCardsPerRow } from '../utils/helpers';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config/api';
 import SEO from '../components/SEO';
 import CenteredMessage from '../components/CenteredMessage';
+import ScrollableTable from '../components/ScrollableTable';
 
 const BOOKS_CONTENT_TYPE_ID = '481a065c-8733-4e97-9adf-dc64acacf5fb';
 const ORDERS_CONTENT_TYPE_ID = 'cec824c6-1e37-4b1f-8cf6-b69cd39e52b2';
@@ -138,139 +139,83 @@ const Books: React.FC<BooksProps> = ({ search, onSearchChange, setSubheaderData,
       {/* Side column left */}
       <Box sx={{ borderRight: '0.5px dashed #d32f2f', height: '100%' }} />
       {/* Center columns: books table */}
-      <Box
-        sx={{
-          gridColumn: cardsPerRow === 1 ? '2 / 3' : `2 / ${totalColumns}`,
-          width: '100%',
-          background: 'none',
-          p: 0,
-          m: 0,
-          height: 'fit-content',
-          minHeight: '40px',
-          overflow: 'auto',
-          ...(cardsPerRow === 1 && {
-            px: 0,
-            borderRight: '0.5px dashed #d32f2f',
-          }),
-        }}
-      >
-        <Table sx={{
-          minWidth: 800,
-          background: 'none',
-          tableLayout: 'auto',
-          borderCollapse: 'separate',
-          borderSpacing: 0,
-          '& .MuiTableRow-root': {
-            height: 44,
-            minHeight: 44,
-            maxHeight: 44,
-            transition: 'background 0.2s',
-            '&:hover': {
-              background: 'rgba(211,47,47,0.04)',
-            },
-          },
-          '& .MuiTableCell-root': {
-            borderBottom: '1px solid #e0e0e0',
-            borderRight: 'none',
-            fontSize: 15,
-            padding: '0 16px',
-            height: 44,
-            minHeight: 44,
-            maxHeight: 44,
-            whiteSpace: 'nowrap',
-            background: 'none',
-          },
-          '& .MuiTableHead-root .MuiTableCell-root': {
-            fontWeight: 700,
-            fontSize: 16,
-            color: '#222',
-            background: 'none',
-            borderBottom: '2px solid #d32f2f',
-            letterSpacing: 0.2,
-          },
-          '& .MuiTableBody-root .MuiTableCell-root': {
-            fontSize: 15,
-            color: '#333',
-            background: 'none',
-          }
-        }}>
-          <TableHead>
+      <ScrollableTable cardsPerRow={cardsPerRow} totalColumns={totalColumns}>
+        <TableHead>
+          <TableRow>
+            <TableCell>Title</TableCell>
+            <TableCell>Author</TableCell>
+            <TableCell>Publisher</TableCell>
+            <TableCell>ISBN</TableCell>
+            <TableCell>Price</TableCell>
+            <TableCell>Offers</TableCell>
+            <TableCell>Created At</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {loading ? (
             <TableRow>
-              <TableCell>Title</TableCell>
-              <TableCell>Author</TableCell>
-              <TableCell>Publisher</TableCell>
-              <TableCell>ISBN</TableCell>
-              <TableCell>Price</TableCell>
-              <TableCell>Offers</TableCell>
-              <TableCell>Created At</TableCell>
+              <TableCell colSpan={7} align="center">
+                <Skeleton variant="rectangular" width="100%" height={44} />
+              </TableCell>
             </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={7} align="center">
-                  <Skeleton variant="rectangular" width="100%" height={44} />
-                </TableCell>
-              </TableRow>
-            ) : filteredBooks.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} align="center">
-                  No books found.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredBooks.map((book) => {
-                // Count offers for this book
-                const bookOffers = orders.filter(order => order.data.book === book.id);
-                const offerCount = bookOffers.length;
-                const highestOffer = bookOffers.length > 0 
-                  ? Math.max(...bookOffers.map((offer: any) => offer.data.price))
-                  : 0;
+          ) : filteredBooks.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={7} align="center">
+                No books found.
+              </TableCell>
+            </TableRow>
+          ) : (
+            filteredBooks.map((book) => {
+              // Count offers for this book
+              const bookOffers = orders.filter(order => order.data.book === book.id);
+              const offerCount = bookOffers.length;
+              const highestOffer = bookOffers.length > 0 
+                ? Math.max(...bookOffers.map((offer: any) => offer.data.price))
+                : 0;
 
-                return (
-                  <TableRow key={book.id}>
-                    <TableCell>
-                      <Link 
-                        to={`/book/${book.id}`}
-                        style={{ 
-                          color: '#d32f2f', 
-                          textDecoration: 'none',
-                          fontWeight: 600
-                        }}
-                      >
-                        {book.data?.name || 'Untitled'}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{book.data?.author || 'Unknown'}</TableCell>
-                    <TableCell>{book.data?.publisher || 'Unknown'}</TableCell>
-                    <TableCell>{book.data?.isbn || 'N/A'}</TableCell>
-                    <TableCell>${book.data?.price || 0}</TableCell>
-                    <TableCell>
-                      {offerCount > 0 ? (
-                        <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#d32f2f' }}>
-                            {offerCount} offer{offerCount !== 1 ? 's' : ''}
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: '#666' }}>
-                            Highest: ${highestOffer}
-                          </Typography>
-                        </Box>
-                      ) : (
-                        <Typography variant="body2" sx={{ color: '#666', fontStyle: 'italic' }}>
-                          No offers
+              return (
+                <TableRow key={book.id}>
+                  <TableCell>
+                    <Link 
+                      to={`/book/${book.id}`}
+                      style={{ 
+                        color: '#d32f2f', 
+                        textDecoration: 'none',
+                        fontWeight: 600
+                      }}
+                    >
+                      {book.data?.name || 'Untitled'}
+                    </Link>
+                  </TableCell>
+                  <TableCell>{book.data?.author || 'Unknown'}</TableCell>
+                  <TableCell>{book.data?.publisher || 'Unknown'}</TableCell>
+                  <TableCell>{book.data?.isbn || 'N/A'}</TableCell>
+                  <TableCell>${book.data?.price || 0}</TableCell>
+                  <TableCell>
+                    {offerCount > 0 ? (
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#d32f2f' }}>
+                          {offerCount} offer{offerCount !== 1 ? 's' : ''}
                         </Typography>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(book.created_at).toLocaleDateString()}
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </Box>
+                        <Typography variant="caption" sx={{ color: '#666' }}>
+                          Highest: ${highestOffer}
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Typography variant="body2" sx={{ color: '#666', fontStyle: 'italic' }}>
+                        No offers
+                      </Typography>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(book.created_at).toLocaleDateString()}
+                  </TableCell>
+                </TableRow>
+              );
+            })
+          )}
+        </TableBody>
+      </ScrollableTable>
       {/* Side column right */}
       <Box sx={{ borderLeft: '0.5px dashed #d32f2f', height: '100%' }} />
     </Box>

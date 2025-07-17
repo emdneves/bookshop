@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Skeleton, Chip, Alert, Table, TableBody, TableCell, TableHead, TableRow, TextField } from '@mui/material';
+import { Box, Typography, Skeleton, Chip, Alert, TableBody, TableCell, TableHead, TableRow, TextField } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { getCardsPerRow } from '../utils/helpers';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config/api';
 import CenteredMessage from '../components/CenteredMessage';
+import ScrollableTable from '../components/ScrollableTable';
 
 const ORDERS_CONTENT_TYPE_ID = 'cec824c6-1e37-4b1f-8cf6-b69cd39e52b2';
 const BOOKS_CONTENT_TYPE_ID = '481a065c-8733-4e97-9adf-dc64acacf5fb';
@@ -140,134 +141,78 @@ const Buy: React.FC<BuyProps> = ({ search, onSearchChange, setSubheaderData, set
       {/* Side column left */}
       <Box sx={{ borderRight: '0.5px dashed #d32f2f', height: '100%' }} />
       {/* Center columns: orders table */}
-      <Box
-        sx={{
-          gridColumn: cardsPerRow === 1 ? '2 / 3' : `2 / ${totalColumns}`,
-          width: '100%',
-          background: 'none',
-          p: 0,
-          m: 0,
-          height: 'fit-content',
-          minHeight: '40px',
-          overflow: 'auto',
-          ...(cardsPerRow === 1 && {
-            px: 0,
-            borderRight: '0.5px dashed #d32f2f',
-          }),
-        }}
-      >
-        <Table sx={{
-          minWidth: 800,
-          background: 'none',
-          tableLayout: 'auto',
-          borderCollapse: 'separate',
-          borderSpacing: 0,
-          '& .MuiTableRow-root': {
-            height: 44,
-            minHeight: 44,
-            maxHeight: 44,
-            transition: 'background 0.2s',
-            '&:hover': {
-              background: 'rgba(211,47,47,0.04)',
-            },
-          },
-          '& .MuiTableCell-root': {
-            borderBottom: '1px solid #e0e0e0',
-            borderRight: 'none',
-            fontSize: 15,
-            padding: '0 16px',
-            height: 44,
-            minHeight: 44,
-            maxHeight: 44,
-            whiteSpace: 'nowrap',
-            background: 'none',
-          },
-          '& .MuiTableHead-root .MuiTableCell-root': {
-            fontWeight: 700,
-            fontSize: 16,
-            color: '#222',
-            background: 'none',
-            borderBottom: '2px solid #d32f2f',
-            letterSpacing: 0.2,
-          },
-          '& .MuiTableBody-root .MuiTableCell-root': {
-            fontSize: 15,
-            color: '#333',
-            background: 'none',
-          }
-        }}>
-          <TableHead>
+      <ScrollableTable cardsPerRow={cardsPerRow} totalColumns={totalColumns}>
+        <TableHead>
+          <TableRow>
+            <TableCell>Book</TableCell>
+            <TableCell>Seller</TableCell>
+            <TableCell>My Offer</TableCell>
+            <TableCell>Counter Offer</TableCell>
+            <TableCell>Status</TableCell>
+            <TableCell>Created At</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {loading ? (
             <TableRow>
-              <TableCell>Book</TableCell>
-              <TableCell>Seller</TableCell>
-              <TableCell>My Offer</TableCell>
-              <TableCell>Counter Offer</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Created At</TableCell>
+              <TableCell colSpan={6} align="center">
+                <Skeleton variant="rectangular" width="100%" height={44} />
+              </TableCell>
             </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={6} align="center">
-                  <Skeleton variant="rectangular" width="100%" height={44} />
-                </TableCell>
-              </TableRow>
-            ) : filteredOrders.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} align="center">
-                  No purchase orders found.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredOrders.map((order) => {
-                const book = books.find(b => b.id === order.data.book);
-                // The seller is the one who created the book
-                const sellerEmail = book?.created_by || 'Unknown';
-                return (
-                  <TableRow key={order.id}>
-                    <TableCell>
-                      <Link 
-                        to={`/book/${order.data.book}`} 
-                        style={{ 
-                          textDecoration: 'none', 
-                          color: 'inherit',
-                          cursor: 'pointer',
-                          display: 'block',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        {book?.data?.name || order.data.book || 'Book'}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      {sellerEmail}
-                    </TableCell>
-                    <TableCell>{order.data.price ? `$${order.data.price}` : '-'}</TableCell>
-                    <TableCell>{order.data.counter ? `$${order.data.counter}` : '-'}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={order.data.status || 'Pending'}
-                        size="small"
-                        sx={{
-                          fontSize: 12,
-                          height: 24,
-                          borderRadius: '12px',
-                          backgroundColor: order.data.status === 'Accepted' ? '#4caf50' : 
-                                           order.data.status === 'Rejected' ? '#f44336' : '#ff9800',
-                          color: 'white',
-                          fontWeight: 600,
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>{new Date(order.created_at).toLocaleString()}</TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </Box>
+          ) : filteredOrders.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} align="center">
+                No purchase orders found.
+              </TableCell>
+            </TableRow>
+          ) : (
+            filteredOrders.map((order) => {
+              const book = books.find(b => b.id === order.data.book);
+              // The seller is the one who created the book
+              const sellerEmail = book?.created_by || 'Unknown';
+              return (
+                <TableRow key={order.id}>
+                  <TableCell>
+                    <Link 
+                      to={`/book/${order.data.book}`} 
+                      style={{ 
+                        textDecoration: 'none', 
+                        color: 'inherit',
+                        cursor: 'pointer',
+                        display: 'block',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {book?.data?.name || order.data.book || 'Book'}
+                    </Link>
+                  </TableCell>
+                  <TableCell>
+                    {sellerEmail}
+                  </TableCell>
+                  <TableCell>{order.data.price ? `$${order.data.price}` : '-'}</TableCell>
+                  <TableCell>{order.data.counter ? `$${order.data.counter}` : '-'}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={order.data.status || 'Pending'}
+                      size="small"
+                      sx={{
+                        fontSize: 12,
+                        height: 24,
+                        borderRadius: '12px',
+                        backgroundColor: order.data.status === 'Accepted' ? '#4caf50' : 
+                                         order.data.status === 'Rejected' ? '#f44336' : '#ff9800',
+                        color: 'white',
+                        fontWeight: 600,
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>{new Date(order.created_at).toLocaleString()}</TableCell>
+                </TableRow>
+              );
+            })
+          )}
+        </TableBody>
+      </ScrollableTable>
       {/* Side column right */}
       <Box sx={{ borderLeft: '0.5px dashed #d32f2f', height: '100%' }} />
     </Box>

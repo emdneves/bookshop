@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Skeleton, Table, TableBody, TableCell, TableHead, TableRow, Alert, TextField, Select, MenuItem } from '@mui/material';
+import { Box, Typography, Skeleton, TableBody, TableCell, TableHead, TableRow, Alert, TextField, Select, MenuItem } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { getCardsPerRow } from '../utils/helpers';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config/api';
 import CenteredMessage from '../components/CenteredMessage';
+import ScrollableTable from '../components/ScrollableTable';
 
 const BOOKS_CONTENT_TYPE_ID = '481a065c-8733-4e97-9adf-dc64acacf5fb';
 const ORDERS_CONTENT_TYPE_ID = 'cec824c6-1e37-4b1f-8cf6-b69cd39e52b2';
@@ -205,186 +206,73 @@ const Sell: React.FC<SellProps> = ({ search, onSearchChange, setSubheaderData, s
       {/* Side column left */}
       <Box sx={{ borderRight: '0.5px dashed #d32f2f', height: '100%' }} />
       {/* Center columns: offers table */}
-      <Box
-        sx={{
-          gridColumn: cardsPerRow === 1 ? '2 / 3' : `2 / ${totalColumns}`,
-          width: '100%',
-          background: 'none',
-          p: 0,
-          m: 0,
-          height: 'fit-content',
-          minHeight: '40px',
-          overflow: 'auto',
-          ...(cardsPerRow === 1 && {
-            px: 0,
-            borderRight: '0.5px dashed #d32f2f',
-          }),
-        }}
-      >
-        {/* Offers received for my books */}
-        <Table sx={{
-          minWidth: 800,
-          background: 'none',
-          tableLayout: 'auto',
-          borderCollapse: 'separate',
-          borderSpacing: 0,
-          '& .MuiTableRow-root': {
-            height: 44,
-            minHeight: 44,
-            maxHeight: 44,
-            transition: 'background 0.2s',
-            '&:hover': {
-              background: 'rgba(211,47,47,0.04)',
-            },
-          },
-          '& .MuiTableCell-root': {
-            borderBottom: '1px solid #e0e0e0',
-            borderRight: 'none',
-            fontSize: 15,
-            padding: '0 16px',
-            height: 44,
-            minHeight: 44,
-            maxHeight: 44,
-            whiteSpace: 'nowrap',
-            background: 'none',
-          },
-          '& .MuiTableHead-root .MuiTableCell-root': {
-            fontWeight: 700,
-            fontSize: 16,
-            color: '#222',
-            background: 'none',
-            borderBottom: '2px solid #d32f2f',
-            letterSpacing: 0.2,
-          },
-          '& .MuiTableBody-root .MuiTableCell-root': {
-            fontSize: 15,
-            color: '#333',
-            background: 'none',
-          }
-        }}>
-          <TableHead>
+      <ScrollableTable cardsPerRow={cardsPerRow} totalColumns={totalColumns}>
+        <TableHead>
+          <TableRow>
+            <TableCell>Book</TableCell>
+            <TableCell>Buyer</TableCell>
+            <TableCell>Proposal</TableCell>
+            <TableCell>Counter Offer</TableCell>
+            <TableCell>Status</TableCell>
+            <TableCell>Created At</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {ordersLoading ? (
             <TableRow>
-              <TableCell>Book</TableCell>
-              <TableCell>Buyer</TableCell>
-              <TableCell>Proposal</TableCell>
-              <TableCell>Counter Offer</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Created At</TableCell>
+              <TableCell colSpan={6} align="center">
+                <Skeleton variant="rectangular" width="100%" height={44} />
+              </TableCell>
             </TableRow>
-          </TableHead>
-          <TableBody>
-            {ordersLoading ? (
-              <TableRow>
-                <TableCell colSpan={6} align="center">
-                  <Skeleton variant="rectangular" width="100%" height={44} />
-                </TableCell>
-              </TableRow>
-            ) : filteredOffers.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} align="center">
-                  No offers found for your books.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredOffers.map((order) => {
-                const book = books.find(b => b.id === order.data.book);
-                // The buyer is the one who created the order
-                const buyerEmail = order.created_by || 'Unknown';
-                return (
-                  <TableRow key={order.id}>
-                    <TableCell>
-                      <Link 
-                        to={`/book/${order.data.book}`} 
-                        style={{ 
-                          textDecoration: 'none', 
-                          color: 'inherit',
-                          cursor: 'pointer',
-                          display: 'block',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        {book?.data?.name || order.data.book || 'Book'}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      {buyerEmail}
-                    </TableCell>
-                    <TableCell>{order.data.price ? `$${order.data.price}` : '-'}</TableCell>
-                    <TableCell>
-                      <TextField
-                        type="number"
-                        value={counterValues[order.id] ?? (order.data.counter ?? '')}
-                        onChange={e => setCounterValues(prev => ({ ...prev, [order.id]: e.target.value }))}
-                        onBlur={() => handleCounterBlur(order.id)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleCounterBlur(order.id);
-                          }
-                        }}
-                        size="small"
-                        variant="outlined"
-                        disabled={updatingCounter === order.id}
-                        sx={{
-                          width: '80px',
-                          '& .MuiOutlinedInput-root': {
-                            fontSize: 15,
-                            height: 32,
-                            borderRadius: '999px',
-                            background: 'transparent',
-                            boxShadow: 'none',
-                            border: '1.5px solid #d32f2f',
-                            px: 1.5,
-                            '& fieldset': {
-                              border: 'none',
-                            },
-                          },
-                          '& .MuiInputBase-input': {
-                            fontSize: 15,
-                            padding: '4px 12px',
-                            textAlign: 'center',
-                            background: 'transparent',
-                            '&::-webkit-outer-spin-button': {
-                              WebkitAppearance: 'none',
-                              margin: 0,
-                            },
-                            '&::-webkit-inner-spin-button': {
-                              WebkitAppearance: 'none',
-                              margin: 0,
-                            },
-                            MozAppearance: 'textfield',
-                          },
-                        }}
-                        inputProps={{ style: { textAlign: 'center', background: 'transparent' } }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        value={order.data.status || ''}
-                        onChange={async (e) => {
-                          const newStatus = e.target.value;
-                          // Update backend
-                          try {
-                            const response = await fetch(`${API_BASE_URL}/content/update`, {
-                              method: 'POST',
-                              headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`,
-                              },
-                              body: JSON.stringify({
-                                id: order.id,
-                                data: { ...order.data, status: newStatus },
-                              }),
-                            });
-                            if (response.ok) {
-                              setOrders(prevOrders => prevOrders.map(o => o.id === order.id ? { ...o, data: { ...o.data, status: newStatus } } : o));
-                            }
-                          } catch (err) {
-                            // Optionally show error
-                          }
-                        }}
-                        size="small"
-                        sx={{
+          ) : filteredOffers.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} align="center">
+                No offers found for your books.
+              </TableCell>
+            </TableRow>
+          ) : (
+            filteredOffers.map((order) => {
+              const book = books.find(b => b.id === order.data.book);
+              // The buyer is the one who created the order
+              const buyerEmail = order.created_by || 'Unknown';
+              return (
+                <TableRow key={order.id}>
+                  <TableCell>
+                    <Link 
+                      to={`/book/${order.data.book}`} 
+                      style={{ 
+                        textDecoration: 'none', 
+                        color: 'inherit',
+                        cursor: 'pointer',
+                        display: 'block',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {book?.data?.name || order.data.book || 'Book'}
+                    </Link>
+                  </TableCell>
+                  <TableCell>
+                    {buyerEmail}
+                  </TableCell>
+                  <TableCell>{order.data.price ? `$${order.data.price}` : '-'}</TableCell>
+                  <TableCell>
+                    <TextField
+                      type="number"
+                      value={counterValues[order.id] ?? (order.data.counter ?? '')}
+                      onChange={e => setCounterValues(prev => ({ ...prev, [order.id]: e.target.value }))}
+                      onBlur={() => handleCounterBlur(order.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleCounterBlur(order.id);
+                        }
+                      }}
+                      size="small"
+                      variant="outlined"
+                      disabled={updatingCounter === order.id}
+                      sx={{
+                        width: '80px',
+                        '& .MuiOutlinedInput-root': {
                           fontSize: 15,
                           height: 32,
                           borderRadius: '999px',
@@ -395,22 +283,78 @@ const Sell: React.FC<SellProps> = ({ search, onSearchChange, setSubheaderData, s
                           '& fieldset': {
                             border: 'none',
                           },
-                        }}
-                      >
-                        <MenuItem value="received" sx={{'&.Mui-selected, &:hover': { backgroundColor: 'rgba(211, 47, 47, 0.08) !important' }}}>Received</MenuItem>
-                        <MenuItem value="accepted" sx={{'&.Mui-selected, &:hover': { backgroundColor: 'rgba(211, 47, 47, 0.08) !important' }}}>Accepted</MenuItem>
-                        <MenuItem value="rejected" sx={{'&.Mui-selected, &:hover': { backgroundColor: 'rgba(211, 47, 47, 0.08) !important' }}}>Rejected</MenuItem>
-                        <MenuItem value="pending" sx={{'&.Mui-selected, &:hover': { backgroundColor: 'rgba(211, 47, 47, 0.08) !important' }}}>Pending</MenuItem>
-                      </Select>
-                    </TableCell>
-                    <TableCell>{new Date(order.created_at).toLocaleString()}</TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </Box>
+                        },
+                        '& .MuiInputBase-input': {
+                          fontSize: 15,
+                          padding: '4px 12px',
+                          textAlign: 'center',
+                          background: 'transparent',
+                          '&::-webkit-outer-spin-button': {
+                            WebkitAppearance: 'none',
+                            margin: 0,
+                          },
+                          '&::-webkit-inner-spin-button': {
+                            WebkitAppearance: 'none',
+                            margin: 0,
+                          },
+                          MozAppearance: 'textfield',
+                        },
+                      }}
+                      inputProps={{ style: { textAlign: 'center', background: 'transparent' } }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Select
+                      value={order.data.status || ''}
+                      onChange={async (e) => {
+                        const newStatus = e.target.value;
+                        // Update backend
+                        try {
+                          const response = await fetch(`${API_BASE_URL}/content/update`, {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              'Authorization': `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({
+                              id: order.id,
+                              data: { ...order.data, status: newStatus },
+                            }),
+                          });
+                          if (response.ok) {
+                            setOrders(prevOrders => prevOrders.map(o => o.id === order.id ? { ...o, data: { ...o.data, status: newStatus } } : o));
+                          }
+                        } catch (err) {
+                          // Optionally show error
+                        }
+                      }}
+                      size="small"
+                      sx={{
+                        fontSize: 15,
+                        height: 32,
+                        borderRadius: '999px',
+                        background: 'transparent',
+                        boxShadow: 'none',
+                        border: '1.5px solid #d32f2f',
+                        px: 1.5,
+                        '& fieldset': {
+                          border: 'none',
+                        },
+                      }}
+                    >
+                      <MenuItem value="received" sx={{'&.Mui-selected, &:hover': { backgroundColor: 'rgba(211, 47, 47, 0.08) !important' }}}>Received</MenuItem>
+                      <MenuItem value="accepted" sx={{'&.Mui-selected, &:hover': { backgroundColor: 'rgba(211, 47, 47, 0.08) !important' }}}>Accepted</MenuItem>
+                      <MenuItem value="rejected" sx={{'&.Mui-selected, &:hover': { backgroundColor: 'rgba(211, 47, 47, 0.08) !important' }}}>Rejected</MenuItem>
+                      <MenuItem value="pending" sx={{'&.Mui-selected, &:hover': { backgroundColor: 'rgba(211, 47, 47, 0.08) !important' }}}>Pending</MenuItem>
+                    </Select>
+                  </TableCell>
+                  <TableCell>{new Date(order.created_at).toLocaleString()}</TableCell>
+                </TableRow>
+              );
+            })
+          )}
+        </TableBody>
+      </ScrollableTable>
       {/* Side column right */}
       <Box sx={{ borderLeft: '0.5px dashed #d32f2f', height: '100%' }} />
     </Box>
