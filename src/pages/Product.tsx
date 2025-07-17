@@ -20,7 +20,7 @@ const theme = createTheme({
 const getColumns = (width: number) => {
   if (width < 600) return 1;
   if (width < 900) return 2;
-  if (width < 1500) return 4;
+  if (width < 1200) return 4;
   return 5;
 };
 
@@ -58,7 +58,7 @@ const mainContentBoxSx = {
   height: '100%',
   boxSizing: 'border-box',
   position: 'relative',
-  zIndex: 1,
+  zIndex: 0, // Reduced z-index so grid lines show through
 };
 
 // Reusable MainCard component
@@ -184,41 +184,87 @@ const renderImageCard = (loading: boolean, book: any) =>
 
 // Layout config for breakpoints
 const getCardLayout = (columns: number) => {
-  if (columns === 2) {
+  if (columns === 1) {
+    // 1 column bp: img on top, details below
     return [
-      {
-        type: 'info',
-        gridColumn: 2,
-        gridRow: 2,
-        gridColumnEnd: 'span 2',
-        gridRowEnd: 6,
-      },
       {
         type: 'image',
         gridColumn: 2,
-        gridRow: 6,
-        gridColumnEnd: 'span 2',
-        gridRowEnd: 10,
+        gridRow: 2,
+        gridColumnEnd: 3,
+        gridRowEnd: 3,
+      },
+      {
+        type: 'info',
+        gridColumn: 2,
+        gridRow: 3,
+        gridColumnEnd: 3,
+        gridRowEnd: 4,
       },
     ];
   }
-  // columns >= 4
-  return [
-    {
-      type: 'info',
-      gridColumn: 2,
-      gridRow: 2,
-      gridColumnEnd: 'span 2',
-      gridRowEnd: 'span 2',
-    },
-    {
-      type: 'image',
-      gridColumn: columns,
-      gridRow: 2,
-      gridColumnEnd: 'span 2',
-      gridRowEnd: 'span 2',
-    },
-  ];
+  
+  if (columns === 2) {
+    // 2 columns bp: img on top (2 squares), blank row, details below (2 squares)
+    return [
+      {
+        type: 'image',
+        gridColumn: 2,
+        gridRow: 2,
+        gridColumnEnd: 4,
+        gridRowEnd: 4,
+      },
+      {
+        type: 'info',
+        gridColumn: 2,
+        gridRow: 5,
+        gridColumnEnd: 4,
+        gridRowEnd: 7,
+      },
+    ];
+  }
+  
+  if (columns === 4) {
+    // 4 columns bp: img on left (2 squares), details on right (2 squares)
+    return [
+      {
+        type: 'image',
+        gridColumn: 2,
+        gridRow: 2,
+        gridColumnEnd: 4,
+        gridRowEnd: 4,
+      },
+      {
+        type: 'info',
+        gridColumn: 4,
+        gridRow: 2,
+        gridColumnEnd: 6,
+        gridRowEnd: 4,
+      },
+    ];
+  }
+  
+  if (columns === 5) {
+    // 5 columns bp: img on left (2 squares), blank column, details on right (2 squares)
+    return [
+      {
+        type: 'image',
+        gridColumn: 2,
+        gridRow: 2,
+        gridColumnEnd: 4,
+        gridRowEnd: 4,
+      },
+      {
+        type: 'info',
+        gridColumn: 5,
+        gridRow: 2,
+        gridColumnEnd: 7,
+        gridRowEnd: 4,
+      },
+    ];
+  }
+  
+  return [];
 };
 
 const Product: React.FC = () => {
@@ -370,7 +416,7 @@ const Product: React.FC = () => {
   const mainCol = `calc(100vw / ${columns + 1})`;
   const sCol = `calc(0.5 * 100vw / ${columns + 1})`;
   const colCount = columns + 2;
-  const rowCount = columns === 2 ? 8 : 4;
+  const rowCount = columns === 1 ? 4 : columns === 2 ? 7 : 4;
 
   const getCellBorder = (col: number, row: number): React.CSSProperties => ({
     borderRight: col < colCount - 1 ? '1px dashed #d32f2f' : 'none',
@@ -384,12 +430,14 @@ const Product: React.FC = () => {
     minHeight: 0,
     minWidth: 0,
     position: 'relative',
-    zIndex: 0,
+    zIndex: 1, // Increased z-index so grid lines appear above content
   });
 
-  // Dynamic grid row count for 2-column breakpoint
-  const gridTemplateRows = columns === 2
-    ? `repeat(8, 1fr)`
+  // Dynamic grid row count for different breakpoints
+  const gridTemplateRows = columns === 1 
+    ? `repeat(4, 1fr)`
+    : columns === 2 
+    ? `repeat(7, 1fr)`
     : `calc(0.5 * ${mainCol}) repeat(2, ${mainCol}) 1fr`;
 
   // Also log book in render
@@ -402,7 +450,8 @@ const Product: React.FC = () => {
         width: '100vw',
         minHeight: '100vh',
         gridTemplateColumns: `${sCol} repeat(${columns}, ${mainCol}) ${sCol}`,
-        gridTemplateRows      }}
+        gridTemplateRows: gridTemplateRows,
+      }}
     >
         {/* Top border row */}
         <Box style={{ ...getCellBorder(0, 0), gridColumn: 1, gridRow: 1 }} />
@@ -411,15 +460,24 @@ const Product: React.FC = () => {
         ))}
         <Box style={{ ...getCellBorder(colCount - 1, 0), gridColumn: colCount, gridRow: 1 }} />
 
-        {/* Side and middle rows for 2-column layout */}
-        {columns === 2 && Array.from({ length: 6 }).map((_, rowIdx) => (
+        {/* Side and middle rows for 1-column layout */}
+        {columns === 1 && Array.from({ length: 2 }).map((_, rowIdx) => (
           <React.Fragment key={rowIdx}>
             <Box style={{ ...getCellBorder(0, rowIdx + 1), gridColumn: 1, gridRow: rowIdx + 2 }} />
             <Box style={{ ...getCellBorder(colCount - 1, rowIdx + 1), gridColumn: colCount, gridRow: rowIdx + 2 }} />
           </React.Fragment>
         ))}
+        
+        {/* Side and middle rows for 2-column layout */}
+        {columns === 2 && Array.from({ length: 5 }).map((_, rowIdx) => (
+          <React.Fragment key={rowIdx}>
+            <Box style={{ ...getCellBorder(0, rowIdx + 1), gridColumn: 1, gridRow: rowIdx + 2 }} />
+            <Box style={{ ...getCellBorder(colCount - 1, rowIdx + 1), gridColumn: colCount, gridRow: rowIdx + 2 }} />
+          </React.Fragment>
+        ))}
+        
         {/* Side and middle rows for 4/5-column layout */}
-        {columns !== 2 && [1, 2].map((rowIdx) => (
+        {(columns === 4 || columns === 5) && [1, 2].map((rowIdx) => (
           <React.Fragment key={rowIdx}>
             <Box style={{ ...getCellBorder(0, rowIdx), gridColumn: 1, gridRow: rowIdx + 1 }} />
             {Array.from({ length: columns }).map((_, i) => (
