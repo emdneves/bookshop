@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://209.74.83.122/sitemap.xml
+Sitemap: https://theartifact.shop/sitemap.xml
 
 # Disallow admin areas (if any)
 Disallow: /admin/

@@ -342,10 +342,10 @@ const Home: React.FC<HomeProps> = ({
   return (
     <>
       <SEO 
-        title="Bookshop - Buy and Sell Books Online | Modern Book Marketplace"
+        title="the artifact - Buy and Sell Books Online | Modern Book Marketplace"
         description="Discover, buy, and sell books in our modern marketplace. Connect with book lovers, find rare editions, and build your personal library. Join thousands of readers and sellers today."
-        keywords="books, bookshop, buy books, sell books, online bookstore, rare books, used books, book marketplace, reading, literature"
-        url="https://209.74.83.122"
+        keywords="books, the artifact, buy books, sell books, online bookstore, rare books, used books, book marketplace, reading, literature"
+        url="https://theartifact.shop"
         type="website"
       />
     <PageWrapper cardsPerRow={cardsPerRow}

@@ -123,9 +123,9 @@ const Books: React.FC<BooksProps> = ({ search, onSearchChange, setSubheaderData,
   return (
     <>
       <SEO 
-        title="My Books - Bookshop"
+        title="My Books - the artifact"
         description="Manage your books for sale. View, edit, and track offers on your listed books."
-        url="https://209.74.83.122/books"
+        url="https://theartifact.shop/books"
       />
       <Box
       sx={{

@@ -141,7 +141,7 @@ const Header: React.FC = () => {
       <Box sx={{ height: '100%' }} />
       {/* Center columns */}
       {Array.from({ length: cardsPerRow }).map((_, i) => {
-        // First center column: Bookshop title and icons (mobile) or just title (desktop)
+        // First center column: the artifact title and icons (mobile) or just title (desktop)
         if (i === 0) {
           return (
             <Box
@@ -168,8 +168,8 @@ const Header: React.FC = () => {
                     fontSize: cardsPerRow === 1 ? '2rem' : '2.125rem', // Increased from 1.5rem to 2rem for mobile
                   }}
                 >
-        Bookshop
-      </Typography>
+                  the artifact
+                </Typography>
               </Link>
               
               {/* Icons for mobile - show beneath title */}

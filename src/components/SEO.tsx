@@ -12,13 +12,13 @@ interface SEOProps {
 }
 
 const SEO: React.FC<SEOProps> = ({
-  title = 'Bookshop - Buy and Sell Books Online | Modern Book Marketplace',
+  title = 'the artifact - Buy and Sell Books Online | Modern Book Marketplace',
   description = 'Discover, buy, and sell books in our modern marketplace. Connect with book lovers, find rare editions, and build your personal library. Join thousands of readers and sellers today.',
-  keywords = 'books, bookshop, buy books, sell books, online bookstore, rare books, used books, book marketplace, reading, literature',
-  image = 'https://209.74.83.122/social-thumbnail.svg',
-  url = 'https://209.74.83.122',
+  keywords = 'books, the artifact, buy books, sell books, online bookstore, rare books, used books, book marketplace, reading, literature',
+  image = 'https://theartifact.shop/social-thumbnail.png',
+  url = 'https://theartifact.shop',
   type = 'website',
-  author = 'Bookshop'
+  author = 'the artifact'
 }) => {
   useEffect(() => {
     // Update document title
