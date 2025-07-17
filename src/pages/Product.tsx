@@ -52,8 +52,8 @@ const mainContentBoxSx = {
   m: 0,
   overflow: 'hidden',
   display: 'flex',
-  alignItems: 'stretch',
-  justifyContent: 'stretch',
+  alignItems: 'center',
+  justifyContent: 'center',
   width: '100%',
   height: '100%',
   boxSizing: 'border-box',
@@ -176,7 +176,18 @@ const renderImageCard = (loading: boolean, book: any) =>
     <Skeleton variant="rectangular" width="100%" height="100%"  />
   ) : (
     book.Cover ? (
-      <img src={book.Cover} alt={book.name} style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 3 }} />
+      <img 
+        src={book.Cover} 
+        alt={book.name} 
+        style={{ 
+          width: '100%', 
+          height: '100%', 
+          objectFit: 'contain', 
+          borderRadius: 3,
+          maxWidth: '100%',
+          maxHeight: '100%'
+        }} 
+      />
     ) : (
       <Skeleton variant="rectangular" width="100%" height="100%"  />
     )
@@ -415,6 +426,8 @@ const Product: React.FC = () => {
 
   const mainCol = `calc(100vw / ${columns + 1})`;
   const sCol = `calc(0.5 * 100vw / ${columns + 1})`;
+  // Use the same size for both width and height to ensure perfect squares
+  const squareSize = mainCol;
   const colCount = columns + 2;
   const rowCount = columns === 1 ? 4 : columns === 2 ? 7 : 4;
 
@@ -433,12 +446,12 @@ const Product: React.FC = () => {
     zIndex: 1, // Increased z-index so grid lines appear above content
   });
 
-  // Dynamic grid row count for different breakpoints
+  // Dynamic grid row count for different breakpoints - border rows are 1/4 height, content rows are full squares
   const gridTemplateRows = columns === 1 
-    ? `0.25fr 1fr 1fr 0.25fr`
+    ? `calc(0.25 * ${squareSize}) ${squareSize} ${squareSize} calc(0.25 * ${squareSize})`
     : columns === 2 
-    ? `0.25fr 1fr 1fr 1fr 1fr 1fr 0.25fr`
-    : `0.25fr 1fr 1fr 0.25fr`;
+    ? `calc(0.25 * ${squareSize}) ${squareSize} ${squareSize} ${squareSize} ${squareSize} ${squareSize} calc(0.25 * ${squareSize})`
+    : `calc(0.25 * ${squareSize}) ${squareSize} ${squareSize} calc(0.25 * ${squareSize})`;
 
   // Also log book in render
   console.log('Book in render:', book);
@@ -449,7 +462,7 @@ const Product: React.FC = () => {
         display: 'grid',
         width: '100vw',
         minHeight: '100vh',
-        gridTemplateColumns: `${sCol} repeat(${columns}, ${mainCol}) ${sCol}`,
+        gridTemplateColumns: `calc(0.5 * ${squareSize}) repeat(${columns}, ${squareSize}) calc(0.5 * ${squareSize})`,
         gridTemplateRows: gridTemplateRows,
       }}
     >
