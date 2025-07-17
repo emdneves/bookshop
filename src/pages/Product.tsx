@@ -24,7 +24,7 @@ const getColumns = (width: number) => {
   return 5;
 };
 
-const ProductBox = ({ background = '#FFFAF0', color, children }: { background?: string; color?: string; children: React.ReactNode }) => (
+const ProductBox = ({ background = 'transparent', color, children }: { background?: string; color?: string; children: React.ReactNode }) => (
   <Box
     sx={{
       overflow: 'hidden',
@@ -58,11 +58,11 @@ const mainContentBoxSx = {
   height: '100%',
   boxSizing: 'border-box',
   position: 'relative',
-  zIndex: 0, // Reduced z-index so grid lines show through
+  zIndex: 2, // Higher z-index so content appears above grid lines
 };
 
 // Reusable MainCard component
-const MainCard = ({ children, gridColumn, gridRow, gridColumnEnd, gridRowEnd, background = '#FFFAF0', color = '#111' }: any) => (
+const MainCard = ({ children, gridColumn, gridRow, gridColumnEnd, gridRowEnd, background = 'transparent', color = '#111' }: any) => (
   <Box
     sx={{
       ...mainContentBoxSx,
@@ -185,7 +185,7 @@ const renderImageCard = (loading: boolean, book: any) =>
 // Layout config for breakpoints
 const getCardLayout = (columns: number) => {
   if (columns === 1) {
-    // 1 column bp: img on top, details below
+    // 1 column bp: img on top (1 square), details below (1 square)
     return [
       {
         type: 'image',
@@ -205,7 +205,7 @@ const getCardLayout = (columns: number) => {
   }
   
   if (columns === 2) {
-    // 2 columns bp: img on top (2 squares), blank row, details below (2 squares)
+    // 2 columns bp: img on top (2x2 squares), blank row, details below (2x2 squares)
     return [
       {
         type: 'image',
@@ -225,7 +225,7 @@ const getCardLayout = (columns: number) => {
   }
   
   if (columns === 4) {
-    // 4 columns bp: img on left (2 squares), details on right (2 squares)
+    // 4 columns bp: img on left (2x2 squares), details on right (2x2 squares)
     return [
       {
         type: 'image',
@@ -245,7 +245,7 @@ const getCardLayout = (columns: number) => {
   }
   
   if (columns === 5) {
-    // 5 columns bp: img on left (2 squares), blank column, details on right (2 squares)
+    // 5 columns bp: img on left (2x2 squares), blank column, details on right (2x2 squares)
     return [
       {
         type: 'image',
@@ -437,8 +437,8 @@ const Product: React.FC = () => {
   const gridTemplateRows = columns === 1 
     ? `0.25fr 1fr 1fr 0.25fr`
     : columns === 2 
-    ? `0.25fr repeat(5, 1fr) 0.25fr`
-    : `0.25fr repeat(2, 1fr) 0.25fr`;
+    ? `0.25fr 1fr 1fr 1fr 1fr 1fr 0.25fr`
+    : `0.25fr 1fr 1fr 0.25fr`;
 
   // Also log book in render
   console.log('Book in render:', book);
