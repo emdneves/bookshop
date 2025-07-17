@@ -81,7 +81,7 @@ const MainCard = ({ children, gridColumn, gridRow, gridColumnEnd, gridRowEnd, ba
 // Card content renderers
 const renderInfoCard = (loading: boolean, book: any, orders: any[], onMakeOffer: () => void, getHighestOffer: () => number, isAuthenticated: boolean) =>
   loading || !book ? (
-    <Skeleton variant="rectangular" width="100%" height={120} sx={{ borderRadius: 3, mb: 2 }} />
+    <Skeleton variant="rectangular" width="100%" height={120} sx={{ borderRadius: 3, mb: 2, bgcolor: 'transparent' }} />
   ) : (
     <Box sx={{ 
       width: '100%', 
@@ -173,7 +173,7 @@ const renderInfoCard = (loading: boolean, book: any, orders: any[], onMakeOffer:
 
 const renderImageCard = (loading: boolean, book: any) =>
   loading || !book ? (
-    <Skeleton variant="rectangular" width="100%" height="100%"  />
+    <Skeleton variant="rectangular" width="100%" height="100%" sx={{ bgcolor: 'transparent' }} />
   ) : (
     book.Cover ? (
       <img 
@@ -189,7 +189,7 @@ const renderImageCard = (loading: boolean, book: any) =>
         }} 
       />
     ) : (
-      <Skeleton variant="rectangular" width="100%" height="100%"  />
+      <Skeleton variant="rectangular" width="100%" height="100%" sx={{ bgcolor: 'transparent' }} />
     )
   );
 
@@ -462,9 +462,7 @@ const Product: React.FC = () => {
         display: 'grid',
         width: '100vw',
         minHeight: '100vh',
-        gridTemplateColumns: columns === 1 || columns === 2 
-          ? `calc(0.25 * ${squareSize}) repeat(${columns}, ${squareSize}) calc(0.25 * ${squareSize})`
-          : `calc(0.5 * ${squareSize}) repeat(${columns}, ${squareSize}) calc(0.5 * ${squareSize})`,
+        gridTemplateColumns: `calc(0.5 * ${squareSize}) repeat(${columns}, ${squareSize}) calc(0.5 * ${squareSize})`,
         gridTemplateRows: gridTemplateRows,
       }}
     >
