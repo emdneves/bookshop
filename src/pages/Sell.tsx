@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Skeleton, Table, TableBody, TableCell, TableHead, TableRow, Alert, TextField, Select, MenuItem } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getCardsPerRow } from '../utils/helpers';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config/api';
+import CenteredMessage from '../components/CenteredMessage';
 
 const BOOKS_CONTENT_TYPE_ID = '481a065c-8733-4e97-9adf-dc64acacf5fb';
 const ORDERS_CONTENT_TYPE_ID = 'cec824c6-1e37-4b1f-8cf6-b69cd39e52b2';
@@ -11,9 +12,11 @@ const ORDERS_CONTENT_TYPE_ID = 'cec824c6-1e37-4b1f-8cf6-b69cd39e52b2';
 interface SellProps {
   search: string;
   onSearchChange: (value: string) => void;
+  setSubheaderData?: (data: any[]) => void;
+  setTargetElement?: (element: string) => void;
 }
 
-const Sell: React.FC<SellProps> = ({ search, onSearchChange }) => {
+const Sell: React.FC<SellProps> = ({ search, onSearchChange, setSubheaderData, setTargetElement }) => {
   const { token, isAuthenticated } = useAuth();
   const [books, setBooks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,12 +26,24 @@ const Sell: React.FC<SellProps> = ({ search, onSearchChange }) => {
   const [counterValues, setCounterValues] = useState<Record<string, string>>({});
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  const navigate = useNavigate();
+  const [showAuthMessage, setShowAuthMessage] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setCardsPerRow(getCardsPerRow());
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setShowAuthMessage(true);
+      const timer = setTimeout(() => {
+        navigate('/', { state: { openLogin: true } });
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     if (!token) return;
@@ -44,7 +59,14 @@ const Sell: React.FC<SellProps> = ({ search, onSearchChange }) => {
           body: JSON.stringify({ content_type_id: BOOKS_CONTENT_TYPE_ID }),
         });
         const data = await response.json();
-        setBooks(data.contents || []);
+        const booksData = data.contents || [];
+        setBooks(booksData);
+        
+        // Pass data to subheader for dynamic filter generation
+        if (setSubheaderData && setTargetElement) {
+          setTargetElement('sell-offers');
+          setSubheaderData(booksData);
+        }
       } catch (err) {
         setBooks([]);
       } finally {
@@ -52,7 +74,7 @@ const Sell: React.FC<SellProps> = ({ search, onSearchChange }) => {
       }
     };
     fetchBooks();
-  }, [token]);
+  }, [token, setSubheaderData, setTargetElement]);
 
   // Fetch all orders (offers)
   useEffect(() => {
@@ -157,8 +179,18 @@ const Sell: React.FC<SellProps> = ({ search, onSearchChange }) => {
     }
   };
 
+  if (!isAuthenticated && showAuthMessage) {
+    return (
+      <CenteredMessage
+        title="Login Required"
+        description="You must be logged in to view offers for your books. Redirecting to login..."
+        showSpinner
+      />
+    );
+  }
+
   if (!isAuthenticated) {
-    return <Alert severity="warning">You must be logged in to view offers for your books.</Alert>;
+    return null;
   }
 
   return (

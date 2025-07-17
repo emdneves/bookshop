@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, IconButton, Tooltip } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import AuthModal from './AuthModal';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
 import StoreOutlinedIcon from '@mui/icons-material/StoreOutlined';
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
@@ -14,6 +14,7 @@ import { getCardsPerRow } from '../utils/helpers';
 const Header: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [cardsPerRow, setCardsPerRow] = useState(getCardsPerRow());
 
@@ -22,6 +23,15 @@ const Header: React.FC = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Open login modal if redirected with openLogin state
+  useEffect(() => {
+    if (location.pathname === '/' && location.state && (location.state as any).openLogin) {
+      setAuthModalOpen(true);
+      // Remove openLogin from state so it doesn't trigger again
+      navigate('/', { replace: true, state: {} });
+    }
+  }, [location, navigate]);
 
   const handleLogout = () => {
     logout();

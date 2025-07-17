@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Skeleton, Table, TableBody, TableCell, TableHead, TableRow, Alert } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getCardsPerRow } from '../utils/helpers';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config/api';
 import SEO from '../components/SEO';
+import CenteredMessage from '../components/CenteredMessage';
 
 const BOOKS_CONTENT_TYPE_ID = '481a065c-8733-4e97-9adf-dc64acacf5fb';
 const ORDERS_CONTENT_TYPE_ID = 'cec824c6-1e37-4b1f-8cf6-b69cd39e52b2';
@@ -12,9 +13,11 @@ const ORDERS_CONTENT_TYPE_ID = 'cec824c6-1e37-4b1f-8cf6-b69cd39e52b2';
 interface BooksProps {
   search: string;
   onSearchChange: (value: string) => void;
+  setSubheaderData?: (data: any[]) => void;
+  setTargetElement?: (element: string) => void;
 }
 
-const Books: React.FC<BooksProps> = ({ search, onSearchChange }) => {
+const Books: React.FC<BooksProps> = ({ search, onSearchChange, setSubheaderData, setTargetElement }) => {
   const { token, isAuthenticated } = useAuth();
   const [books, setBooks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,12 +25,24 @@ const Books: React.FC<BooksProps> = ({ search, onSearchChange }) => {
   const totalColumns = cardsPerRow + 2;
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  const navigate = useNavigate();
+  const [showAuthMessage, setShowAuthMessage] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setCardsPerRow(getCardsPerRow());
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setShowAuthMessage(true);
+      const timer = setTimeout(() => {
+        navigate('/', { state: { openLogin: true } });
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     if (!token) return;
@@ -43,7 +58,14 @@ const Books: React.FC<BooksProps> = ({ search, onSearchChange }) => {
           body: JSON.stringify({ content_type_id: BOOKS_CONTENT_TYPE_ID }),
         });
         const data = await response.json();
-        setBooks(data.contents || []);
+        const booksData = data.contents || [];
+        setBooks(booksData);
+        
+        // Pass data to subheader for dynamic filter generation
+        if (setSubheaderData && setTargetElement) {
+          setTargetElement('books-table');
+          setSubheaderData(booksData);
+        }
       } catch (err) {
         setBooks([]);
       } finally {
@@ -51,7 +73,7 @@ const Books: React.FC<BooksProps> = ({ search, onSearchChange }) => {
       }
     };
     fetchBooks();
-  }, [token]);
+  }, [token, setSubheaderData, setTargetElement]);
 
   // Fetch all orders (offers) to count offers per book
   useEffect(() => {
@@ -88,16 +110,13 @@ const Books: React.FC<BooksProps> = ({ search, onSearchChange }) => {
     );
   });
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && showAuthMessage) {
     return (
-      <>
-        <SEO 
-          title="My Books - Bookshop"
-          description="Manage your books for sale. View, edit, and track offers on your listed books."
-          url="https://209.74.83.122/books"
-        />
-        <Alert severity="warning">You must be logged in to view your books for sale.</Alert>
-      </>
+      <CenteredMessage
+        title="Login Required"
+        description="You must be logged in to view your books for sale. Redirecting to login..."
+        showSpinner
+      />
     );
   }
 
@@ -202,32 +221,50 @@ const Books: React.FC<BooksProps> = ({ search, onSearchChange }) => {
               </TableRow>
             ) : (
               filteredBooks.map((book) => {
-                const offersCount = orders.filter(order => order.data.book === book.id).length;
+                // Count offers for this book
+                const bookOffers = orders.filter(order => order.data.book === book.id);
+                const offerCount = bookOffers.length;
+                const highestOffer = bookOffers.length > 0 
+                  ? Math.max(...bookOffers.map((offer: any) => offer.data.price))
+                  : 0;
+
                 return (
                   <TableRow key={book.id}>
-                    <TableCell sx={{ maxWidth: 180 }}>
+                    <TableCell>
                       <Link 
-                        to={`/book/${book.id}`} 
+                        to={`/book/${book.id}`}
                         style={{ 
-                          textDecoration: 'none', 
-                          color: 'inherit',
-                          cursor: 'pointer',
-                          display: 'block',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          maxWidth: '100%'
+                          color: '#d32f2f', 
+                          textDecoration: 'none',
+                          fontWeight: 600
                         }}
                       >
-                        {book.data?.name || 'Book'}
+                        {book.data?.name || 'Untitled'}
                       </Link>
                     </TableCell>
-                    <TableCell sx={{ maxWidth: 120 }}>{book.data?.author || '-'}</TableCell>
-                    <TableCell sx={{ maxWidth: 120 }}>{book.data?.publisher || '-'}</TableCell>
-                    <TableCell sx={{ maxWidth: 100 }}>{book.data?.isbn || '-'}</TableCell>
-                    <TableCell sx={{ maxWidth: 80 }}>{book.data?.['Original price'] ? `$${book.data['Original price']}` : '-'}</TableCell>
-                    <TableCell sx={{ maxWidth: 120 }}>{offersCount}</TableCell>
-                    <TableCell sx={{ maxWidth: 140 }}>{new Date(book.created_at).toLocaleString()}</TableCell>
+                    <TableCell>{book.data?.author || 'Unknown'}</TableCell>
+                    <TableCell>{book.data?.publisher || 'Unknown'}</TableCell>
+                    <TableCell>{book.data?.isbn || 'N/A'}</TableCell>
+                    <TableCell>${book.data?.price || 0}</TableCell>
+                    <TableCell>
+                      {offerCount > 0 ? (
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#d32f2f' }}>
+                            {offerCount} offer{offerCount !== 1 ? 's' : ''}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: '#666' }}>
+                            Highest: ${highestOffer}
+                          </Typography>
+                        </Box>
+                      ) : (
+                        <Typography variant="body2" sx={{ color: '#666', fontStyle: 'italic' }}>
+                          No offers
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(book.created_at).toLocaleDateString()}
+                    </TableCell>
                   </TableRow>
                 );
               })

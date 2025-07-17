@@ -21,7 +21,9 @@ import {
   Select,
   MenuItem,
   FormControlLabel,
-  Switch
+  Switch,
+  IconButton,
+  Tooltip
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { getCardsPerRow } from '../utils/helpers';
@@ -34,6 +36,10 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
+import DeleteIcon from '@mui/icons-material/Delete';
+import WarningIcon from '@mui/icons-material/Warning';
+import { useNavigate } from 'react-router-dom';
+import CenteredMessage from '../components/CenteredMessage';
 
 interface UserData {
   id: number;
@@ -47,13 +53,235 @@ interface UserData {
   last_login: string;
 }
 
+interface FieldConfig {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}
+
+interface FormFieldConfig {
+  name: string;
+  label: string;
+  type: 'text' | 'select' | 'switch';
+  options?: { value: string; label: string }[];
+  required?: boolean;
+}
+
+// Reusable pill input field component
+const PillField: React.FC<FieldConfig> = ({ icon, label, value }) => (
+  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+    <Box sx={{ color: '#d32f2f', fontSize: 20, flexShrink: 0, width: 24 }}>
+      {icon}
+    </Box>
+    <TextField
+      value={value}
+      label={label}
+      variant="outlined"
+      fullWidth
+      disabled
+      sx={pillInputStyle}
+    />
+  </Box>
+);
+
+// Reusable form field component
+const FormField: React.FC<{
+  field: FormFieldConfig;
+  value: any;
+  onChange: (value: any) => void;
+  isAdmin?: boolean;
+}> = ({ field, value, onChange, isAdmin }) => {
+  if (field.type === 'select') {
+    return (
+      <FormControl fullWidth>
+        <InputLabel>{field.label}</InputLabel>
+        <Select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          label={field.label}
+          sx={pillInputStyle}
+        >
+          {field.options?.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    );
+  }
+
+  if (field.type === 'switch') {
+    return (
+      <FormControlLabel
+        control={
+          <Switch
+            checked={value}
+            onChange={(e) => onChange(e.target.checked)}
+            sx={{
+              '& .MuiSwitch-switchBase.Mui-checked': {
+                color: '#d32f2f',
+                '&:hover': {
+                  backgroundColor: 'rgba(211, 47, 47, 0.08)',
+                },
+              },
+              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                backgroundColor: '#d32f2f',
+              },
+            }}
+          />
+        }
+        label={field.label}
+      />
+    );
+  }
+
+  return (
+    <TextField
+      label={field.label}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      fullWidth
+      required={field.required}
+      sx={pillInputStyle}
+    />
+  );
+};
+
+// Reusable section component
+const InfoSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+  <Paper
+    elevation={0}
+    sx={{
+      p: 2,
+      border: '1px dashed #d32f2f',
+      borderRadius: 2,
+      background: 'rgba(255, 255, 255, 0.8)',
+      height: 'fit-content',
+    }}
+  >
+    <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: '#222' }}>
+      {title}
+    </Typography>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      {children}
+    </Box>
+  </Paper>
+);
+
+// Reusable dialog component
+const ConfirmationDialog: React.FC<{
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  message: string;
+  confirmText: string;
+  onConfirm: () => void;
+  icon?: React.ReactNode;
+  severity?: 'warning' | 'info';
+}> = ({ open, onClose, title, message, confirmText, onConfirm, icon, severity = 'warning' }) => (
+  <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <DialogTitle sx={{ color: '#d32f2f', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+      {icon && icon}
+      {title}
+    </DialogTitle>
+    <DialogContent>
+      <Typography sx={{ mb: 2 }}>
+        {message}
+      </Typography>
+      {severity === 'warning' && (
+        <Typography variant="body2" sx={{ color: '#666' }}>
+          All your data, including books, transactions, and account information will be permanently removed.
+        </Typography>
+      )}
+    </DialogContent>
+    <DialogActions>
+      <Button 
+        onClick={onClose}
+        sx={buttonStyle.outlined}
+      >
+        Cancel
+      </Button>
+      <Button 
+        onClick={onConfirm}
+        variant="contained"
+        sx={buttonStyle.contained}
+      >
+        {confirmText}
+      </Button>
+    </DialogActions>
+  </Dialog>
+);
+
+// Pill-like input field styling
+const pillInputStyle = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '25px',
+    border: '1px dotted #d32f2f',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    height: '28px',
+    '&:hover': {
+      border: '1px solid #d32f2f',
+    },
+    '&.Mui-focused': {
+      border: '1px solid #d32f2f',
+      '& .MuiOutlinedInput-notchedOutline': {
+        border: 'none',
+      },
+    },
+    '&.Mui-disabled': {
+      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+      '& .MuiInputBase-input': {
+        color: '#333',
+        WebkitTextFillColor: '#333',
+      },
+    },
+    '& .MuiOutlinedInput-notchedOutline': {
+      border: 'none',
+    },
+    '& .MuiInputBase-input': {
+      padding: '2px 6px',
+      fontSize: '13px',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    color: '#666',
+    fontSize: '14px',
+    '&.Mui-focused': {
+      color: '#d32f2f',
+    },
+    '&.MuiInputLabel-shrink': {
+      fontSize: '12px',
+    },
+  },
+};
+
+// Reusable button styles
+const buttonStyle = {
+  outlined: {
+    borderRadius: '25px',
+    border: '1px dotted #d32f2f',
+    color: '#d32f2f',
+    '&:hover': { 
+      border: '1px solid #d32f2f',
+      backgroundColor: 'rgba(211, 47, 47, 0.04)' 
+    }
+  },
+  contained: {
+    borderRadius: '25px',
+    backgroundColor: '#d32f2f',
+    '&:hover': { backgroundColor: '#b71c1c' }
+  }
+};
+
 const Account: React.FC = () => {
-  const { isAuthenticated, token, role } = useAuth();
+  const { isAuthenticated, token, role, logout } = useAuth();
   const [cardsPerRow, setCardsPerRow] = useState(getCardsPerRow());
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({
     open: false,
     message: '',
@@ -70,6 +298,27 @@ const Account: React.FC = () => {
   });
 
   const isAdmin = role === 'admin';
+  const [showAuthMessage, setShowAuthMessage] = useState(false);
+  const navigate = useNavigate();
+
+  // Form field configurations
+  const editFormFields: FormFieldConfig[] = [
+    { name: 'email', label: 'Email Address', type: 'text' as const, required: true },
+    { name: 'first_name', label: 'First Name', type: 'text' as const, required: true },
+    { name: 'last_name', label: 'Last Name', type: 'text' as const, required: true },
+    ...(isAdmin ? [
+      { 
+        name: 'role', 
+        label: 'Role', 
+        type: 'select' as const, 
+        options: [
+          { value: 'user', label: 'User' },
+          { value: 'admin', label: 'Admin' }
+        ]
+      },
+      { name: 'is_active', label: 'Active Account', type: 'switch' as const }
+    ] : [])
+  ];
 
   useEffect(() => {
     const handleResize = () => setCardsPerRow(getCardsPerRow());
@@ -83,13 +332,22 @@ const Account: React.FC = () => {
     }
   }, [isAuthenticated, token]);
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setShowAuthMessage(true);
+      const timer = setTimeout(() => {
+        navigate('/', { state: { openLogin: true } });
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, navigate]);
+
   const fetchUserData = async () => {
     try {
       setLoading(true);
       setError(null);
       
       // Extract user ID from JWT token
-      // The token contains the user ID in the payload
       const tokenPayload = JSON.parse(atob(token!.split('.')[1]));
       const userId = tokenPayload.id;
       
@@ -223,10 +481,66 @@ const Account: React.FC = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    try {
+      // Extract user ID from JWT token
+      const tokenPayload = JSON.parse(atob(token!.split('.')[1]));
+      const userId = tokenPayload.id;
+      
+      const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          // API endpoint is still admin-only
+          setSnackbar({
+            open: true,
+            message: 'Account deletion not available yet. API endpoints are being updated.',
+            severity: 'info'
+          });
+          setDeleteDialogOpen(false);
+          return;
+        } else {
+          throw new Error('Failed to delete account');
+        }
+      }
+
+      setSnackbar({
+        open: true,
+        message: 'Account deleted successfully. You will be logged out.',
+        severity: 'success'
+      });
+      
+      // Logout after successful deletion
+      setTimeout(() => {
+        logout();
+      }, 2000);
+      
+      setDeleteDialogOpen(false);
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: err instanceof Error ? err.message : 'Failed to delete account',
+        severity: 'error'
+      });
+    }
+  };
+
   const totalColumns = cardsPerRow + 2;
 
-  if (!isAuthenticated) {
-    return <Alert severity="warning">You must be logged in to view your account.</Alert>;
+  if (!isAuthenticated && showAuthMessage) {
+    return (
+      <CenteredMessage
+        title="Login Required"
+        description="You must be logged in to view your account. Redirecting to login..."
+        showSpinner
+      />
+    );
   }
 
   const formatDate = (dateString: string) => {
@@ -238,6 +552,19 @@ const Account: React.FC = () => {
       minute: '2-digit'
     });
   };
+
+  // Field configurations
+  const accountInfoFields: FieldConfig[] = userData ? [
+    { icon: <EmailIcon />, label: 'Email Address', value: userData.email },
+    { icon: <PersonIcon />, label: 'Full Name', value: `${userData.first_name} ${userData.last_name}` },
+    { icon: <PersonIcon />, label: 'User ID', value: userData.id.toString() }
+  ] : [];
+
+  const accountActivityFields: FieldConfig[] = userData ? [
+    { icon: <CalendarTodayIcon />, label: 'Member Since', value: formatDate(userData.created_at) },
+    { icon: <AccessTimeIcon />, label: 'Last Login', value: formatDate(userData.last_login) },
+    { icon: <CalendarTodayIcon />, label: 'Last Updated', value: formatDate(userData.updated_at) }
+  ] : [];
 
   return (
     <Box
@@ -267,22 +594,39 @@ const Account: React.FC = () => {
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Typography variant="h4" sx={{ fontWeight: 700, color: '#d32f2f' }}>
-          Account Profile
-        </Typography>
-          {userData && (
-            <Button
-              variant="outlined"
-              startIcon={<EditIcon />}
-              onClick={handleEditClick}
-              sx={{ 
-                borderColor: '#d32f2f', 
-                color: '#d32f2f',
-                '&:hover': { borderColor: '#b71c1c', backgroundColor: 'rgba(211, 47, 47, 0.04)' }
-              }}
-            >
-              Edit Profile
-            </Button>
-          )}
+            Account Profile
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            {userData && (
+              <>
+                <Button
+                  variant="outlined"
+                  startIcon={<EditIcon />}
+                  onClick={handleEditClick}
+                  sx={buttonStyle.outlined}
+                >
+                  Edit Profile
+                </Button>
+                <Tooltip title="Delete Account">
+                  <IconButton
+                    onClick={() => setDeleteDialogOpen(true)}
+                    sx={{ 
+                      borderRadius: '50%',
+                      border: '1px dotted #d32f2f',
+                      color: '#d32f2f',
+                      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                      '&:hover': { 
+                        border: '1px solid #d32f2f',
+                        backgroundColor: 'rgba(211, 47, 47, 0.04)' 
+                      }
+                    }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Tooltip>
+              </>
+            )}
+          </Box>
         </Box>
 
         {error && (
@@ -304,13 +648,13 @@ const Account: React.FC = () => {
               <Paper
                 elevation={0}
                 sx={{
-                  p: 4,
+                  p: 2,
                   border: '1px dashed #d32f2f',
                   borderRadius: 2,
                   background: 'rgba(255, 255, 255, 0.8)',
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                   <Avatar
                     sx={{
                       width: 80,
@@ -353,114 +697,20 @@ const Account: React.FC = () => {
 
             {/* Account Details */}
             <Grid item xs={12} md={6}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 3,
-                  border: '1px dashed #d32f2f',
-                  borderRadius: 2,
-                  background: 'rgba(255, 255, 255, 0.8)',
-                  height: 'fit-content',
-                }}
-              >
-                <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, color: '#222' }}>
-                  Account Information
-                </Typography>
-                
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <EmailIcon sx={{ color: '#d32f2f', fontSize: 20 }} />
-                    <Box>
-                      <Typography variant="caption" sx={{ color: '#666', fontWeight: 600 }}>
-                        Email Address
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#222', fontWeight: 500 }}>
-                        {userData.email}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <PersonIcon sx={{ color: '#d32f2f', fontSize: 20 }} />
-                    <Box>
-                      <Typography variant="caption" sx={{ color: '#666', fontWeight: 600 }}>
-                        Full Name
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#222', fontWeight: 500 }}>
-                        {userData.first_name} {userData.last_name}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <PersonIcon sx={{ color: '#d32f2f', fontSize: 20 }} />
-                    <Box>
-                      <Typography variant="caption" sx={{ color: '#666', fontWeight: 600 }}>
-                        User ID
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#222', fontWeight: 500 }}>
-                        {userData.id}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Box>
-              </Paper>
+              <InfoSection title="Account Information">
+                {accountInfoFields.map((field, index) => (
+                  <PillField key={index} {...field} />
+                ))}
+              </InfoSection>
             </Grid>
 
             {/* Account Activity */}
             <Grid item xs={12} md={6}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 3,
-                  border: '1px dashed #d32f2f',
-                  borderRadius: 2,
-                  background: 'rgba(255, 255, 255, 0.8)',
-                  height: 'fit-content',
-                }}
-              >
-                <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, color: '#222' }}>
-                  Account Activity
-                </Typography>
-                
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <CalendarTodayIcon sx={{ color: '#d32f2f', fontSize: 20 }} />
-                    <Box>
-                      <Typography variant="caption" sx={{ color: '#666', fontWeight: 600 }}>
-                        Member Since
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#222', fontWeight: 500 }}>
-                        {formatDate(userData.created_at)}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <AccessTimeIcon sx={{ color: '#d32f2f', fontSize: 20 }} />
-                    <Box>
-                      <Typography variant="caption" sx={{ color: '#666', fontWeight: 600 }}>
-                        Last Login
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#222', fontWeight: 500 }}>
-                        {formatDate(userData.last_login)}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <CalendarTodayIcon sx={{ color: '#d32f2f', fontSize: 20 }} />
-                    <Box>
-                      <Typography variant="caption" sx={{ color: '#666', fontWeight: 600 }}>
-                        Last Updated
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#222', fontWeight: 500 }}>
-                        {formatDate(userData.updated_at)}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Box>
-              </Paper>
+              <InfoSection title="Account Activity">
+                {accountActivityFields.map((field, index) => (
+                  <PillField key={index} {...field} />
+                ))}
+              </InfoSection>
             </Grid>
           </Grid>
         ) : (
@@ -477,73 +727,47 @@ const Account: React.FC = () => {
           Edit Profile
         </DialogTitle>
         <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-            <TextField
-              label="Email Address"
-              value={editForm.email}
-              onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-              fullWidth
-              required
-            />
-            <TextField
-              label="First Name"
-              value={editForm.first_name}
-              onChange={(e) => setEditForm({ ...editForm, first_name: e.target.value })}
-              fullWidth
-              required
-            />
-            <TextField
-              label="Last Name"
-              value={editForm.last_name}
-              onChange={(e) => setEditForm({ ...editForm, last_name: e.target.value })}
-              fullWidth
-              required
-            />
-            
-            {/* Admin-only fields */}
-            {isAdmin && (
-              <>
-                <FormControl fullWidth>
-                  <InputLabel>Role</InputLabel>
-                  <Select
-                    value={editForm.role}
-                    onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
-                    label="Role"
-                  >
-                    <MenuItem value="user">User</MenuItem>
-                    <MenuItem value="admin">Admin</MenuItem>
-                  </Select>
-                </FormControl>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={editForm.is_active}
-                      onChange={(e) => setEditForm({ ...editForm, is_active: e.target.checked })}
-                    />
-                  }
-                  label="Active Account"
-                />
-              </>
-            )}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1 }}>
+            {editFormFields.map((field) => (
+              <FormField
+                key={field.name}
+                field={field}
+                value={editForm[field.name as keyof typeof editForm]}
+                onChange={(value) => setEditForm({ ...editForm, [field.name]: value })}
+                isAdmin={isAdmin}
+              />
+            ))}
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>
+          <Button 
+            onClick={() => setEditDialogOpen(false)}
+            sx={buttonStyle.outlined}
+          >
             Cancel
           </Button>
           <Button 
             onClick={handleSaveProfile}
             variant="contained"
             startIcon={<SaveIcon />}
-            sx={{ 
-              backgroundColor: '#d32f2f',
-              '&:hover': { backgroundColor: '#b71c1c' }
-            }}
+            sx={buttonStyle.contained}
           >
             Save Changes
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Delete Account Dialog */}
+      <ConfirmationDialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        title="Delete Account"
+        message="Are you sure you want to delete your account? This action cannot be undone."
+        confirmText="Delete Account"
+        onConfirm={handleDeleteAccount}
+        icon={<WarningIcon sx={{ color: '#d32f2f' }} />}
+        severity="warning"
+      />
 
       {/* Snackbar for notifications */}
       <Snackbar

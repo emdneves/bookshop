@@ -348,12 +348,12 @@ const Home: React.FC<HomeProps> = ({
         url="https://209.74.83.122"
         type="website"
       />
-      <PageWrapper cardsPerRow={cardsPerRow}
-        sx={{
-          gridTemplateColumns: cardsPerRow === 1 ? '0.125fr 0.75fr 0.125fr' : `0.5fr repeat(${cardsPerRow}, 1fr) 0.5fr`,
-          gridTemplateRows: `repeat(${mainRows}, 1fr)`,
-        }}
-      >
+    <PageWrapper cardsPerRow={cardsPerRow}
+      sx={{
+        gridTemplateColumns: cardsPerRow === 1 ? '0.125fr 0.75fr 0.125fr' : `0.5fr repeat(${cardsPerRow}, 1fr) 0.5fr`,
+        gridTemplateRows: `repeat(${mainRows}, 1fr)`,
+      }}
+    >
           <GridContainer cardsPerRow={cardsPerRow} sx={{
             gridColumn: '1 / -1',
             gridRow: '1 / -1',
