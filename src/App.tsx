@@ -15,25 +15,11 @@ const ProductWithBreadcrumbs: React.FC = () => {
   const { id } = useParams();
   const [bookTitle, setBookTitle] = useState('Book Details');
   
-  // Fetch book title for breadcrumbs
+  // Fetch book title for breadcrumbs (simplified for now)
   useEffect(() => {
-    const fetchBookTitle = async () => {
-      if (!id) return;
-      
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/api/books/${id}`);
-        const data = await response.json();
-        
-        if (data.success && data.content && data.content.data) {
-          setBookTitle(data.content.data.name || 'Book Details');
-        }
-      } catch (error) {
-        console.error('Error fetching book title:', error);
-        setBookTitle('Book Details');
-      }
-    };
-    
-    fetchBookTitle();
+    // In a real implementation, you'd fetch the book data here
+    // For now, we'll use a placeholder
+    setBookTitle('Book Details');
   }, [id]);
 
   return (
