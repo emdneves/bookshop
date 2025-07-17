@@ -216,7 +216,7 @@ const getCardLayout = (columns: number) => {
   }
   
   if (columns === 2) {
-    // 2 columns bp: img on top (2x2 squares), blank row, details below (2x2 squares)
+    // 2 columns bp: img on top (2x2 squares), details below (2x2 squares) - no blank row
     return [
       {
         type: 'image',
@@ -228,9 +228,9 @@ const getCardLayout = (columns: number) => {
       {
         type: 'info',
         gridColumn: 2,
-        gridRow: 5,
+        gridRow: 4,
         gridColumnEnd: 4,
-        gridRowEnd: 7,
+        gridRowEnd: 6,
       },
     ];
   }
@@ -429,7 +429,7 @@ const Product: React.FC = () => {
   // Use the same size for both width and height to ensure perfect squares
   const squareSize = mainCol;
   const colCount = columns + 2;
-  const rowCount = columns === 1 ? 4 : columns === 2 ? 7 : 4;
+  const rowCount = columns === 1 ? 4 : columns === 2 ? 6 : 4;
 
   const getCellBorder = (col: number, row: number): React.CSSProperties => ({
     borderRight: col < colCount - 1 ? '1px dashed #d32f2f' : 'none',
@@ -450,7 +450,7 @@ const Product: React.FC = () => {
   const gridTemplateRows = columns === 1 
     ? `calc(0.25 * ${squareSize}) ${squareSize} ${squareSize} calc(0.25 * ${squareSize})`
     : columns === 2 
-    ? `calc(0.25 * ${squareSize}) ${squareSize} ${squareSize} ${squareSize} ${squareSize} ${squareSize} calc(0.25 * ${squareSize})`
+    ? `calc(0.25 * ${squareSize}) ${squareSize} ${squareSize} ${squareSize} ${squareSize} calc(0.25 * ${squareSize})`
     : `calc(0.25 * ${squareSize}) ${squareSize} ${squareSize} calc(0.25 * ${squareSize})`;
 
   // Also log book in render
@@ -462,7 +462,9 @@ const Product: React.FC = () => {
         display: 'grid',
         width: '100vw',
         minHeight: '100vh',
-        gridTemplateColumns: `calc(0.5 * ${squareSize}) repeat(${columns}, ${squareSize}) calc(0.5 * ${squareSize})`,
+        gridTemplateColumns: columns === 1 || columns === 2 
+          ? `calc(0.25 * ${squareSize}) repeat(${columns}, ${squareSize}) calc(0.25 * ${squareSize})`
+          : `calc(0.5 * ${squareSize}) repeat(${columns}, ${squareSize}) calc(0.5 * ${squareSize})`,
         gridTemplateRows: gridTemplateRows,
       }}
     >
@@ -482,7 +484,7 @@ const Product: React.FC = () => {
         ))}
         
         {/* Side and middle rows for 2-column layout */}
-        {columns === 2 && Array.from({ length: 5 }).map((_, rowIdx) => (
+        {columns === 2 && Array.from({ length: 4 }).map((_, rowIdx) => (
           <React.Fragment key={rowIdx}>
             <Box style={{ ...getCellBorder(0, rowIdx + 1), gridColumn: 1, gridRow: rowIdx + 2 }} />
             <Box style={{ ...getCellBorder(colCount - 1, rowIdx + 1), gridColumn: colCount, gridRow: rowIdx + 2 }} />
