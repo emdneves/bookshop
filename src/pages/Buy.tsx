@@ -149,6 +149,7 @@ const Buy: React.FC<BuyProps> = ({ search, onSearchChange, setSubheaderData, set
           m: 0,
           height: 'fit-content',
           minHeight: '40px',
+          overflow: 'auto',
           ...(cardsPerRow === 1 && {
             px: 0,
             borderRight: '0.5px dashed #d32f2f',
@@ -156,9 +157,9 @@ const Buy: React.FC<BuyProps> = ({ search, onSearchChange, setSubheaderData, set
         }}
       >
         <Table sx={{
-          width: '100%',
+          minWidth: 800,
           background: 'none',
-          tableLayout: 'fixed',
+          tableLayout: 'auto',
           borderCollapse: 'separate',
           borderSpacing: 0,
           '& .MuiTableRow-root': {
@@ -178,8 +179,6 @@ const Buy: React.FC<BuyProps> = ({ search, onSearchChange, setSubheaderData, set
             height: 44,
             minHeight: 44,
             maxHeight: 44,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
             background: 'none',
           },
@@ -199,12 +198,12 @@ const Buy: React.FC<BuyProps> = ({ search, onSearchChange, setSubheaderData, set
         }}>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ maxWidth: 180 }}>Book</TableCell>
-              <TableCell sx={{ maxWidth: 120 }}>Seller</TableCell>
-              <TableCell sx={{ maxWidth: 120 }}>My Offer</TableCell>
-              <TableCell sx={{ maxWidth: 120 }}>Counter Offer</TableCell>
-              <TableCell sx={{ maxWidth: 100 }}>Status</TableCell>
-              <TableCell sx={{ maxWidth: 140 }}>Created At</TableCell>
+              <TableCell>Book</TableCell>
+              <TableCell>Seller</TableCell>
+              <TableCell>My Offer</TableCell>
+              <TableCell>Counter Offer</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Created At</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -227,7 +226,7 @@ const Buy: React.FC<BuyProps> = ({ search, onSearchChange, setSubheaderData, set
                 const sellerEmail = book?.created_by || 'Unknown';
                 return (
                   <TableRow key={order.id}>
-                    <TableCell sx={{ maxWidth: 180 }}>
+                    <TableCell>
                       <Link 
                         to={`/book/${order.data.book}`} 
                         style={{ 
@@ -235,21 +234,18 @@ const Buy: React.FC<BuyProps> = ({ search, onSearchChange, setSubheaderData, set
                           color: 'inherit',
                           cursor: 'pointer',
                           display: 'block',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          maxWidth: '100%'
+                          whiteSpace: 'nowrap'
                         }}
                       >
                         {book?.data?.name || order.data.book || 'Book'}
                       </Link>
                     </TableCell>
-                    <TableCell sx={{ maxWidth: 120 }}>
+                    <TableCell>
                       {sellerEmail}
                     </TableCell>
-                    <TableCell sx={{ maxWidth: 120 }}>{order.data.price ? `$${order.data.price}` : '-'}</TableCell>
-                    <TableCell sx={{ maxWidth: 120 }}>{order.data.counter ? `$${order.data.counter}` : '-'}</TableCell>
-                    <TableCell sx={{ maxWidth: 100 }}>
+                    <TableCell>{order.data.price ? `$${order.data.price}` : '-'}</TableCell>
+                    <TableCell>{order.data.counter ? `$${order.data.counter}` : '-'}</TableCell>
+                    <TableCell>
                       <Chip
                         label={order.data.status || 'Pending'}
                         size="small"
@@ -264,7 +260,7 @@ const Buy: React.FC<BuyProps> = ({ search, onSearchChange, setSubheaderData, set
                         }}
                       />
                     </TableCell>
-                    <TableCell sx={{ maxWidth: 140 }}>{new Date(order.created_at).toLocaleString()}</TableCell>
+                    <TableCell>{new Date(order.created_at).toLocaleString()}</TableCell>
                   </TableRow>
                 );
               })

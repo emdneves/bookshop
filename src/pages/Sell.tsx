@@ -214,6 +214,7 @@ const Sell: React.FC<SellProps> = ({ search, onSearchChange, setSubheaderData, s
           m: 0,
           height: 'fit-content',
           minHeight: '40px',
+          overflow: 'auto',
           ...(cardsPerRow === 1 && {
             px: 0,
             borderRight: '0.5px dashed #d32f2f',
@@ -222,9 +223,9 @@ const Sell: React.FC<SellProps> = ({ search, onSearchChange, setSubheaderData, s
       >
         {/* Offers received for my books */}
         <Table sx={{
-          width: '100%',
+          minWidth: 800,
           background: 'none',
-          tableLayout: 'fixed',
+          tableLayout: 'auto',
           borderCollapse: 'separate',
           borderSpacing: 0,
           '& .MuiTableRow-root': {
@@ -244,8 +245,6 @@ const Sell: React.FC<SellProps> = ({ search, onSearchChange, setSubheaderData, s
             height: 44,
             minHeight: 44,
             maxHeight: 44,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
             background: 'none',
           },
@@ -265,12 +264,12 @@ const Sell: React.FC<SellProps> = ({ search, onSearchChange, setSubheaderData, s
         }}>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ maxWidth: 180 }}>Book</TableCell>
-              <TableCell sx={{ maxWidth: 120 }}>Buyer</TableCell>
-              <TableCell sx={{ maxWidth: 120 }}>Proposal</TableCell>
-              <TableCell sx={{ maxWidth: 120 }}>Counter Offer</TableCell>
-              <TableCell sx={{ maxWidth: 100 }}>Status</TableCell>
-              <TableCell sx={{ maxWidth: 140 }}>Created At</TableCell>
+              <TableCell>Book</TableCell>
+              <TableCell>Buyer</TableCell>
+              <TableCell>Proposal</TableCell>
+              <TableCell>Counter Offer</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Created At</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -293,7 +292,7 @@ const Sell: React.FC<SellProps> = ({ search, onSearchChange, setSubheaderData, s
                 const buyerEmail = order.created_by || 'Unknown';
                 return (
                   <TableRow key={order.id}>
-                    <TableCell sx={{ maxWidth: 180 }}>
+                    <TableCell>
                       <Link 
                         to={`/book/${order.data.book}`} 
                         style={{ 
@@ -301,20 +300,17 @@ const Sell: React.FC<SellProps> = ({ search, onSearchChange, setSubheaderData, s
                           color: 'inherit',
                           cursor: 'pointer',
                           display: 'block',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          maxWidth: '100%'
+                          whiteSpace: 'nowrap'
                         }}
                       >
                         {book?.data?.name || order.data.book || 'Book'}
                       </Link>
                     </TableCell>
-                    <TableCell sx={{ maxWidth: 120 }}>
+                    <TableCell>
                       {buyerEmail}
                     </TableCell>
-                    <TableCell sx={{ maxWidth: 120 }}>{order.data.price ? `$${order.data.price}` : '-'}</TableCell>
-                    <TableCell sx={{ maxWidth: 120 }}>
+                    <TableCell>{order.data.price ? `$${order.data.price}` : '-'}</TableCell>
+                    <TableCell>
                       <TextField
                         type="number"
                         value={counterValues[order.id] ?? (order.data.counter ?? '')}
@@ -362,7 +358,7 @@ const Sell: React.FC<SellProps> = ({ search, onSearchChange, setSubheaderData, s
                         inputProps={{ style: { textAlign: 'center', background: 'transparent' } }}
                       />
                     </TableCell>
-                    <TableCell sx={{ maxWidth: 100 }}>
+                    <TableCell>
                       <Select
                         value={order.data.status || ''}
                         onChange={async (e) => {
@@ -407,7 +403,7 @@ const Sell: React.FC<SellProps> = ({ search, onSearchChange, setSubheaderData, s
                         <MenuItem value="pending" sx={{'&.Mui-selected, &:hover': { backgroundColor: 'rgba(211, 47, 47, 0.08) !important' }}}>Pending</MenuItem>
                       </Select>
                     </TableCell>
-                    <TableCell sx={{ maxWidth: 140 }}>{new Date(order.created_at).toLocaleString()}</TableCell>
+                    <TableCell>{new Date(order.created_at).toLocaleString()}</TableCell>
                   </TableRow>
                 );
               })

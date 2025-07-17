@@ -147,6 +147,7 @@ const Books: React.FC<BooksProps> = ({ search, onSearchChange, setSubheaderData,
           m: 0,
           height: 'fit-content',
           minHeight: '40px',
+          overflow: 'auto',
           ...(cardsPerRow === 1 && {
             px: 0,
             borderRight: '0.5px dashed #d32f2f',
@@ -154,9 +155,9 @@ const Books: React.FC<BooksProps> = ({ search, onSearchChange, setSubheaderData,
         }}
       >
         <Table sx={{
-          width: '100%',
+          minWidth: 800,
           background: 'none',
-          tableLayout: 'fixed',
+          tableLayout: 'auto',
           borderCollapse: 'separate',
           borderSpacing: 0,
           '& .MuiTableRow-root': {
@@ -176,8 +177,6 @@ const Books: React.FC<BooksProps> = ({ search, onSearchChange, setSubheaderData,
             height: 44,
             minHeight: 44,
             maxHeight: 44,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
             background: 'none',
           },
@@ -197,13 +196,13 @@ const Books: React.FC<BooksProps> = ({ search, onSearchChange, setSubheaderData,
         }}>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ maxWidth: 180 }}>Title</TableCell>
-              <TableCell sx={{ maxWidth: 120 }}>Author</TableCell>
-              <TableCell sx={{ maxWidth: 120 }}>Publisher</TableCell>
-              <TableCell sx={{ maxWidth: 100 }}>ISBN</TableCell>
-              <TableCell sx={{ maxWidth: 80 }}>Price</TableCell>
-              <TableCell sx={{ maxWidth: 120 }}>Offers</TableCell>
-              <TableCell sx={{ maxWidth: 140 }}>Created At</TableCell>
+              <TableCell>Title</TableCell>
+              <TableCell>Author</TableCell>
+              <TableCell>Publisher</TableCell>
+              <TableCell>ISBN</TableCell>
+              <TableCell>Price</TableCell>
+              <TableCell>Offers</TableCell>
+              <TableCell>Created At</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
