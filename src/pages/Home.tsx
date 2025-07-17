@@ -96,18 +96,22 @@ const GridItem = styled(Box)<{
   row: number;
   colCount: number;
   rowCount: number;
-}>(({ col, row, colCount, rowCount }) => ({
+}>(({ col, row, colCount, rowCount, theme }) => ({
   position: 'relative',
   width: '100%',
   boxSizing: 'border-box',
   background: 'none',
-  borderRight: col < colCount - 1 ? '0.5px dashed #d32f2f' : 'none',
-  borderBottom: row < rowCount - 1 ? '0.5px dashed #d32f2f' : 'none',
+  borderRight: col < colCount - 1 ? '1px dashed #d32f2f' : 'none',
+  borderBottom: row < rowCount - 1 ? '1px dashed #d32f2f' : 'none',
   padding: '8px',
   overflow: 'hidden',
   display: 'flex',
   alignItems: 'stretch',
   justifyContent: 'stretch',
+  [theme.breakpoints.down('sm')]: {
+    borderRight: col < colCount - 1 ? '2px dashed #d32f2f' : 'none',
+    borderBottom: row < rowCount - 1 ? '2px dashed #d32f2f' : 'none',
+  },
 }));
 
 // Card hover wrapper
