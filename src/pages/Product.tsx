@@ -435,10 +435,10 @@ const Product: React.FC = () => {
 
   // Dynamic grid row count for different breakpoints
   const gridTemplateRows = columns === 1 
-    ? `repeat(4, 1fr)`
+    ? `0.25fr 1fr 1fr 0.25fr`
     : columns === 2 
-    ? `repeat(7, 1fr)`
-    : `calc(0.5 * ${mainCol}) repeat(2, ${mainCol}) 1fr`;
+    ? `0.25fr repeat(5, 1fr) 0.25fr`
+    : `0.25fr repeat(2, 1fr) 0.25fr`;
 
   // Also log book in render
   console.log('Book in render:', book);
