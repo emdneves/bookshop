@@ -424,6 +424,8 @@ const Product: React.FC = () => {
     fetchData();
   }, [id]);
 
+  // For smallest breakpoint (1 column), use 1/4 width for sides like header
+  const sideWidth = columns === 1 ? '0.125fr' : '0.5fr';
   const mainCol = `calc(100vw / ${columns + 1})`;
   const sCol = `calc(0.5 * 100vw / ${columns + 1})`;
   // Use the same size for both width and height to ensure perfect squares
@@ -462,7 +464,7 @@ const Product: React.FC = () => {
         display: 'grid',
         width: '100vw',
         height: 'fit-content',
-        gridTemplateColumns: `calc(0.5 * ${squareSize}) repeat(${columns}, ${squareSize}) calc(0.5 * ${squareSize})`,
+        gridTemplateColumns: `${sideWidth} repeat(${columns}, ${squareSize}) ${sideWidth}`,
         gridTemplateRows: gridTemplateRows,
       }}
     >
