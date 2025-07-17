@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Table, TableHead, TableBody, TableRow, TableCell } from '@mui/material';
+import { getCardsPerRow } from '../utils/helpers';
 
 interface ScrollableTableProps {
   children: React.ReactNode;
@@ -8,6 +9,9 @@ interface ScrollableTableProps {
 }
 
 const ScrollableTable: React.FC<ScrollableTableProps> = ({ children, cardsPerRow, totalColumns }) => {
+  const currentCardsPerRow = getCardsPerRow();
+  const isSmallBreakpoint = currentCardsPerRow <= 2; // 1 or 2 columns (mobile/tablet)
+
   return (
     <Box
       sx={{
@@ -18,7 +22,7 @@ const ScrollableTable: React.FC<ScrollableTableProps> = ({ children, cardsPerRow
         m: 0,
         height: 'fit-content',
         minHeight: '40px',
-        overflow: 'auto',
+        overflow: isSmallBreakpoint ? 'auto' : 'hidden', // Horizontal scroll only on small breakpoints
         ...(cardsPerRow === 1 && {
           px: 0,
           borderRight: '0.5px dashed #d32f2f',
@@ -26,9 +30,9 @@ const ScrollableTable: React.FC<ScrollableTableProps> = ({ children, cardsPerRow
       }}
     >
       <Table sx={{
-        minWidth: 800,
+        minWidth: isSmallBreakpoint ? 800 : '100%',
         background: 'none',
-        tableLayout: 'auto',
+        tableLayout: isSmallBreakpoint ? 'auto' : 'fixed',
         borderCollapse: 'separate',
         borderSpacing: 0,
         '& .MuiTableRow-root': {
@@ -48,7 +52,9 @@ const ScrollableTable: React.FC<ScrollableTableProps> = ({ children, cardsPerRow
           height: 44,
           minHeight: 44,
           maxHeight: 44,
-          whiteSpace: 'nowrap',
+          whiteSpace: isSmallBreakpoint ? 'nowrap' : 'nowrap', // Always nowrap, let ellipsis handle overflow
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
           background: 'none',
         },
         '& .MuiTableHead-root .MuiTableCell-root': {
