@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, useParams } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { HelmetProvider } from 'react-helmet-async';
 import Layout from './components/Layout';
@@ -9,6 +9,48 @@ import Buy from './pages/Buy';
 import Sell from './pages/Sell';
 import Books from './pages/Books';
 import Account from './pages/Account';
+
+// Product component with breadcrumbs
+const ProductWithBreadcrumbs: React.FC = () => {
+  const { id } = useParams();
+  const [bookTitle, setBookTitle] = useState('Book Details');
+  
+  // Fetch book title for breadcrumbs
+  useEffect(() => {
+    const fetchBookTitle = async () => {
+      if (!id) return;
+      
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/api/books/${id}`);
+        const data = await response.json();
+        
+        if (data.success && data.content && data.content.data) {
+          setBookTitle(data.content.data.name || 'Book Details');
+        }
+      } catch (error) {
+        console.error('Error fetching book title:', error);
+        setBookTitle('Book Details');
+      }
+    };
+    
+    fetchBookTitle();
+  }, [id]);
+
+  return (
+    <Layout
+      showSubheader={true}
+      subheaderProps={{
+        mode: 'breadcrumbs',
+        breadcrumbs: [
+          { label: 'Home', href: '/' },
+          { label: bookTitle, href: undefined }
+        ]
+      }}
+    >
+      <Product />
+    </Layout>
+  );
+};
 
 const theme = createTheme({
   typography: {
@@ -74,7 +116,7 @@ const App: React.FC = () => {
               />
             } 
           />
-          <Route path="/book/:id" element={<Product />} />
+          <Route path="/book/:id" element={<ProductWithBreadcrumbs />} />
           <Route path="/buy" element={<Buy search={search} onSearchChange={setSearch} />} />
           <Route path="/sell" element={<Sell search={search} onSearchChange={setSearch} />} />
           <Route path="/books" element={<Books search={search} onSearchChange={setSearch} />} />

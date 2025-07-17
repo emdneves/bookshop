@@ -10,12 +10,16 @@ interface LayoutProps {
   children: React.ReactNode;
   showSubheader?: boolean;
   subheaderProps?: {
+    mode?: 'search' | 'breadcrumbs';
+    // Search mode props
     search?: string;
     onSearchChange?: (value: string) => void;
     filterAnchorEl?: null | HTMLElement;
     onFilterClick?: (event: React.MouseEvent<HTMLElement>) => void;
     onFilterClose?: () => void;
     filterOpen?: boolean;
+    // Breadcrumbs mode props
+    breadcrumbs?: Array<{ label: string; href?: string }>;
   };
 }
 
@@ -38,12 +42,14 @@ const Layout: React.FC<LayoutProps> = ({
       {showSubheader && (
         <Subheader
           cardsPerRow={cardsPerRow}
+          mode={subheaderProps.mode || 'search'}
           search={subheaderProps.search || ''}
           onSearchChange={subheaderProps.onSearchChange || (() => {})}
           filterAnchorEl={subheaderProps.filterAnchorEl || null}
           onFilterClick={subheaderProps.onFilterClick || (() => {})}
           onFilterClose={subheaderProps.onFilterClose || (() => {})}
           filterOpen={subheaderProps.filterOpen || false}
+          breadcrumbs={subheaderProps.breadcrumbs || []}
         />
       )}
       <main style={{ flex: 1, minHeight: 'calc(100vh - 128px)' }}>

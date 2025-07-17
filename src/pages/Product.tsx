@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AuthModal from '../components/AuthModal';
 import { API_BASE_URL } from '../config/api';
+import { getCardsPerRow } from '../utils/helpers';
 
 
 const theme = createTheme({
@@ -17,12 +18,8 @@ const theme = createTheme({
   },
 });
 
-const getColumns = (width: number) => {
-  if (width < 600) return 1;
-  if (width < 900) return 2;
-  if (width < 1200) return 4;
-  return 5;
-};
+// Use the same breakpoint logic as header and footer
+const getColumns = () => getCardsPerRow();
 
 const ProductBox = ({ background = 'transparent', color, children }: { background?: string; color?: string; children: React.ReactNode }) => (
   <Box
@@ -282,7 +279,7 @@ const Product: React.FC = () => {
   const { id } = useParams();
   const { isAuthenticated, token } = useAuth();
   console.log('Book ID from URL:', id);
-  const [columns, setColumns] = React.useState(getColumns(window.innerWidth));
+  const [columns, setColumns] = React.useState(getColumns());
   const [loading, setLoading] = React.useState(true);
   const [book, setBook] = React.useState<any>(null);
   const [orders, setOrders] = React.useState<any[]>([]);
@@ -384,7 +381,7 @@ const Product: React.FC = () => {
   };
 
   React.useEffect(() => {
-    const handleResize = () => setColumns(getColumns(window.innerWidth));
+    const handleResize = () => setColumns(getColumns());
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -424,7 +421,7 @@ const Product: React.FC = () => {
     fetchData();
   }, [id]);
 
-  // For smallest breakpoint (1 column), use 1/4 width for sides like header
+  // Use the same side width logic as header and footer
   const sideWidth = columns === 1 ? '0.125fr' : '0.5fr';
   const mainCol = `calc(100vw / ${columns + 1})`;
   const sCol = `calc(0.5 * 100vw / ${columns + 1})`;
@@ -434,8 +431,8 @@ const Product: React.FC = () => {
   const rowCount = columns === 1 ? 4 : columns === 2 ? 6 : 4;
 
   const getCellBorder = (col: number, row: number): React.CSSProperties => ({
-    borderRight: col < colCount - 1 ? '1px dashed #d32f2f' : 'none',
-    borderBottom: row < rowCount - 1 ? '1px dashed #d32f2f' : 'none',
+    borderRight: col < colCount - 1 ? '0.5px dashed #d32f2f' : 'none',
+    borderBottom: row < rowCount - 1 ? '0.5px dashed #d32f2f' : 'none',
     borderLeft: 'none',
     borderTop: 'none',
     display: 'flex',
@@ -466,6 +463,8 @@ const Product: React.FC = () => {
         height: 'fit-content',
         gridTemplateColumns: `${sideWidth} repeat(${columns}, ${squareSize}) ${sideWidth}`,
         gridTemplateRows: gridTemplateRows,
+        background: '#fafafa', // Light background to differentiate from footer
+        minHeight: 'calc(100vh - 200px)', // Ensure minimum height for visual separation
       }}
     >
         {/* Top border row */}
