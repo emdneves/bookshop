@@ -477,6 +477,7 @@ const Product: React.FC = () => {
         {columns === 1 && Array.from({ length: 2 }).map((_, rowIdx) => (
           <React.Fragment key={rowIdx}>
             <Box style={{ ...getCellBorder(0, rowIdx + 1), gridColumn: 1, gridRow: rowIdx + 2 }} />
+            <Box style={{ ...getCellBorder(1, rowIdx + 1), gridColumn: 2, gridRow: rowIdx + 2 }} />
             <Box style={{ ...getCellBorder(colCount - 1, rowIdx + 1), gridColumn: colCount, gridRow: rowIdx + 2 }} />
           </React.Fragment>
         ))}
@@ -485,6 +486,8 @@ const Product: React.FC = () => {
         {columns === 2 && Array.from({ length: 4 }).map((_, rowIdx) => (
           <React.Fragment key={rowIdx}>
             <Box style={{ ...getCellBorder(0, rowIdx + 1), gridColumn: 1, gridRow: rowIdx + 2 }} />
+            <Box style={{ ...getCellBorder(1, rowIdx + 1), gridColumn: 2, gridRow: rowIdx + 2 }} />
+            <Box style={{ ...getCellBorder(2, rowIdx + 1), gridColumn: 3, gridRow: rowIdx + 2 }} />
             <Box style={{ ...getCellBorder(colCount - 1, rowIdx + 1), gridColumn: colCount, gridRow: rowIdx + 2 }} />
           </React.Fragment>
         ))}
@@ -503,7 +506,7 @@ const Product: React.FC = () => {
                   padding: 8,
                 }}
               >
-                <Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 2, bgcolor: '#FFFAF0' }} />
+                <Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 2, bgcolor: 'transparent' }} />
               </Box>
             ))}
             <Box style={{ ...getCellBorder(colCount - 1, rowIdx), gridColumn: colCount, gridRow: rowIdx + 1 }} />
