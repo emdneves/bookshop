@@ -446,15 +446,24 @@ const Product: React.FC = () => {
     zIndex: 1, // Increased z-index so grid lines appear above content
   });
 
-  // Dynamic grid row count for different breakpoints - border rows are 1/4 height, content rows are full squares
-  const gridTemplateRows = columns === 1 
-    ? `calc(0.25 * ${squareSize}) ${squareSize} ${squareSize} calc(0.25 * ${squareSize})`
-    : columns === 2 
-    ? `calc(0.25 * ${squareSize}) ${squareSize} ${squareSize} ${squareSize} ${squareSize} calc(0.25 * ${squareSize})`
-    : `calc(0.25 * ${squareSize}) ${squareSize} ${squareSize} calc(0.25 * ${squareSize})`;
-
-  // Also log book in render
-  console.log('Book in render:', book);
+  let gridTemplateColumns, gridTemplateRows;
+  if (columns === 1) {
+    // Use the same calculation as header/footer for columns
+    // 0.125fr 0.75fr 0.125fr, but in px based on container width
+    // Let containerWidth = 100vw
+    // left = 0.125 * 100vw = 12.5vw
+    // center = 0.75 * 100vw = 75vw
+    // right = 0.125 * 100vw = 12.5vw
+    gridTemplateColumns = '12.5vw 75vw 12.5vw';
+    // Use fr units for rows since they're relative to available height
+    gridTemplateRows = '0.125fr 0.75fr 0.75fr 0.125fr';
+  } else if (columns === 2) {
+    gridTemplateColumns = `calc(0.5 * ${squareSize}) repeat(${columns}, ${squareSize}) calc(0.5 * ${squareSize})`;
+    gridTemplateRows = `calc(0.25 * ${squareSize}) ${squareSize} ${squareSize} ${squareSize} ${squareSize} calc(0.25 * ${squareSize})`;
+  } else {
+    gridTemplateColumns = `calc(0.5 * ${squareSize}) repeat(${columns}, ${squareSize}) calc(0.5 * ${squareSize})`;
+    gridTemplateRows = `calc(0.25 * ${squareSize}) ${squareSize} ${squareSize} calc(0.25 * ${squareSize})`;
+  }
 
   return (
     <Box
@@ -462,10 +471,8 @@ const Product: React.FC = () => {
         display: 'grid',
         width: '100vw',
         minHeight: '100vh',
-        gridTemplateColumns: columns === 1
-          ? '0.125fr 0.75fr 0.125fr'
-          : `calc(0.5 * ${squareSize}) repeat(${columns}, ${squareSize}) calc(0.5 * ${squareSize})`,
-        gridTemplateRows: gridTemplateRows,
+        gridTemplateColumns,
+        gridTemplateRows,
       }}
     >
         {/* Top border row */}
