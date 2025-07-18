@@ -462,7 +462,9 @@ const Product: React.FC = () => {
         display: 'grid',
         width: '100vw',
         minHeight: '100vh',
-        gridTemplateColumns: `calc(0.5 * ${squareSize}) repeat(${columns}, ${squareSize}) calc(0.5 * ${squareSize})`,
+        gridTemplateColumns: columns === 1
+          ? '0.125fr 0.75fr 0.125fr'
+          : `calc(0.5 * ${squareSize}) repeat(${columns}, ${squareSize}) calc(0.5 * ${squareSize})`,
         gridTemplateRows: gridTemplateRows,
       }}
     >
