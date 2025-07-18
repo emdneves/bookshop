@@ -61,7 +61,7 @@ const Subheader: React.FC<SubheaderProps> = ({
           background: SHARED_BG,
           borderBottom: '0.5px dashed #d32f2f',
           position: 'sticky',
-          top: '80px', // Header height
+          top: cardsPerRow === 1 ? '120px' : '80px', // Responsive header height
           zIndex: 9,
         }}
       >
