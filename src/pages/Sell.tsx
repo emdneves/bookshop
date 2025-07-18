@@ -1,11 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Typography, Skeleton, TableBody, TableCell, TableHead, TableRow, Alert, TextField, Select, MenuItem } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  TextField,
+  Select,
+  MenuItem,
+  Skeleton,
+  Chip
+} from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-import { getCardsPerRow } from '../utils/helpers';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config/api';
 import CenteredMessage from '../components/CenteredMessage';
 import ScrollableTable from '../components/ScrollableTable';
+import PageLayout from '../components/PageLayout';
+import { getCardsPerRow } from '../utils/helpers';
 import { formatSimpleDate } from '../utils/dateFormatter';
 
 const BOOKS_CONTENT_TYPE_ID = '481a065c-8733-4e97-9adf-dc64acacf5fb';
@@ -61,7 +75,7 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
         const data = await response.json();
         const booksData = data.contents || [];
         setBooks(booksData);
-        
+
         // Pass data to subheader for dynamic filter generation
         if (setSubheaderData && setTargetElement) {
           setTargetElement('sell-offers');
@@ -110,7 +124,7 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
   const handleCounterBlur = async (orderId: string) => {
     const value = counterValues[orderId];
     if (value === undefined) return;
-    
+
     setUpdatingCounter(orderId);
     try {
       // Find the current order to get all existing data
@@ -128,7 +142,7 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
         },
         body: JSON.stringify({
           id: orderId,
-          data: { 
+          data: {
             ...currentOrder.data, // Include all existing data
             counter: value === '' ? null : Number(value) // Update only the counter field
           },
@@ -139,9 +153,9 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
         const result = await response.json();
         if (result.success) {
           // Update the local orders state with the new counter value
-          setOrders(prevOrders => 
-            prevOrders.map(order => 
-              order.id === orderId 
+          setOrders(prevOrders =>
+            prevOrders.map(order =>
+              order.id === orderId
                 ? { ...order, data: { ...order.data, counter: value === '' ? null : Number(value) } }
                 : order
             )
@@ -179,18 +193,11 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
     return null;
   }
 
+  // Calculate row count for side columns (based on offers + header + some padding)
+  const rowCount = Math.max(10, filteredOffers.length + 2); // At least 10 rows, or offers + header + padding
+
   return (
-    <Box
-      sx={{
-        width: '100%',
-        display: 'grid',
-        gridTemplateColumns: cardsPerRow === 1 ? '0.125fr 0.75fr 0.125fr' : `0.5fr repeat(${cardsPerRow}, 1fr) 0.5fr`,
-        background: 'none',
-      }}
-    >
-      {/* Side column left */}
-      <Box sx={{ borderRight: '0.5px dashed #d32f2f', height: '100%' }} />
-      {/* Center columns: offers table */}
+    <PageLayout rowCount={rowCount}>
       <ScrollableTable cardsPerRow={cardsPerRow} totalColumns={totalColumns}>
         <TableHead>
           <TableRow>
@@ -340,9 +347,7 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
           )}
         </TableBody>
       </ScrollableTable>
-      {/* Side column right */}
-      <Box sx={{ borderLeft: '0.5px dashed #d32f2f', height: '100%' }} />
-    </Box>
+    </PageLayout>
   );
 };
 
