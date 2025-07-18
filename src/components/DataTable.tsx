@@ -255,11 +255,12 @@ const DataTable = <T extends Record<string, any>>({
             tableLayout: 'fixed',
             width: '100%',
           }),
-          // Constrained width on larger breakpoints
+          // Fixed layout with ellipsis on larger breakpoints
           ...(!isSmallBreakpoint && {
-            tableLayout: 'auto',
+            tableLayout: 'fixed',
             width: '100%',
             maxWidth: '100%', // Ensure table doesn't exceed container
+            overflow: 'hidden', // Prevent any overflow
           })
         }}
       >
@@ -278,6 +279,7 @@ const DataTable = <T extends Record<string, any>>({
                     sx={{ 
                       width: header.getSize(),
                       minWidth: header.getSize(),
+                      maxWidth: header.getSize(), // Prevent expansion
                       fontWeight: 600,
                       color: '#222',
                       borderBottom: getBorderStyle(),
@@ -489,6 +491,7 @@ const DataTable = <T extends Record<string, any>>({
                         fontSize: '14px',
                         width: cell.column.getSize(),
                         minWidth: cell.column.getSize(),
+                        maxWidth: cell.column.getSize(), // Prevent expansion
                         // Ellipsis on larger breakpoints
                         ...(!isSmallBreakpoint && {
                           overflow: 'hidden',
@@ -533,6 +536,9 @@ const DataTable = <T extends Record<string, any>>({
           overflow: isSmallBreakpoint ? 'auto' : 'hidden', // Horizontal scroll only on small breakpoints
           ...(isSmallBreakpoint && {
             minWidth: '800px', // Force minimum width for scrolling on small breakpoints
+          }),
+          ...(!isSmallBreakpoint && {
+            maxWidth: '100%', // Ensure table doesn't exceed container width on larger breakpoints
           }),
         }}>
           {tableContent}
