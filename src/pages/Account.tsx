@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Typography, 
-  Paper, 
   Avatar, 
-  Divider, 
-  Grid, 
   Chip,
   Skeleton,
   Alert,
@@ -44,6 +41,8 @@ import { formatSimpleDate } from '../utils/dateFormatter';
 import { usePageLayout } from '../hooks/usePageLayout';
 import { useSubheaderData } from '../hooks/useSubheaderData';
 import AuthGuard from '../components/AuthGuard';
+import DataTable from '../components/DataTable';
+import Pill from '../components/Pill';
 import { 
   ARTIFACT_RED, 
   ARTIFACT_RED_DARK,
@@ -62,12 +61,6 @@ interface UserData {
   last_login: string;
 }
 
-interface FieldConfig {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}
-
 interface FormFieldConfig {
   name: string;
   label: string;
@@ -75,23 +68,6 @@ interface FormFieldConfig {
   options?: { value: string; label: string }[];
   required?: boolean;
 }
-
-// Reusable pill input field component
-const PillField: React.FC<FieldConfig> = ({ icon, label, value }) => (
-  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-    <Box sx={{ color: ARTIFACT_RED, fontSize: 20, flexShrink: 0, width: 24 }}>
-      {icon}
-    </Box>
-    <TextField
-      value={value}
-      label={label}
-      variant="outlined"
-      fullWidth
-      disabled
-      sx={pillInputStyle}
-    />
-  </Box>
-);
 
 // Reusable form field component
 const FormField: React.FC<{
@@ -156,27 +132,6 @@ const FormField: React.FC<{
     />
   );
 };
-
-// Reusable section component
-const InfoSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-  <Paper
-    elevation={0}
-    sx={{
-      p: 2,
-      border: `1px dashed ${ARTIFACT_RED}`,
-      borderRadius: 2,
-      background: 'rgba(255, 255, 255, 0.8)',
-      height: 'fit-content',
-    }}
-  >
-    <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: '#222' }}>
-      {title}
-    </Typography>
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      {children}
-    </Box>
-  </Paper>
-);
 
 // Reusable dialog component
 const ConfirmationDialog: React.FC<{
@@ -284,38 +239,40 @@ const buttonStyle = {
 };
 
 const Account: React.FC = () => {
-  const { isAuthenticated, token, role, logout } = useAuth();
-  const [cardsPerRow, setCardsPerRow] = useState(getCardsPerRow());
-  const [loading, setLoading] = useState(true);
+  const { user, logout, isAuthenticated, token, role } = useAuth();
+  const navigate = useNavigate();
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [cardsPerRow, setCardsPerRow] = useState(getCardsPerRow());
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({
-    open: false,
-    message: '',
-    severity: 'success'
-  });
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' | 'info' });
+  const [showAuthMessage, setShowAuthMessage] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  
+  // Inline editing state
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
+  const [savingField, setSavingField] = useState(false);
 
-  // Form state for editing
+  // Edit form state
   const [editForm, setEditForm] = useState({
     email: '',
     first_name: '',
     last_name: '',
     role: '',
-    is_active: true
+    is_active: true,
   });
 
-  const isAdmin = role === 'admin';
-  const [showAuthMessage, setShowAuthMessage] = useState(false);
-  const navigate = useNavigate();
+  const isAdminUser = role === 'admin';
 
   // Form field configurations
   const editFormFields: FormFieldConfig[] = [
-    { name: 'email', label: 'Email Address', type: 'text' as const, required: true },
+    { name: 'email', label: 'Email', type: 'text' as const, required: true },
     { name: 'first_name', label: 'First Name', type: 'text' as const, required: true },
     { name: 'last_name', label: 'Last Name', type: 'text' as const, required: true },
-    ...(isAdmin ? [
+    ...(isAdminUser ? [
       { 
         name: 'role', 
         label: 'Role', 
@@ -325,7 +282,7 @@ const Account: React.FC = () => {
           { value: 'admin', label: 'Admin' }
         ]
       },
-      { name: 'is_active', label: 'Active Account', type: 'switch' as const }
+      { name: 'is_active', label: 'Active', type: 'switch' as const }
     ] : [])
   ];
 
@@ -429,24 +386,21 @@ const Account: React.FC = () => {
   };
 
   const handleSaveProfile = async () => {
+    if (!token || !userData) return;
+
     try {
-      // Extract user ID from JWT token
-      const tokenPayload = JSON.parse(atob(token!.split('.')[1]));
-      const userId = tokenPayload.id;
-      
       const updateData: any = {
-        email: editForm.email,
         first_name: editForm.first_name,
-        last_name: editForm.last_name
+        last_name: editForm.last_name,
       };
 
       // Only include role and is_active if user is admin
-      if (isAdmin) {
+      if (isAdminUser) {
         updateData.role = editForm.role;
         updateData.is_active = editForm.is_active;
       }
 
-      const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/users/${userData.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -455,26 +409,10 @@ const Account: React.FC = () => {
         body: JSON.stringify(updateData)
       });
 
-      if (!response.ok) {
-        if (response.status === 403) {
-          // API endpoint is still admin-only
-          setSnackbar({
-            open: true,
-            message: 'Profile update not available yet. API endpoints are being updated.',
-            severity: 'info'
-          });
-          setEditDialogOpen(false);
-          return;
-        } else if (response.status === 400) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Validation error');
-        } else {
-          throw new Error('Failed to update profile');
-        }
-      }
+      if (!response.ok) throw new Error('Failed to update profile');
 
-      const data = await response.json();
-      setUserData(data.user);
+      const updatedUser = await response.json();
+      setUserData(updatedUser);
       setEditDialogOpen(false);
       setSnackbar({
         open: true,
@@ -488,6 +426,55 @@ const Account: React.FC = () => {
         severity: 'error'
       });
     }
+  };
+
+  // Inline editing functions
+  const handleInlineEdit = (field: string, value: string) => {
+    setEditingField(field);
+    setEditValue(value);
+  };
+
+  const handleInlineSave = async (field: string) => {
+    if (!token || !userData || !editValue.trim()) return;
+
+    setSavingField(true);
+    try {
+      const updateData: any = { [field]: editValue.trim() };
+
+      const response = await fetch(`${API_BASE_URL}/users/${userData.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateData)
+      });
+
+      if (!response.ok) throw new Error('Failed to update field');
+
+      const updatedUser = await response.json();
+      setUserData(updatedUser);
+      setEditingField(null);
+      setEditValue('');
+      setSnackbar({
+        open: true,
+        message: `${field.replace('_', ' ')} updated successfully!`,
+        severity: 'success'
+      });
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: err instanceof Error ? err.message : 'Failed to update field',
+        severity: 'error'
+      });
+    } finally {
+      setSavingField(false);
+    }
+  };
+
+  const handleInlineCancel = () => {
+    setEditingField(null);
+    setEditValue('');
   };
 
   const handleDeleteAccount = async () => {
@@ -551,19 +538,6 @@ const Account: React.FC = () => {
       />
     );
   }
-
-  // Field configurations
-  const accountInfoFields: FieldConfig[] = userData ? [
-    { icon: <EmailIcon />, label: 'Email Address', value: userData.email },
-    { icon: <PersonIcon />, label: 'Full Name', value: `${userData.first_name} ${userData.last_name}` },
-    { icon: <PersonIcon />, label: 'User ID', value: userData.id.toString() }
-  ] : [];
-
-  const accountActivityFields: FieldConfig[] = userData ? [
-    { icon: <CalendarTodayIcon />, label: 'Member Since', value: formatSimpleDate(userData.created_at) },
-    { icon: <AccessTimeIcon />, label: 'Last Login', value: formatSimpleDate(userData.last_login) },
-    { icon: <CalendarTodayIcon />, label: 'Last Updated', value: formatSimpleDate(userData.updated_at) }
-  ] : [];
 
   return (
     <Box
@@ -641,77 +615,207 @@ const Account: React.FC = () => {
             <Skeleton variant="rectangular" width="100%" height={100} />
           </Box>
         ) : userData ? (
-          <Grid container spacing={3}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {/* Profile Header */}
-            <Grid item xs={12}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 2,
-                  border: `1px dashed ${ARTIFACT_RED}`,
-                  borderRadius: 2,
-                  background: 'rgba(255, 255, 255, 0.8)',
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Avatar
-                    sx={{
-                      width: 80,
-                      height: 80,
-                      bgcolor: ARTIFACT_RED,
-                      fontSize: 32,
-                      fontWeight: 700,
-                      mr: 3,
-                    }}
-                  >
-                    {userData.first_name.charAt(0).toUpperCase()}
-                  </Avatar>
-                  <Box>
-                    <Typography variant="h5" sx={{ fontWeight: 700, color: '#222', mb: 1 }}>
-                      {userData.first_name} {userData.last_name}
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Chip
-                        icon={userData.is_active ? <CheckCircleIcon /> : <CancelIcon />}
-                        label={userData.is_active ? 'Active' : 'Inactive'}
-                        color={userData.is_active ? 'success' : 'error'}
-                        size="small"
-                        sx={{ fontWeight: 600 }}
-                      />
-                      <Chip
-                        label={userData.role}
-                        variant="outlined"
-                        size="small"
-                        sx={{ 
-                          borderColor: ARTIFACT_RED, 
-                          color: ARTIFACT_RED,
-                          fontWeight: 600 
-                        }}
-                      />
-                    </Box>
+            <Box
+              sx={{
+                p: 2,
+                border: getBorderStyle(),
+                borderRadius: 2,
+                background: 'rgba(255, 255, 255, 0.8)',
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Avatar
+                  sx={{
+                    width: 80,
+                    height: 80,
+                    bgcolor: ARTIFACT_RED,
+                    fontSize: 32,
+                    fontWeight: 700,
+                    mr: 3,
+                  }}
+                >
+                  {userData.first_name.charAt(0).toUpperCase()}
+                </Avatar>
+                <Box>
+                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#222', mb: 1 }}>
+                    {userData.first_name} {userData.last_name}
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Chip
+                      icon={userData.is_active ? <CheckCircleIcon /> : <CancelIcon />}
+                      label={userData.is_active ? 'Active' : 'Inactive'}
+                      color={userData.is_active ? 'success' : 'error'}
+                      size="small"
+                      sx={{ fontWeight: 600 }}
+                    />
+                    <Chip
+                      label={userData.role}
+                      variant="outlined"
+                      size="small"
+                      sx={{ 
+                        borderColor: ARTIFACT_RED, 
+                        color: ARTIFACT_RED,
+                        fontWeight: 600 
+                      }}
+                    />
                   </Box>
                 </Box>
-              </Paper>
-            </Grid>
+              </Box>
+            </Box>
 
-            {/* Account Details */}
-            <Grid item xs={12} md={6}>
-              <InfoSection title="Account Information">
-                {accountInfoFields.map((field, index) => (
-                  <PillField key={index} {...field} />
-                ))}
-              </InfoSection>
-            </Grid>
+            {/* Account Information Table */}
+            <DataTable
+              data={[
+                {
+                  field: 'email',
+                  value: userData.email,
+                  icon: <EmailIcon />,
+                  editable: false,
+                },
+                {
+                  field: 'first_name',
+                  value: userData.first_name,
+                  icon: <PersonIcon />,
+                  editable: true,
+                },
+                {
+                  field: 'last_name',
+                  value: userData.last_name,
+                  icon: <PersonIcon />,
+                  editable: true,
+                },
+              ]}
+              columns={[
+                {
+                  key: 'field',
+                  label: 'Field',
+                  width: 200,
+                  render: (value, row) => (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ color: ARTIFACT_RED, fontSize: 20 }}>
+                        {row.icon}
+                      </Box>
+                      <span>{value === 'first_name' ? 'First Name' : 
+                             value === 'last_name' ? 'Last Name' : 
+                             value === 'email' ? 'Email Address' : value}</span>
+                    </Box>
+                  ),
+                },
+                {
+                  key: 'value',
+                  label: 'Value',
+                  render: (value, row) => {
+                    if (row.editable && editingField === row.field) {
+                      return (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Pill fullWidth sx={{ 
+                            justifyContent: 'flex-start',
+                            padding: '2px 8px',
+                            minHeight: '28px',
+                          }}>
+                            <Box
+                              component="input"
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              onBlur={() => handleInlineSave(row.field)}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleInlineSave(row.field);
+                                } else if (e.key === 'Escape') {
+                                  handleInlineCancel();
+                                }
+                              }}
+                              autoFocus
+                              placeholder={row.field === 'first_name' ? 'Enter first name' : 'Enter last name'}
+                              style={{
+                                width: '100%',
+                                background: 'transparent',
+                                border: 'none',
+                                outline: 'none',
+                                color: 'inherit',
+                                fontSize: '14px',
+                              }}
+                            />
+                          </Pill>
+                        </Box>
+                      );
+                    }
+                    
+                    return (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                        {row.editable ? (
+                          <Pill
+                            fullWidth
+                            onClick={() => handleInlineEdit(row.field, value)}
+                            sx={{ 
+                              cursor: 'pointer',
+                              '&:hover': { 
+                                backgroundColor: 'rgba(139, 0, 0, 0.04)',
+                                border: `1px solid ${ARTIFACT_RED}`,
+                              }
+                            }}
+                          >
+                            {value}
+                          </Pill>
+                        ) : (
+                          <span>{value}</span>
+                        )}
+                      </Box>
+                    );
+                  },
+                },
+              ]}
+              emptyMessage="No account information available."
+              cardsPerRow={cardsPerRow}
+              totalColumns={totalColumns}
+            />
 
-            {/* Account Activity */}
-            <Grid item xs={12} md={6}>
-              <InfoSection title="Account Activity">
-                {accountActivityFields.map((field, index) => (
-                  <PillField key={index} {...field} />
-                ))}
-              </InfoSection>
-            </Grid>
-          </Grid>
+            {/* Account Activity Table */}
+            <DataTable
+              data={[
+                {
+                  field: 'Member Since',
+                  value: formatSimpleDate(userData.created_at),
+                  icon: <CalendarTodayIcon />,
+                },
+                {
+                  field: 'Last Login',
+                  value: formatSimpleDate(userData.last_login),
+                  icon: <AccessTimeIcon />,
+                },
+                {
+                  field: 'Last Updated',
+                  value: formatSimpleDate(userData.updated_at),
+                  icon: <CalendarTodayIcon />,
+                },
+              ]}
+              columns={[
+                {
+                  key: 'field',
+                  label: 'Activity',
+                  width: 200,
+                  render: (value, row) => (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ color: ARTIFACT_RED, fontSize: 20 }}>
+                        {row.icon}
+                      </Box>
+                      <span>{value}</span>
+                    </Box>
+                  ),
+                },
+                {
+                  key: 'value',
+                  label: 'Date',
+                  render: (value) => <span>{value}</span>,
+                },
+              ]}
+              emptyMessage="No account activity available."
+              cardsPerRow={cardsPerRow}
+              totalColumns={totalColumns}
+            />
+          </Box>
         ) : (
           <Alert severity="info">No user data available.</Alert>
         )}
@@ -733,7 +837,7 @@ const Account: React.FC = () => {
                 field={field}
                 value={editForm[field.name as keyof typeof editForm]}
                 onChange={(value) => setEditForm({ ...editForm, [field.name]: value })}
-                isAdmin={isAdmin}
+                isAdmin={isAdminUser}
               />
             ))}
           </Box>

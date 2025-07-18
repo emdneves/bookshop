@@ -233,7 +233,7 @@ const DataTable = <T extends Record<string, any>>({
   const isSmallBreakpoint = cardsPerRow <= 2;
 
   const tableContent = (
-    <Box sx={{ width: '100%', overflow: 'auto' }}>
+    <Box sx={{ width: '100%' }}>
       {/* Filter Status */}
       {columnFilters.length > 0 && (
         <Box sx={{ mb: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
@@ -255,10 +255,11 @@ const DataTable = <T extends Record<string, any>>({
             tableLayout: 'fixed',
             width: '100%',
           }),
-          // Auto layout on larger breakpoints
+          // Constrained width on larger breakpoints
           ...(!isSmallBreakpoint && {
             tableLayout: 'auto',
             width: '100%',
+            maxWidth: '100%', // Ensure table doesn't exceed container
           })
         }}
       >
@@ -520,7 +521,7 @@ const DataTable = <T extends Record<string, any>>({
           m: 0,
           height: 'fit-content',
           minHeight: '40px',
-          overflow: isSmallBreakpoint ? 'auto' : 'visible', // Horizontal scroll only on small breakpoints
+          overflow: 'hidden', // Always hide overflow to prevent sliding
           ...(cardsPerRow === 1 && {
             px: 0,
             borderRight: getBorderStyle(),
@@ -528,9 +529,11 @@ const DataTable = <T extends Record<string, any>>({
         }}
       >
         <Box sx={{
-          minWidth: isSmallBreakpoint ? 800 : '100%',
           width: '100%',
-          overflow: isSmallBreakpoint ? 'auto' : 'visible',
+          overflow: isSmallBreakpoint ? 'auto' : 'hidden', // Horizontal scroll only on small breakpoints
+          ...(isSmallBreakpoint && {
+            minWidth: '800px', // Force minimum width for scrolling on small breakpoints
+          }),
         }}>
           {tableContent}
         </Box>
