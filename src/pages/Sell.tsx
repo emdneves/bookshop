@@ -1,29 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  TextField,
-  Select,
-  MenuItem,
-  Skeleton,
-  Chip
-} from '@mui/material';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { API_BASE_URL } from '../config/api';
-import CenteredMessage from '../components/CenteredMessage';
-import ScrollableTable from '../components/ScrollableTable';
-import PageLayout from '../components/PageLayout';
-import { getCardsPerRow } from '../utils/helpers';
+import React, { useState } from 'react';
+import { Box, Menu, MenuItem, Button } from '@mui/material';
+import { useApiData } from '../hooks/useApiData';
+import { usePageLayout } from '../hooks/usePageLayout';
+import { useSubheaderData } from '../hooks/useSubheaderData';
+import { CONTENT_TYPE_IDS } from '../constants/contentTypes';
+import { Column } from '../components/DataTable';
+import DataTable from '../components/DataTable';
+import AuthGuard from '../components/AuthGuard';
+import Pill from '../components/Pill';
 import { formatSimpleDate } from '../utils/dateFormatter';
-
-const BOOKS_CONTENT_TYPE_ID = '481a065c-8733-4e97-9adf-dc64acacf5fb';
-const ORDERS_CONTENT_TYPE_ID = 'cec824c6-1e37-4b1f-8cf6-b69cd39e52b2';
+import EditableField from '../components/EditableField';
 
 interface SellProps {
   setSubheaderData?: (data: any[]) => void;
@@ -31,323 +17,182 @@ interface SellProps {
 }
 
 const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
-  const { token, isAuthenticated } = useAuth();
-  const [books, setBooks] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [cardsPerRow, setCardsPerRow] = useState(getCardsPerRow());
-  const totalColumns = cardsPerRow + 2;
-  const [updatingCounter, setUpdatingCounter] = useState<string | null>(null);
-  const [counterValues, setCounterValues] = useState<Record<string, string>>({});
-  const [orders, setOrders] = useState<any[]>([]);
-  const [ordersLoading, setOrdersLoading] = useState(true);
-  const navigate = useNavigate();
-  const [showAuthMessage, setShowAuthMessage] = useState(false);
+  const { cardsPerRow, totalColumns, gridTemplateColumns } = usePageLayout();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const handleResize = () => setCardsPerRow(getCardsPerRow());
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // Fetch books created by the current user
+  const { data: books } = useApiData({
+    contentTypeId: CONTENT_TYPE_IDS.BOOKS,
+    endpoint: 'list-by-user',
+    requireAuth: true
+  });
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setShowAuthMessage(true);
-      const timer = setTimeout(() => {
-        navigate('/', { state: { openLogin: true } });
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [isAuthenticated, navigate]);
+  // Fetch all orders (offers) for books created by the current user
+  const { data: allOrders, loading } = useApiData({
+    contentTypeId: CONTENT_TYPE_IDS.ORDERS,
+    endpoint: 'list',
+    requireAuth: false
+  });
 
-  useEffect(() => {
-    if (!token) return;
-    const fetchBooks = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(`${API_BASE_URL}/content/list-by-user`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({ content_type_id: BOOKS_CONTENT_TYPE_ID }),
-        });
-        const data = await response.json();
-        const booksData = data.contents || [];
-        setBooks(booksData);
+  // Filter orders for books created by the current user
+  const userBookIds = books.map(book => book.id);
+  const userOrders = allOrders.filter((order: any) => userBookIds.includes(order.data.book));
 
-        // Pass data to subheader for dynamic filter generation
-        if (setSubheaderData && setTargetElement) {
-          setTargetElement('sell-offers');
-          setSubheaderData(booksData);
-        }
-      } catch (err) {
-        setBooks([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBooks();
-  }, [token, setSubheaderData, setTargetElement]);
+  // Handle subheader data
+  useSubheaderData({
+    data: userOrders,
+    targetElement: 'sell-offers',
+    setSubheaderData,
+    setTargetElement
+  });
 
-  // Fetch all orders (offers)
-  useEffect(() => {
-    if (!token) return;
-    const fetchOrders = async () => {
-      setOrdersLoading(true);
-      try {
-        const response = await fetch(`${API_BASE_URL}/content/list`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content_type_id: ORDERS_CONTENT_TYPE_ID }),
-        });
-        const data = await response.json();
-        setOrders(data.contents || []);
-      } catch (err) {
-        setOrders([]);
-      } finally {
-        setOrdersLoading(false);
-      }
-    };
-    fetchOrders();
-  }, [token]);
-
-  // IDs of books created by this user
-  const myBookIds = books.map(book => book.id);
-
-  // Offers received for my books
-  const offersForMyBooks = orders.filter(order => myBookIds.includes(order.data.book));
-
-  const filteredOffers = offersForMyBooks;
-
-  // Save counter offer to backend and update local state
-  const handleCounterBlur = async (orderId: string) => {
-    const value = counterValues[orderId];
-    if (value === undefined) return;
-
-    setUpdatingCounter(orderId);
-    try {
-      // Find the current order to get all existing data
-      const currentOrder = orders.find(order => order.id === orderId);
-      if (!currentOrder) {
-        console.error('Order not found:', orderId);
-        return;
-      }
-
-              const response = await fetch(`${API_BASE_URL}/content/update`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          id: orderId,
-          data: {
-            ...currentOrder.data, // Include all existing data
-            counter: value === '' ? null : Number(value) // Update only the counter field
-          },
-        }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success) {
-          // Update the local orders state with the new counter value
-          setOrders(prevOrders =>
-            prevOrders.map(order =>
-              order.id === orderId
-                ? { ...order, data: { ...order.data, counter: value === '' ? null : Number(value) } }
-                : order
-            )
-          );
-        } else {
-          console.error('Failed to update counter offer:', result.error);
-          // Revert the counter value if the update failed
-          setCounterValues(prev => ({ ...prev, [orderId]: orders.find(o => o.id === orderId)?.data.counter?.toString() || '' }));
-        }
-      } else {
-        console.error('Failed to update counter offer:', response.statusText);
-        // Revert the counter value if the update failed
-        setCounterValues(prev => ({ ...prev, [orderId]: orders.find(o => o.id === orderId)?.data.counter?.toString() || '' }));
-      }
-    } catch (error) {
-      console.error('Error updating counter offer:', error);
-      // Revert the counter value if the update failed
-      setCounterValues(prev => ({ ...prev, [orderId]: orders.find(o => o.id === orderId)?.data.counter?.toString() || '' }));
-    } finally {
-      setUpdatingCounter(null);
-    }
+  const handleStatusClick = (event: React.MouseEvent<HTMLElement>, orderId: string) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedOrderId(orderId);
   };
 
-  if (!isAuthenticated && showAuthMessage) {
-    return (
-      <CenteredMessage
-        title="Login Required"
-        description="You must be logged in to view offers for your books. Redirecting to login..."
-        showSpinner
-      />
-    );
-  }
+  const handleStatusClose = () => {
+    setAnchorEl(null);
+    setSelectedOrderId(null);
+  };
 
-  if (!isAuthenticated) {
-    return null;
-  }
+  const handleStatusChange = (newStatus: string) => {
+    // TODO: Implement API call to update order status
+    console.log(`Updating order ${selectedOrderId} status to ${newStatus}`);
+    handleStatusClose();
+  };
 
-  // Calculate row count for side columns (based on offers + header + some padding)
-  const rowCount = Math.max(10, filteredOffers.length + 2); // At least 10 rows, or offers + header + padding
+  const statusOptions = ['Pending', 'Accepted', 'Rejected', 'Completed'];
+
+  // Column definitions for Sell page
+  const renderPrice = (value: any, row: any) => {
+    const price = value || row.data?.price;
+    return price ? `€${price}` : '-';
+  };
+
+  const renderDate = (value: any, row: any) => {
+    const date = value || row.created_at;
+    return formatSimpleDate(date);
+  };
+
+  const renderBookName = (books: any[]) => (value: any, row: any) => {
+    const book = books.find(b => b.id === row.data.book);
+    return book?.data?.name || row.data.book || 'Book';
+  };
+
+  const renderBuyer = (value: any, row: any) => {
+    return row.created_by || 'Unknown';
+  };
+
+  const columns: Column<any>[] = [
+    {
+      key: 'book',
+      label: 'Book',
+      render: renderBookName(books)
+    },
+    {
+      key: 'buyer',
+      label: 'Buyer',
+      render: renderBuyer
+    },
+    {
+      key: 'price',
+      label: 'Proposal',
+      render: renderPrice
+    },
+    {
+      key: 'counter',
+      label: 'Counter Offer',
+      render: (value: any, row: any) => (
+        <EditableField
+          value={row.data?.counter || ''}
+          placeholder="Counter offer"
+          onSave={(newValue) => {
+            // TODO: Implement API call to update counter offer
+            console.log(`Updating order ${row.id} counter offer to ${newValue}`);
+          }}
+        />
+      )
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (value: any, row: any) => {
+        const currentStatus = row.data?.status || 'Pending';
+        return (
+          <Pill
+            onClick={(e) => e && handleStatusClick(e, row.id)}
+            fullWidth
+            sx={{ cursor: 'pointer' }}
+          >
+            {currentStatus}
+          </Pill>
+        );
+      }
+    },
+    {
+      key: 'created_at',
+      label: 'Created At',
+      render: renderDate
+    }
+  ];
 
   return (
-    <PageLayout rowCount={rowCount}>
-      <ScrollableTable cardsPerRow={cardsPerRow} totalColumns={totalColumns}>
-        <TableHead>
-          <TableRow>
-            <TableCell>Book</TableCell>
-            <TableCell>Buyer</TableCell>
-            <TableCell>Proposal</TableCell>
-            <TableCell>Counter Offer</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell>Created At</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {ordersLoading ? (
-            <TableRow>
-              <TableCell colSpan={6} align="center">
-                <Skeleton variant="rectangular" width="100%" height={44} />
-              </TableCell>
-            </TableRow>
-          ) : filteredOffers.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={6} align="center">
-                No offers found for your books.
-              </TableCell>
-            </TableRow>
-          ) : (
-            filteredOffers.map((order) => {
-              const book = books.find(b => b.id === order.data.book);
-              // The buyer is the one who created the order
-              const buyerEmail = order.created_by || 'Unknown';
-              return (
-                <TableRow key={order.id}>
-                  <TableCell>
-                    <Link 
-                      to={`/book/${order.data.book}`} 
-                      style={{ 
-                        textDecoration: 'none', 
-                        color: 'inherit',
-                        cursor: 'pointer',
-                        display: 'block',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      {book?.data?.name || order.data.book || 'Book'}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    {buyerEmail}
-                  </TableCell>
-                  <TableCell>{order.data.price ? `$${order.data.price}` : '-'}</TableCell>
-                  <TableCell>
-                    <TextField
-                      type="number"
-                      value={counterValues[order.id] ?? (order.data.counter ?? '')}
-                      onChange={e => setCounterValues(prev => ({ ...prev, [order.id]: e.target.value }))}
-                      onBlur={() => handleCounterBlur(order.id)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleCounterBlur(order.id);
-                        }
-                      }}
-                      size="small"
-                      variant="outlined"
-                      disabled={updatingCounter === order.id}
+    <AuthGuard
+      title="Login Required"
+      description="You must be logged in to view offers for your books. Redirecting to login..."
+    >
+    <Box
+      sx={{
+        width: '100%',
+        display: 'grid',
+          gridTemplateColumns: gridTemplateColumns,
+        background: 'none',
+      }}
+    >
+      {/* Side column left */}
+      <Box sx={{ borderRight: '0.5px dashed #d32f2f', height: '100%' }} />
+        {/* Center columns: table */}
+        <DataTable
+          cardsPerRow={cardsPerRow}
+          totalColumns={totalColumns}
+          data={userOrders}
+          columns={columns}
+          loading={loading}
+          emptyMessage="No offers found for your books."
+          rowKey="id"
+        />
+        {/* Side column right */}
+        <Box sx={{ borderLeft: '0.5px dashed #d32f2f', height: '100%' }} />
+      </Box>
+      
+      {/* Status dropdown menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleStatusClose}
+        PaperProps={{
+          sx: {
+            mt: 1,
+            minWidth: 120,
+          }
+        }}
+      >
+        {statusOptions.map((status) => (
+          <MenuItem
+            key={status}
+            onClick={() => handleStatusChange(status)}
                       sx={{
-                        width: '80px',
-                        '& .MuiOutlinedInput-root': {
-                          fontSize: 15,
-                          height: 32,
-                          borderRadius: '999px',
-                          background: 'transparent',
-                          boxShadow: 'none',
-                          border: '1.5px solid #d32f2f',
-                          px: 1.5,
-                          '& fieldset': {
-                            border: 'none',
-                          },
-                        },
-                        '& .MuiInputBase-input': {
-                          fontSize: 15,
-                          padding: '4px 12px',
-                          textAlign: 'center',
-                          background: 'transparent',
-                          '&::-webkit-outer-spin-button': {
-                            WebkitAppearance: 'none',
-                            margin: 0,
-                          },
-                          '&::-webkit-inner-spin-button': {
-                            WebkitAppearance: 'none',
-                            margin: 0,
-                          },
-                          MozAppearance: 'textfield',
-                        },
-                      }}
-                      inputProps={{ style: { textAlign: 'center', background: 'transparent' } }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={order.data.status || ''}
-                      onChange={async (e) => {
-                        const newStatus = e.target.value;
-                        // Update backend
-                        try {
-                          const response = await fetch(`${API_BASE_URL}/content/update`, {
-                            method: 'POST',
-                            headers: {
-                              'Content-Type': 'application/json',
-                              'Authorization': `Bearer ${token}`,
-                            },
-                            body: JSON.stringify({
-                              id: order.id,
-                              data: { ...order.data, status: newStatus },
-                            }),
-                          });
-                          if (response.ok) {
-                            setOrders(prevOrders => prevOrders.map(o => o.id === order.id ? { ...o, data: { ...o.data, status: newStatus } } : o));
-                          }
-                        } catch (err) {
-                          // Optionally show error
-                        }
-                      }}
-                      size="small"
-                      sx={{
-                        fontSize: 15,
-                        height: 32,
-                        borderRadius: '999px',
-                        background: 'transparent',
-                        boxShadow: 'none',
-                        border: '1.5px solid #d32f2f',
-                        px: 1.5,
-                        '& fieldset': {
-                          border: 'none',
-                        },
-                      }}
-                    >
-                      <MenuItem value="received" sx={{'&.Mui-selected, &:hover': { backgroundColor: 'rgba(211, 47, 47, 0.08) !important' }}}>Received</MenuItem>
-                      <MenuItem value="accepted" sx={{'&.Mui-selected, &:hover': { backgroundColor: 'rgba(211, 47, 47, 0.08) !important' }}}>Accepted</MenuItem>
-                      <MenuItem value="rejected" sx={{'&.Mui-selected, &:hover': { backgroundColor: 'rgba(211, 47, 47, 0.08) !important' }}}>Rejected</MenuItem>
-                      <MenuItem value="pending" sx={{'&.Mui-selected, &:hover': { backgroundColor: 'rgba(211, 47, 47, 0.08) !important' }}}>Pending</MenuItem>
-                    </Select>
-                  </TableCell>
-                  <TableCell>{formatSimpleDate(order.created_at)}</TableCell>
-                </TableRow>
-              );
-            })
-          )}
-        </TableBody>
-      </ScrollableTable>
-    </PageLayout>
+              fontSize: '14px',
+              py: 1,
+            }}
+          >
+            {status}
+          </MenuItem>
+        ))}
+      </Menu>
+    </AuthGuard>
   );
 };
 

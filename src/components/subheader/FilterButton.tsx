@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Box, Popover, Button, Typography } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import Pill from './Pill';
+import Pill from '../Pill';
 
-interface SubheaderFilterButtonProps {
+interface FilterButtonProps {
   fullWidth?: boolean;
 }
 
-const SubheaderFilterButton: React.FC<SubheaderFilterButtonProps> = ({ fullWidth = false }) => {
+const FilterButton: React.FC<FilterButtonProps> = ({ fullWidth = false }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -92,4 +92,4 @@ const SubheaderFilterButton: React.FC<SubheaderFilterButtonProps> = ({ fullWidth
   );
 };
 
-export default SubheaderFilterButton; 
+export default FilterButton; 

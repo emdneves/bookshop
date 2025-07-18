@@ -9,7 +9,7 @@ import Buy from './pages/Buy';
 import Sell from './pages/Sell';
 import Books from './pages/Books';
 import Account from './pages/Account';
-import TestLayout from './pages/TestLayout';
+
 import { SearchProvider } from './context/SearchContext';
 
 const theme = createTheme({
@@ -54,7 +54,7 @@ const App: React.FC = () => {
             <Route path="/sell" element={<Sell />} />
             <Route path="/books" element={<Books />} />
             <Route path="/account" element={<Account />} />
-            <Route path="/test" element={<TestLayout />} />
+
           </Routes>
         </Layout>
       </SearchProvider>

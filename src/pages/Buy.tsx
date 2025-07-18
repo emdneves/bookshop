@@ -1,206 +1,137 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Typography, Skeleton, Chip, Alert, TableBody, TableCell, TableHead, TableRow, TextField } from '@mui/material';
-import { Link, useNavigate } from 'react-router-dom';
-import { getCardsPerRow } from '../utils/helpers';
-import { useAuth } from '../context/AuthContext';
-import { API_BASE_URL } from '../config/api';
-import CenteredMessage from '../components/CenteredMessage';
-import ScrollableTable from '../components/ScrollableTable';
+import React from 'react';
+import { Box } from '@mui/material';
+import { useApiData } from '../hooks/useApiData';
+import { usePageLayout } from '../hooks/usePageLayout';
+import { useSubheaderData } from '../hooks/useSubheaderData';
+import { CONTENT_TYPE_IDS } from '../constants/contentTypes';
+import { Column } from '../components/DataTable';
+import DataTable from '../components/DataTable';
+import AuthGuard from '../components/AuthGuard';
 import { formatSimpleDate } from '../utils/dateFormatter';
-
-const ORDERS_CONTENT_TYPE_ID = 'cec824c6-1e37-4b1f-8cf6-b69cd39e52b2';
-const BOOKS_CONTENT_TYPE_ID = '481a065c-8733-4e97-9adf-dc64acacf5fb';
+import EditableField from '../components/EditableField';
 
 interface BuyProps {
   setSubheaderData?: (data: any[]) => void;
   setTargetElement?: (element: string) => void;
 }
+
 const Buy: React.FC<BuyProps> = ({ setSubheaderData, setTargetElement }) => {
-  const { token, isAuthenticated } = useAuth();
-  const [orders, setOrders] = useState<any[]>([]);
-  const [books, setBooks] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [booksLoading, setBooksLoading] = useState(true);
-  const [cardsPerRow, setCardsPerRow] = useState(getCardsPerRow());
-  const totalColumns = cardsPerRow + 2;
-  const navigate = useNavigate();
-  const [showAuthMessage, setShowAuthMessage] = useState(false);
+  const { cardsPerRow, totalColumns, gridTemplateColumns } = usePageLayout();
 
-  // Handle responsive breakpoints
-  useEffect(() => {
-    const handleResize = () => setCardsPerRow(getCardsPerRow());
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // Fetch orders (requires auth)
+  const { data: orders, loading } = useApiData({
+    contentTypeId: CONTENT_TYPE_IDS.ORDERS,
+    endpoint: 'list-by-user',
+    requireAuth: true
+  });
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setShowAuthMessage(true);
-      const timer = setTimeout(() => {
-        navigate('/', { state: { openLogin: true } });
-      }, 2000);
-      return () => clearTimeout(timer);
+  // Fetch all books (no auth required)
+  const { data: books } = useApiData({
+    contentTypeId: CONTENT_TYPE_IDS.BOOKS,
+    endpoint: 'list',
+    requireAuth: false
+  });
+
+  // Handle subheader data
+  useSubheaderData({
+    data: orders,
+    targetElement: 'buy-orders',
+    setSubheaderData,
+    setTargetElement
+  });
+
+  // Column definitions for Buy page
+  const renderPrice = (value: any, row: any) => {
+    const price = value || row.data?.price;
+    return price ? `€${price}` : '-';
+  };
+
+  const renderDate = (value: any, row: any) => {
+    const date = value || row.created_at;
+    return formatSimpleDate(date);
+  };
+
+  const renderBookName = (books: any[]) => (value: any, row: any) => {
+    const book = books.find(b => b.id === row.data.book);
+    return book?.data?.name || row.data.book || 'Book';
+  };
+
+  const renderSeller = (books: any[]) => (value: any, row: any) => {
+    const book = books.find(b => b.id === row.data.book);
+    return book?.created_by || 'Unknown';
+  };
+
+  const columns: Column<any>[] = [
+    {
+      key: 'book',
+      label: 'Book',
+      render: renderBookName(books)
+    },
+    {
+      key: 'seller',
+      label: 'Seller',
+      render: renderSeller(books)
+    },
+    {
+      key: 'price',
+      label: 'My Offer',
+      render: (value: any, row: any) => (
+        <EditableField
+          value={row.data?.price || ''}
+          placeholder="Offer"
+          onSave={(newValue) => {
+            // TODO: Implement API call to update offer price
+            console.log(`Updating offer ${row.id} price to ${newValue}`);
+          }}
+        />
+      )
+    },
+    {
+      key: 'counter',
+      label: 'Counter Offer',
+      render: (value: any, row: any) => row.data.counter ? `€${row.data.counter}` : '-'
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (value: any, row: any) => row.data?.status || 'Pending'
+    },
+    {
+      key: 'created_at',
+      label: 'Created At',
+      render: renderDate
     }
-  }, [isAuthenticated, navigate]);
-
-  // Fetch orders
-  useEffect(() => {
-    if (!token) return;
-    const fetchOrders = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(`${API_BASE_URL}/content/list-by-user`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            content_type_id: ORDERS_CONTENT_TYPE_ID
-          }),
-        });
-        const data = await response.json();
-        const ordersData = data.contents || [];
-        setOrders(ordersData);
-        
-        // Pass data to subheader for dynamic filter generation
-        if (setSubheaderData && setTargetElement) {
-          setTargetElement('buy-orders');
-          setSubheaderData(ordersData);
-        }
-      } catch (err) {
-        setOrders([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchOrders();
-  }, [token, setSubheaderData, setTargetElement]);
-
-  // Fetch all books
-  useEffect(() => {
-    const fetchBooks = async () => {
-      setBooksLoading(true);
-      try {
-        const response = await fetch(`${API_BASE_URL}/content/list`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content_type_id: BOOKS_CONTENT_TYPE_ID }),
-        });
-        const data = await response.json();
-        setBooks(data.contents || []);
-      } catch (err) {
-        setBooks([]);
-      } finally {
-        setBooksLoading(false);
-      }
-    };
-    fetchBooks();
-  }, []);
-
-  const filteredOrders = orders;
-
-  if (!isAuthenticated && showAuthMessage) {
-    return (
-      <CenteredMessage
-        title="Login Required"
-        description="You must be logged in to view your purchase orders. Redirecting to login..."
-        showSpinner
-      />
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
+  ];
 
   return (
-    <Box
-      sx={{
-        width: '100%',
-        display: 'grid',
-        gridTemplateColumns: cardsPerRow === 1 ? '0.125fr 0.75fr 0.125fr' : `0.5fr repeat(${cardsPerRow}, 1fr) 0.5fr`,
-        background: 'none',
-      }}
+    <AuthGuard
+      title="Login Required"
+      description="You must be logged in to view your purchase orders. Redirecting to login..."
     >
-      {/* Side column left */}
-      <Box sx={{ borderRight: '0.5px dashed #d32f2f', height: '100%' }} />
-      {/* Center columns: orders table */}
-      <ScrollableTable cardsPerRow={cardsPerRow} totalColumns={totalColumns}>
-        <TableHead>
-          <TableRow>
-            <TableCell>Book</TableCell>
-            <TableCell>Seller</TableCell>
-            <TableCell>My Offer</TableCell>
-            <TableCell>Counter Offer</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell>Created At</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {loading ? (
-            <TableRow>
-              <TableCell colSpan={6} align="center">
-                <Skeleton variant="rectangular" width="100%" height={44} />
-              </TableCell>
-            </TableRow>
-          ) : filteredOrders.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={6} align="center">
-                No purchase orders found.
-              </TableCell>
-            </TableRow>
-          ) : (
-            filteredOrders.map((order) => {
-              const book = books.find(b => b.id === order.data.book);
-              // The seller is the one who created the book
-              const sellerEmail = book?.created_by || 'Unknown';
-              return (
-                <TableRow key={order.id}>
-                  <TableCell>
-                    <Link 
-                      to={`/book/${order.data.book}`} 
-                      style={{ 
-                        textDecoration: 'none', 
-                        color: 'inherit',
-                        cursor: 'pointer',
-                        display: 'block',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      {book?.data?.name || order.data.book || 'Book'}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    {sellerEmail}
-                  </TableCell>
-                  <TableCell>{order.data.price ? `$${order.data.price}` : '-'}</TableCell>
-                  <TableCell>{order.data.counter ? `$${order.data.counter}` : '-'}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={order.data.status || 'Pending'}
-                      size="small"
-                      sx={{
-                        fontSize: 12,
-                        height: 24,
-                        borderRadius: '12px',
-                        backgroundColor: order.data.status === 'Accepted' ? '#4caf50' : 
-                                         order.data.status === 'Rejected' ? '#f44336' : '#ff9800',
-                        color: 'white',
-                        fontWeight: 600,
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell>{formatSimpleDate(order.created_at)}</TableCell>
-                </TableRow>
-              );
-            })
-          )}
-        </TableBody>
-      </ScrollableTable>
-      {/* Side column right */}
-      <Box sx={{ borderLeft: '0.5px dashed #d32f2f', height: '100%' }} />
-    </Box>
+      <Box
+        sx={{
+          width: '100%',
+          display: 'grid',
+          gridTemplateColumns: gridTemplateColumns,
+          background: 'none',
+        }}
+      >
+        {/* Side column left */}
+        <Box sx={{ borderRight: '0.5px dashed #d32f2f', height: '100%' }} />
+        {/* Center columns: table */}
+        <DataTable
+          cardsPerRow={cardsPerRow}
+          totalColumns={totalColumns}
+          data={orders}
+          columns={columns}
+          loading={loading}
+          emptyMessage="No purchase orders found."
+          rowKey="id"
+        />
+        {/* Side column right */}
+        <Box sx={{ borderLeft: '0.5px dashed #d32f2f', height: '100%' }} />
+      </Box>
+    </AuthGuard>
   );
 };
 

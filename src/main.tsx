@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import App from './App';
-import { SHARED_BG } from './components/bg';
+import { SHARED_BG } from './constants/colors';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

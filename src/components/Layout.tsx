@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
 import Header from './Header';
 import Footer from './Footer';
-import Subheader from './Subheader';
+import Subheader from './subheader/Subheader';
 
 import { getCardsPerRow } from '../utils/helpers';
 

@@ -4,8 +4,8 @@ import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AuthModal from '../components/AuthModal';
 import { API_BASE_URL } from '../config/api';
-import Subheader from '../components/Subheader';
-import Breadcrumbs from '../components/Breadcrumbs';
+import Subheader from '../components/subheader/Subheader';
+import Breadcrumbs from '../components/subheader/Breadcrumbs';
 
 
 const theme = createTheme({
@@ -572,12 +572,12 @@ const Product: React.FC = () => {
                 <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
                   Book: <strong>{book.name}</strong><br />
                   Author: {book.author}<br />
-                  {book['Original price'] && `Original Price: $${book['Original price']}`}
+                  {book['Original price'] && `Original Price: €${book['Original price']}`}
                 </Typography>
               )}
               <TextField
                 fullWidth
-                label="Your Offer Price ($)"
+                label="Your Offer Price (€)"
                 type="number"
                 value={offerPrice}
                 onChange={(e) => setOfferPrice(e.target.value)}

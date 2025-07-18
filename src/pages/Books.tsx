@@ -1,16 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Typography, Skeleton, TableBody, TableCell, TableHead, TableRow, Alert } from '@mui/material';
-import { Link, useNavigate } from 'react-router-dom';
-import { getCardsPerRow } from '../utils/helpers';
-import { useAuth } from '../context/AuthContext';
-import { API_BASE_URL } from '../config/api';
-import SEO from '../components/SEO';
-import CenteredMessage from '../components/CenteredMessage';
-import ScrollableTable from '../components/ScrollableTable';
+import React from 'react';
+import { Box } from '@mui/material';
+import { useApiData } from '../hooks/useApiData';
+import { usePageLayout } from '../hooks/usePageLayout';
+import { useSubheaderData } from '../hooks/useSubheaderData';
+import { CONTENT_TYPE_IDS } from '../constants/contentTypes';
+import { Column } from '../components/DataTable';
+import DataTable from '../components/DataTable';
+import AuthGuard from '../components/AuthGuard';
+import SEO from '../utils/seo';
 import { formatSimpleDate } from '../utils/dateFormatter';
-
-const BOOKS_CONTENT_TYPE_ID = '481a065c-8733-4e97-9adf-dc64acacf5fb';
-const ORDERS_CONTENT_TYPE_ID = 'cec824c6-1e37-4b1f-8cf6-b69cd39e52b2';
 
 interface BooksProps {
   setSubheaderData?: (data: any[]) => void;
@@ -18,196 +16,122 @@ interface BooksProps {
 }
 
 const Books: React.FC<BooksProps> = ({ setSubheaderData, setTargetElement }) => {
-  const { token, isAuthenticated } = useAuth();
-  const [books, setBooks] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [cardsPerRow, setCardsPerRow] = useState(getCardsPerRow());
-  const totalColumns = cardsPerRow + 2;
-  const [orders, setOrders] = useState<any[]>([]);
-  const [ordersLoading, setOrdersLoading] = useState(true);
-  const navigate = useNavigate();
-  const [showAuthMessage, setShowAuthMessage] = useState(false);
+  const { cardsPerRow, totalColumns, gridTemplateColumns } = usePageLayout();
 
-  useEffect(() => {
-    const handleResize = () => setCardsPerRow(getCardsPerRow());
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setShowAuthMessage(true);
-      const timer = setTimeout(() => {
-        navigate('/', { state: { openLogin: true } });
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [isAuthenticated, navigate]);
-
-  useEffect(() => {
-    if (!token) return;
-    const fetchBooks = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(`${API_BASE_URL}/content/list-by-user`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({ content_type_id: BOOKS_CONTENT_TYPE_ID }),
-        });
-        const data = await response.json();
-        const booksData = data.contents || [];
-        setBooks(booksData);
-        
-        // Pass data to subheader for dynamic filter generation
-        if (setSubheaderData && setTargetElement) {
-          setTargetElement('books-table');
-          setSubheaderData(booksData);
-        }
-      } catch (err) {
-        setBooks([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBooks();
-  }, [token, setSubheaderData, setTargetElement]);
+  // Fetch books created by the current user
+  const { data: books, loading } = useApiData({
+    contentTypeId: CONTENT_TYPE_IDS.BOOKS,
+    endpoint: 'list-by-user',
+    requireAuth: true
+  });
 
   // Fetch all orders (offers) to count offers per book
-  useEffect(() => {
-    if (!token) return;
-    const fetchOrders = async () => {
-      setOrdersLoading(true);
-      try {
-        const response = await fetch(`${API_BASE_URL}/content/list`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content_type_id: ORDERS_CONTENT_TYPE_ID }),
-        });
-        const data = await response.json();
-        setOrders(data.contents || []);
-      } catch (err) {
-        setOrders([]);
-      } finally {
-        setOrdersLoading(false);
-      }
-    };
-    fetchOrders();
-  }, [token]);
+  const { data: orders } = useApiData({
+    contentTypeId: CONTENT_TYPE_IDS.ORDERS,
+    endpoint: 'list',
+    requireAuth: false
+  });
 
-  const filteredBooks = books;
+  // Handle subheader data
+  useSubheaderData({
+    data: books,
+    targetElement: 'books-table',
+    setSubheaderData,
+    setTargetElement
+  });
 
-  if (!isAuthenticated && showAuthMessage) {
-    return (
-      <CenteredMessage
-        title="Login Required"
-        description="You must be logged in to view your books for sale. Redirecting to login..."
-        showSpinner
-      />
-    );
-  }
+  // Column definitions for Books page
+  const renderDate = (value: any, row: any) => {
+    const date = value || row.created_at;
+    return formatSimpleDate(date);
+  };
+
+  const renderOffers = (orders: any[]) => (value: any, row: any) => {
+    const bookOffers = orders.filter(order => order.data.book === row.id);
+    const offerCount = bookOffers.length;
+    const highestOffer = bookOffers.length > 0 
+      ? Math.max(...bookOffers.map((offer: any) => offer.data.price))
+      : 0;
+
+    if (offerCount === 0) {
+      return 'No offers';
+    }
+
+    return `${offerCount} offer${offerCount !== 1 ? 's' : ''} (Highest: €${highestOffer})`;
+  };
+
+  const columns: Column<any>[] = [
+    {
+      key: 'name',
+      label: 'Title',
+      render: (value: any, row: any) => row.data?.name || 'Untitled'
+    },
+    {
+      key: 'author',
+      label: 'Author',
+      render: (value: any, row: any) => row.data?.author || 'Unknown'
+    },
+    {
+      key: 'publisher',
+      label: 'Publisher',
+      render: (value: any, row: any) => row.data?.publisher || 'Unknown'
+    },
+    {
+      key: 'isbn',
+      label: 'ISBN',
+      render: (value: any, row: any) => row.data?.isbn || 'N/A'
+    },
+    {
+      key: 'price',
+      label: 'Price',
+      render: (value: any, row: any) => `€${row.data?.price || 0}`
+    },
+    {
+      key: 'offers',
+      label: 'Offers',
+      render: renderOffers(orders)
+    },
+    {
+      key: 'created_at',
+      label: 'Created At',
+      render: renderDate
+    }
+  ];
 
   return (
-    <>
+    <AuthGuard
+      title="Login Required"
+      description="You must be logged in to view your books for sale. Redirecting to login..."
+    >
       <SEO 
         title="My Books - the artifact"
         description="Manage your books for sale. View, edit, and track offers on your listed books."
         url="https://theartifact.shop/books"
       />
       <Box
-      sx={{
-        width: '100%',
-        display: 'grid',
-        gridTemplateColumns: cardsPerRow === 1 ? '0.125fr 0.75fr 0.125fr' : `0.5fr repeat(${cardsPerRow}, 1fr) 0.5fr`,
-        background: 'none',
-      }}
-    >
-      {/* Side column left */}
-      <Box sx={{ borderRight: '0.5px dashed #d32f2f', height: '100%' }} />
-      {/* Center columns: books table */}
-      <ScrollableTable cardsPerRow={cardsPerRow} totalColumns={totalColumns}>
-        <TableHead>
-          <TableRow>
-            <TableCell>Title</TableCell>
-            <TableCell>Author</TableCell>
-            <TableCell>Publisher</TableCell>
-            <TableCell>ISBN</TableCell>
-            <TableCell>Price</TableCell>
-            <TableCell>Offers</TableCell>
-            <TableCell>Created At</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {loading ? (
-            <TableRow>
-              <TableCell colSpan={7} align="center">
-                <Skeleton variant="rectangular" width="100%" height={44} />
-              </TableCell>
-            </TableRow>
-          ) : filteredBooks.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={7} align="center">
-                No books found.
-              </TableCell>
-            </TableRow>
-          ) : (
-            filteredBooks.map((book) => {
-              // Count offers for this book
-              const bookOffers = orders.filter(order => order.data.book === book.id);
-              const offerCount = bookOffers.length;
-              const highestOffer = bookOffers.length > 0 
-                ? Math.max(...bookOffers.map((offer: any) => offer.data.price))
-                : 0;
-
-              return (
-                <TableRow key={book.id}>
-                  <TableCell>
-                    <Link 
-                      to={`/book/${book.id}`}
-                      style={{ 
-                        color: '#d32f2f', 
-                        textDecoration: 'none',
-                        fontWeight: 600
-                      }}
-                    >
-                      {book.data?.name || 'Untitled'}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{book.data?.author || 'Unknown'}</TableCell>
-                  <TableCell>{book.data?.publisher || 'Unknown'}</TableCell>
-                  <TableCell>{book.data?.isbn || 'N/A'}</TableCell>
-                  <TableCell>${book.data?.price || 0}</TableCell>
-                  <TableCell>
-                    {offerCount > 0 ? (
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#d32f2f' }}>
-                          {offerCount} offer{offerCount !== 1 ? 's' : ''}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: '#666' }}>
-                          Highest: ${highestOffer}
-                        </Typography>
-                      </Box>
-                    ) : (
-                      <Typography variant="body2" sx={{ color: '#666', fontStyle: 'italic' }}>
-                        No offers
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {formatSimpleDate(book.created_at)}
-                  </TableCell>
-                </TableRow>
-              );
-            })
-          )}
-        </TableBody>
-      </ScrollableTable>
-      {/* Side column right */}
-      <Box sx={{ borderLeft: '0.5px dashed #d32f2f', height: '100%' }} />
-    </Box>
-    </>
+        sx={{
+          width: '100%',
+          display: 'grid',
+          gridTemplateColumns: gridTemplateColumns,
+          background: 'none',
+        }}
+      >
+        {/* Side column left */}
+        <Box sx={{ borderRight: '0.5px dashed #d32f2f', height: '100%' }} />
+        {/* Center columns: table */}
+        <DataTable
+          cardsPerRow={cardsPerRow}
+          totalColumns={totalColumns}
+          data={books}
+          columns={columns}
+          loading={loading}
+          emptyMessage="No books found."
+          rowKey="id"
+        />
+        {/* Side column right */}
+        <Box sx={{ borderLeft: '0.5px dashed #d32f2f', height: '100%' }} />
+      </Box>
+    </AuthGuard>
   );
 };
 

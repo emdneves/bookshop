@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, TextField, IconButton, Popover, Button, Typography } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import { SHARED_BG } from './bg';
+import { SHARED_BG } from '../../constants/colors';
 
 interface SubheaderProps {
   cardsPerRow: number;
@@ -198,11 +198,21 @@ const Subheader: React.FC<SubheaderProps> = ({
               </Box>
             );
           }
-          // Other center columns: empty with border
-          return <Box key={i} sx={{ borderRight: '0.5px dashed #d32f2f', height: '100%', minHeight: 40, maxHeight: 40 }} />;
+          // Middle columns: empty
+          return (
+            <Box
+              key={i}
+              sx={{
+                borderRight: '0.5px dashed #d32f2f',
+                height: '100%',
+                minHeight: 40,
+                maxHeight: 40,
+              }}
+            />
+          );
         })}
         {/* Side column right */}
-        <Box sx={{ height: '100%' }} />
+        <Box sx={{ borderLeft: '0.5px dashed #d32f2f', height: '100%' }} />
       </Box>
     </>
   );

@@ -10,7 +10,7 @@ import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined
 import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
 
 import { getCardsPerRow } from '../utils/helpers';
-import { SHARED_BG } from './bg';
+import { SHARED_BG } from '../constants/colors';
 
 const Header: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();

@@ -1,15 +1,22 @@
 import React, { useState } from 'react';
-import { Box } from '@mui/material';
+import { Box, SxProps, Theme } from '@mui/material';
 
 interface PillProps {
   children: React.ReactNode;
   color?: string;
   background?: string;
   fullWidth?: boolean;
+  onClick?: (event?: React.MouseEvent<HTMLElement>) => void;
+  sx?: SxProps<Theme>;
 }
 
-const Pill: React.FC<PillProps> = ({ children, color = '#d32f2f', background = 'transparent', fullWidth = false }) => {
+const Pill: React.FC<PillProps> = ({ children, color = '#d32f2f', background = 'transparent', fullWidth = false, onClick, sx }) => {
   const [active, setActive] = useState(false);
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setActive(true);
+    onClick?.(event);
+  };
 
   return (
     <Box
@@ -23,18 +30,20 @@ const Pill: React.FC<PillProps> = ({ children, color = '#d32f2f', background = '
         color,
         background,
         fontWeight: 600,
-        fontSize: '0.98em',
+        fontSize: 'inherit',
         lineHeight: 1.2,
         whiteSpace: 'nowrap',
         textOverflow: 'ellipsis',
         overflow: 'hidden',
         maxWidth: '100%',
         minWidth: 0,
+        minHeight: '1.2em',
         transition: 'all 0.2s',
-        cursor: 'pointer',
+        cursor: onClick ? 'pointer' : 'default',
+        ...sx,
       }}
       title={typeof children === 'string' ? children : undefined}
-      onClick={() => setActive(true)}
+      onClick={handleClick}
     >
       {children}
     </Box>

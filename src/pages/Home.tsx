@@ -13,10 +13,10 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSearch } from '../context/SearchContext';
 import { API_BASE_URL } from '../config/api';
-import SEO from '../components/SEO';
-import Subheader from '../components/Subheader';
-import SubheaderSearchBar from '../components/SubheaderSearchBar';
-import SubheaderFilterButton from '../components/SubheaderFilterButton';
+import SEO from '../utils/seo';
+import Subheader from '../components/subheader/Subheader';
+import SearchBar from '../components/subheader/SearchBar';
+import FilterButton from '../components/subheader/FilterButton';
 
 
 // Remove the old BookCard interface and replace with a new one for API data
@@ -200,11 +200,11 @@ interface HomeProps {}
 
 // Subheader slot components for Home
 const HomeSubheaderLeft = ({ fullWidth }: { fullWidth?: boolean }) => (
-  <SubheaderSearchBar fullWidth={fullWidth} />
+          <SearchBar fullWidth={fullWidth} />
 );
 
 const HomeSubheaderRight = ({ fullWidth }: { fullWidth?: boolean }) => (
-  <SubheaderFilterButton fullWidth={fullWidth} />
+          <FilterButton fullWidth={fullWidth} />
 );
 
 const Home: React.FC<HomeProps> = () => {
@@ -486,7 +486,7 @@ const Home: React.FC<HomeProps> = () => {
                                       textAlign: 'right',
                                     }}
                                   >
-                                    Original: {cell.originalPrice ? `$${cell.originalPrice}` : '-'}
+                                    Original: {cell.originalPrice ? `€${cell.originalPrice}` : '-'}
                                     </span>
                                   {/* Publisher (left) and Highest offer (right): row 4 */}
                                   <span
@@ -519,7 +519,7 @@ const Home: React.FC<HomeProps> = () => {
                                       textAlign: 'right',
                                     }}
                                   >
-                                    {cell.highestOffer && cell.highestOffer > 0 ? `Highest: $${cell.highestOffer}` : 'No offers yet'}
+                                    {cell.highestOffer && cell.highestOffer > 0 ? `Highest: €${cell.highestOffer}` : 'No offers yet'}
                                     </span>
                                 </div>
                               </TextSection>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
-import Pill from './Pill';
+import Pill from '../Pill';
 
 interface BreadcrumbsProps {
   bookName: string;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-import { SHARED_BG } from './bg';
+import { SHARED_BG } from '../constants/colors';
 
 interface FooterProps {
   cardsPerRow: number;

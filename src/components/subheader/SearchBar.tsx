@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
-import { useSearch } from '../context/SearchContext';
-import Pill from './Pill';
+import { useSearch } from '../../context/SearchContext';
+import Pill from '../Pill';
 
-interface SubheaderSearchBarProps {
+interface SearchBarProps {
   fullWidth?: boolean;
 }
 
-const SubheaderSearchBar: React.FC<SubheaderSearchBarProps> = ({ fullWidth = false }) => {
+const SearchBar: React.FC<SearchBarProps> = ({ fullWidth = false }) => {
   const { setSearchTerm } = useSearch();
   const [searchValue, setSearchValue] = useState('');
 
@@ -61,4 +61,4 @@ const SubheaderSearchBar: React.FC<SubheaderSearchBarProps> = ({ fullWidth = fal
   );
 };
 
-export default SubheaderSearchBar; 
+export default SearchBar; 
