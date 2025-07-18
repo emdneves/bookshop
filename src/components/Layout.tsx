@@ -42,7 +42,7 @@ const Layout: React.FC<LayoutProps> = ({
       <main style={{ flex: 1, minHeight: 'calc(100vh - 128px)' }}>
         {children}
       </main>
-      <Footer cardsPerRow={cardsPerRow} />
+      <Footer />
     </>
   );
 };

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography, CircularProgress } from '@mui/material';
 import WarningIcon from '@mui/icons-material/Warning';
+import { ARTIFACT_RED } from '../constants/colors';
 
 interface CenteredMessageProps {
   icon?: React.ReactNode;
@@ -11,11 +12,11 @@ interface CenteredMessageProps {
 }
 
 const CenteredMessage: React.FC<CenteredMessageProps> = ({
-  icon = <WarningIcon sx={{ fontSize: 48, color: '#d32f2f', mb: 2 }} />,
+  icon = <WarningIcon sx={{ fontSize: 48, color: ARTIFACT_RED, mb: 2 }} />,
   title,
   description,
   showSpinner = false,
-  color = '#d32f2f',
+  color = ARTIFACT_RED,
 }) => (
   <Box
     sx={{

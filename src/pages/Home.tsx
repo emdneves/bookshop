@@ -17,7 +17,8 @@ import SEO from '../utils/seo';
 import Subheader from '../components/subheader/Subheader';
 import SearchBar from '../components/subheader/SearchBar';
 import FilterButton from '../components/subheader/FilterButton';
-
+import { getCardsPerRow, getTotalColumns } from '../utils/helpers';
+import { ARTIFACT_RED, getBorderStyle, getHoverBorderStyle } from '../constants/colors';
 
 // Remove the old BookCard interface and replace with a new one for API data
 interface BookCard {
@@ -78,8 +79,6 @@ const PageWrapper = styled(Box)<{cardsPerRow: number}>(({ theme, cardsPerRow }) 
   },
 }));
 
-import { getCardsPerRow, getTotalColumns } from '../utils/helpers';
-
 // Update GridContainer to start at gridRow 2 so cards start after the empty top row
 const GridContainer = styled(Box)<{cardsPerRow: number}>(({ cardsPerRow }) => ({
   gridColumn: '1 / -1',
@@ -105,16 +104,16 @@ const GridItem = styled(Box)<{
   width: '100%',
   boxSizing: 'border-box',
   background: 'none',
-  borderRight: col < colCount - 1 ? '1px dashed #d32f2f' : 'none',
-  borderBottom: row < rowCount - 1 ? '1px dashed #d32f2f' : 'none',
+  borderRight: col < colCount - 1 ? `1px dashed ${ARTIFACT_RED}` : 'none',
+  borderBottom: row < rowCount - 1 ? `1px dashed ${ARTIFACT_RED}` : 'none',
   padding: '8px',
   overflow: 'hidden',
   display: 'flex',
   alignItems: 'stretch',
   justifyContent: 'stretch',
   [theme.breakpoints.down('sm')]: {
-    borderRight: col < colCount - 1 ? '0.5px solid #d32f2f' : 'none',
-    borderBottom: row < rowCount - 1 ? '0.5px solid #d32f2f' : 'none',
+    borderRight: col < colCount - 1 ? `0.5px solid ${ARTIFACT_RED}` : 'none',
+    borderBottom: row < rowCount - 1 ? `0.5px solid ${ARTIFACT_RED}` : 'none',
   },
 }));
 
@@ -128,10 +127,10 @@ const CardHoverWrapper = styled('div')({
   transition: 'border 0.2s',
   boxSizing: 'border-box',
   '&:hover .MuiCardContainer-hover': {
-    border: '0.5px dashed #d32f2f',
+    border: getHoverBorderStyle(),
   },
   '&:hover .MuiTextSection-hover': {
-    color: '#d32f2f',
+    color: ARTIFACT_RED,
   },
 });
 
@@ -145,7 +144,7 @@ const CardContainer = styled(Box)({
   borderRadius: 4, // Slightly rounded corners
   overflow: 'hidden',
   boxShadow: '0 1px 4px rgba(0,0,0,0.03)',
-  border: '0.5px solid transparent', // default, overridden on hover
+  border: '0.5px solid transparent', // No border by default
   transition: 'border 0.2s',
 });
 
@@ -509,7 +508,7 @@ const Home: React.FC<HomeProps> = () => {
                                     style={{
                                       fontSize: '0.85rem',
                                       lineHeight: 1.1,
-                                      color: cell.highestOffer && cell.highestOffer > 0 ? '#d32f2f' : '#666',
+                                      color: cell.highestOffer && cell.highestOffer > 0 ? ARTIFACT_RED : '#666',
                                       fontWeight: cell.highestOffer && cell.highestOffer > 0 ? 700 : 400,
                                       overflow: 'hidden',
                                       textOverflow: 'ellipsis',

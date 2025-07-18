@@ -1,11 +1,12 @@
-import React from 'react';
-import { Box, Skeleton, Button, Modal, TextField, Alert, Snackbar, Typography, ThemeProvider, createTheme, CssBaseline } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Skeleton, Button, Modal, TextField, Alert, Snackbar, Typography, ThemeProvider, createTheme, CssBaseline, styled } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AuthModal from '../components/AuthModal';
 import { API_BASE_URL } from '../config/api';
 import Subheader from '../components/subheader/Subheader';
 import Breadcrumbs from '../components/subheader/Breadcrumbs';
+import { ARTIFACT_RED, ARTIFACT_RED_DARK } from '../constants/colors';
 
 
 const theme = createTheme({
@@ -146,7 +147,7 @@ const renderInfoCard = (loading: boolean, book: any, orders: any[], onMakeOffer:
           <strong>Offers:</strong>
         </Typography>
         {getHighestOffer() > 0 ? (
-          <Typography variant="body2" sx={{ color: '#d32f2f', fontWeight: 'bold', mb: 1, fontSize: '0.85rem', lineHeight: 1.10 }}>
+          <Typography variant="body2" sx={{ color: ARTIFACT_RED, fontWeight: 'bold', mb: 1, fontSize: '0.85rem', lineHeight: 1.10 }}>
             Highest Offer: ${getHighestOffer()}
           </Typography>
         ) : (
@@ -163,8 +164,8 @@ const renderInfoCard = (loading: boolean, book: any, orders: any[], onMakeOffer:
           onClick={onMakeOffer}
           fullWidth
           sx={{
-            bgcolor: '#d32f2f',
-            '&:hover': { bgcolor: '#b71c1c' }
+            bgcolor: ARTIFACT_RED,
+            '&:hover': { bgcolor: ARTIFACT_RED_DARK }
           }}
         >
           {isAuthenticated ? 'Make Offer' : 'Login to Make Offer'}
@@ -434,8 +435,8 @@ const Product: React.FC = () => {
   const rowCount = columns === 1 ? 4 : columns === 2 ? 6 : 4;
 
   const getCellBorder = (col: number, row: number): React.CSSProperties => ({
-    borderRight: col < colCount - 1 ? '1px dashed #d32f2f' : 'none',
-    borderBottom: row < rowCount - 1 ? '1px dashed #d32f2f' : 'none',
+    borderRight: col < colCount - 1 ? `1px dashed ${ARTIFACT_RED}` : 'none',
+    borderBottom: row < rowCount - 1 ? `1px dashed ${ARTIFACT_RED}` : 'none',
     borderLeft: 'none',
     borderTop: 'none',
     display: 'flex',
@@ -468,7 +469,11 @@ const Product: React.FC = () => {
 
   return (
     <>
-      <Subheader cardsPerRow={columns} left={<Breadcrumbs bookName={bookName} />} />
+      <Subheader 
+        cardsPerRow={columns} 
+        left={<Breadcrumbs bookName={bookName} />} 
+        fullWidthLeft={columns > 1}
+      />
       <Box
         sx={{
           display: 'grid',
@@ -596,8 +601,8 @@ const Product: React.FC = () => {
                   onClick={handleSubmitOffer}
                   disabled={submittingOffer || !offerPrice}
                   sx={{
-                    bgcolor: '#d32f2f',
-                    '&:hover': { bgcolor: '#b71c1c' }
+                    bgcolor: ARTIFACT_RED,
+                    '&:hover': { bgcolor: ARTIFACT_RED_DARK }
                   }}
                 >
                   {submittingOffer ? 'Submitting...' : 'Submit Offer'}

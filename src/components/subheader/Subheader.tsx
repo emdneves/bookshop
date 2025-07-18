@@ -1,12 +1,19 @@
 import React from 'react';
 import { Box, TextField, IconButton, Popover, Button, Typography } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import { SHARED_BG } from '../../constants/colors';
+import { 
+  SHARED_BG, 
+  ARTIFACT_RED, 
+  ARTIFACT_RED_TRANSPARENT_08,
+  ARTIFACT_RED_DARK,
+  getBorderStyle 
+} from '../../constants/colors';
 
 interface SubheaderProps {
   cardsPerRow: number;
   left?: React.ReactElement<any>;
   right?: React.ReactElement<any>;
+  fullWidthLeft?: boolean; // New prop to make left element span full width
 }
 
 // Helper to safely clone with fullWidth if possible
@@ -22,6 +29,7 @@ const Subheader: React.FC<SubheaderProps> = ({
   cardsPerRow,
   left,
   right,
+  fullWidthLeft = false,
 }) => {
   const totalColumns = cardsPerRow + 2;
   const gridTemplateColumns = cardsPerRow === 1 ? '0.125fr 0.75fr 0.125fr' : `0.5fr repeat(${cardsPerRow}, 1fr) 0.5fr`;
@@ -34,18 +42,18 @@ const Subheader: React.FC<SubheaderProps> = ({
           background-color: floralwhite !important;
         }
         .MuiMenuItem-root.Mui-selected, .MuiMenuItem-root:focus, .MuiMenuItem-root:hover {
-          background-color: rgba(211, 47, 47, 0.08) !important;
-          color: #d32f2f !important;
+          background-color: ${ARTIFACT_RED_TRANSPARENT_08} !important;
+          color: ${ARTIFACT_RED} !important;
         }
         .MuiButton-containedPrimary, .MuiButton-contained {
-          background-color: #d32f2f !important;
+          background-color: ${ARTIFACT_RED} !important;
           color: floralwhite !important;
         }
         .MuiButton-containedPrimary:hover, .MuiButton-contained:hover {
-          background-color: #b71c1c !important;
+          background-color: ${ARTIFACT_RED_DARK} !important;
         }
         .Mui-focused, .Mui-focusVisible {
-          box-shadow: 0 0 0 2px #d32f2f !important;
+          box-shadow: 0 0 0 2px ${ARTIFACT_RED} !important;
         }
       `}</style>
       <Box
@@ -53,20 +61,19 @@ const Subheader: React.FC<SubheaderProps> = ({
           width: '100%',
           display: 'grid',
           gridTemplateColumns,
-          gridTemplateRows: '40px', // Half the header height
           alignItems: 'center',
-          height: 40,
           minHeight: 40,
           maxHeight: 40,
           background: SHARED_BG,
-          borderBottom: '0.5px dashed #d32f2f',
+          borderBottom: getBorderStyle(),
           position: 'sticky',
           top: cardsPerRow === 1 ? '120px' : '80px', // Responsive header height
           zIndex: 9,
+          boxSizing: 'border-box',
         }}
       >
         {/* Side column left */}
-        <Box sx={{ borderRight: '0.5px dashed #d32f2f', height: '100%' }} />
+        <Box sx={{ borderRight: getBorderStyle(), height: '100%' }} />
         {/* Center columns */}
         {Array.from({ length: cardsPerRow }).map((_, i) => {
           // Single column: merge left and right into center slot
@@ -82,7 +89,7 @@ const Subheader: React.FC<SubheaderProps> = ({
                   height: '100%',
                   minHeight: 40,
                   maxHeight: 40,
-                  borderRight: '0.5px dashed #d32f2f',
+                  borderRight: getBorderStyle(),
                   gap: 1,
                   minWidth: 0,
                 }}
@@ -108,6 +115,36 @@ const Subheader: React.FC<SubheaderProps> = ({
               </Box>
             );
           }
+          
+          // Full width left element (like breadcrumbs) - spans all main columns
+          if (fullWidthLeft && left) {
+            if (i === 0) {
+              return (
+                <Box
+                  key={i}
+                  sx={{
+                    px: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    height: '100%',
+                    minHeight: 40,
+                    maxHeight: 40,
+                    borderRight: getBorderStyle(),
+                    minWidth: 0,
+                    maxWidth: '100%',
+                    overflow: 'hidden',
+                    gridColumn: `2 / span ${cardsPerRow}`, // Span all main columns
+                  }}
+                >
+                  {React.cloneElement(left, { fullWidth: true })}
+                </Box>
+              );
+            }
+            // Skip other columns when fullWidthLeft is true
+            return null;
+          }
+          
           // Special case: 2 columns, left in first, right in second
           if (cardsPerRow === 2) {
             if (i === 0) {
@@ -122,7 +159,7 @@ const Subheader: React.FC<SubheaderProps> = ({
                     height: '100%',
                     minHeight: 40,
                     maxHeight: 40,
-                    borderRight: '0.5px dashed #d32f2f',
+                    borderRight: getBorderStyle(),
                     minWidth: 0,
                     maxWidth: '100%',
                     overflow: 'hidden',
@@ -146,7 +183,7 @@ const Subheader: React.FC<SubheaderProps> = ({
                     height: '100%',
                     minHeight: 40,
                     maxHeight: 40,
-                    borderRight: '0.5px dashed #d32f2f',
+                    borderRight: getBorderStyle(),
                   }}
                 >
                   {right && React.cloneElement(right, { fullWidth: true })}
@@ -154,7 +191,7 @@ const Subheader: React.FC<SubheaderProps> = ({
               );
             }
             // Should never hit this, but just in case
-            return <Box key={i} sx={{ borderRight: '0.5px dashed #d32f2f', height: '100%', minHeight: 40, maxHeight: 40 }} />;
+            return <Box key={i} sx={{ borderRight: getBorderStyle(), height: '100%', minHeight: 40, maxHeight: 40 }} />;
           }
           // Multiple columns: left in first, right in last
           if (i === 0) {
@@ -169,7 +206,7 @@ const Subheader: React.FC<SubheaderProps> = ({
                   height: '100%',
                   minHeight: 40,
                   maxHeight: 40,
-                  borderRight: '0.5px dashed #d32f2f',
+                  borderRight: getBorderStyle(),
                   minWidth: 0,
                   maxWidth: '100%',
                   overflow: 'hidden',
@@ -191,7 +228,7 @@ const Subheader: React.FC<SubheaderProps> = ({
                   height: '100%',
                   minHeight: 40,
                   maxHeight: 40,
-                  borderRight: '0.5px dashed #d32f2f',
+                  borderRight: getBorderStyle(),
                 }}
               >
                 {right && React.cloneElement(right, { fullWidth: true })}
@@ -203,7 +240,7 @@ const Subheader: React.FC<SubheaderProps> = ({
             <Box
               key={i}
               sx={{
-                borderRight: '0.5px dashed #d32f2f',
+                borderRight: getBorderStyle(),
                 height: '100%',
                 minHeight: 40,
                 maxHeight: 40,
@@ -212,7 +249,7 @@ const Subheader: React.FC<SubheaderProps> = ({
           );
         })}
         {/* Side column right */}
-        <Box sx={{ borderLeft: '0.5px dashed #d32f2f', height: '100%' }} />
+        <Box sx={{ borderLeft: getBorderStyle(), height: '100%' }} />
       </Box>
     </>
   );

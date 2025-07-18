@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Box, Popover, Button, Typography } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import Pill from '../Pill';
+import { ARTIFACT_RED } from '../../constants/colors';
 
 interface FilterButtonProps {
   fullWidth?: boolean;
@@ -76,7 +77,7 @@ const FilterButton: React.FC<FilterButtonProps> = ({ fullWidth = false }) => {
         }}
       >
         <Box sx={{ p: 2, minWidth: 200 }}>
-          <Typography variant="h6" sx={{ mb: 2, color: '#d32f2f' }}>
+          <Typography variant="h6" sx={{ mb: 2, color: ARTIFACT_RED }}>
             Filter Options
           </Typography>
           <Button

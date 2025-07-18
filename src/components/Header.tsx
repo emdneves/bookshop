@@ -10,13 +10,18 @@ import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined
 import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
 
 import { getCardsPerRow } from '../utils/helpers';
-import { SHARED_BG } from '../constants/colors';
+import { 
+  SHARED_BG, 
+  ARTIFACT_RED, 
+  ARTIFACT_RED_DARK,
+  getBorderStyle 
+} from '../constants/colors';
 
 const Header: React.FC = () => {
-  const { isAuthenticated, logout } = useAuth();
+  const { user, logout } = useAuth();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [cardsPerRow, setCardsPerRow] = useState(getCardsPerRow());
 
   useEffect(() => {
@@ -28,7 +33,7 @@ const Header: React.FC = () => {
   // Open login modal if redirected with openLogin state
   useEffect(() => {
     if (location.pathname === '/' && location.state && (location.state as any).openLogin) {
-      setAuthModalOpen(true);
+      setIsAuthModalOpen(true);
       // Remove openLogin from state so it doesn't trigger again
       navigate('/', { replace: true, state: {} });
     }
@@ -46,7 +51,7 @@ const Header: React.FC = () => {
     size: "small" as const,
     color: "inherit" as const,
     sx: {
-      border: '0.5px dashed #d32f2f',
+      border: getBorderStyle(),
       background: 'none',
       borderRadius: '50%',
       transition: 'border 0.2s',
@@ -69,7 +74,7 @@ const Header: React.FC = () => {
         transition: 'color 0.2s',
         fontSize: '1.2rem',
       },
-      '&:hover svg': { color: '#d32f2f' },
+      '&:hover svg': { color: ARTIFACT_RED },
     }
   };
 
@@ -77,7 +82,7 @@ const Header: React.FC = () => {
   const desktopIconStyle = {
     color: "inherit" as const,
     sx: {
-      border: '0.5px dashed #d32f2f',
+      border: getBorderStyle(),
       background: 'none',
       borderRadius: '50%',
       transition: 'border 0.2s',
@@ -97,7 +102,7 @@ const Header: React.FC = () => {
         color: '#222',
         transition: 'color 0.2s',
       },
-      '&:hover svg': { color: '#d32f2f' },
+      '&:hover svg': { color: ARTIFACT_RED },
     }
   };
 
@@ -124,7 +129,7 @@ const Header: React.FC = () => {
     <Box
       sx={{
         width: '100%',
-        borderBottom: '1px dashed #d32f2f',
+        borderBottom: getBorderStyle(),
         background: SHARED_BG,
         position: 'sticky',
         top: 0,
@@ -184,7 +189,7 @@ const Header: React.FC = () => {
                     mt: 1,
                   }}
                 >
-                  {isAuthenticated ? (
+                  {user ? (
                     <>
                       {createNavIcon('/buy', 'Buy', <ShoppingCartOutlinedIcon />, 'Compras', true)}
                       {createNavIcon('/sell', 'Sell', <StoreOutlinedIcon />, 'Vendas', true)}
@@ -209,7 +214,7 @@ const Header: React.FC = () => {
                   ) : (
                     <Tooltip title="Login" arrow>
                       <Box 
-                        onClick={() => setAuthModalOpen(true)}
+                        onClick={() => setIsAuthModalOpen(true)}
                         style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
                       >
                         <Typography variant="caption" sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#222', mb: 0.25 }}>
@@ -219,14 +224,14 @@ const Header: React.FC = () => {
                           {...iconStyle}
                           sx={{
                             ...iconStyle.sx,
-                            background: '#d32f2f',
+                            background: ARTIFACT_RED,
                             '& svg': {
                               color: '#fff',
                               transition: 'color 0.2s',
                               fontSize: '1.2rem',
                             },
                             '&:hover': {
-                              background: '#b71c1c',
+                              background: ARTIFACT_RED_DARK,
                             },
                           }}
                         >
@@ -254,7 +259,7 @@ const Header: React.FC = () => {
                 gap: 1.5,
               }}
             >
-              {isAuthenticated ? (
+              {user ? (
                 <>
                   {createNavIcon('/buy', 'Buy', <ShoppingCartOutlinedIcon />, 'Compras', false)}
                   {createNavIcon('/sell', 'Sell', <StoreOutlinedIcon />, 'Vendas', false)}
@@ -279,7 +284,7 @@ const Header: React.FC = () => {
         ) : (
                 <Tooltip title="Login" arrow>
                   <Box 
-            onClick={() => setAuthModalOpen(true)}
+            onClick={() => setIsAuthModalOpen(true)}
                     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
                   >
                     <Typography variant="caption" sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#222', mb: 0.5 }}>
@@ -289,13 +294,13 @@ const Header: React.FC = () => {
                       {...desktopIconStyle}
                       sx={{
                         ...desktopIconStyle.sx,
-                        background: '#d32f2f',
+                        background: ARTIFACT_RED,
                         '& svg': {
                           color: '#fff',
                           transition: 'color 0.2s',
                         },
                         '&:hover': {
-                          background: '#b71c1c',
+                          background: ARTIFACT_RED_DARK,
                         },
                       }}
                     >
@@ -312,7 +317,7 @@ const Header: React.FC = () => {
       })}
       {/* Side column right */}
       <Box sx={{ height: '100%' }} />
-      <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+      <AuthModal open={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </Box>
   );
 };

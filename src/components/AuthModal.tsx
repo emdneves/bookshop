@@ -1,16 +1,7 @@
 import React, { useState } from 'react';
-import { 
-  Modal, 
-  Box, 
-  Typography, 
-  TextField, 
-  Button, 
-  Alert, 
-  Tabs, 
-  Tab,
-  Stack
-} from '@mui/material';
 import { useAuth } from '../context/AuthContext';
+import Pill from './Pill';
+import { SHARED_BG, ARTIFACT_RED, ARTIFACT_RED_DARK, getBorderStyle, ARTIFACT_RED_TRANSPARENT_10 } from '../constants/colors';
 
 interface AuthModalProps {
   open: boolean;
@@ -30,14 +21,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
   
   const { login, register } = useAuth();
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (newValue: number) => {
     setActiveTab(newValue);
     setError(null);
     setSuccess(null);
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async () => {
     setLoading(true);
     setError(null);
     
@@ -54,15 +44,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
     setLoading(false);
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleRegister = async () => {
     setLoading(true);
     setError(null);
     
     const success = await register(email, password, firstName, lastName);
     if (success) {
       setSuccess('Registration successful! Please login.');
-      setActiveTab(0); // Switch to login tab
+      setActiveTab(0);
       setEmail('');
       setPassword('');
       setFirstName('');
@@ -83,132 +72,378 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
     onClose();
   };
 
+  if (!open) return null;
+
   return (
-    <Modal
-      open={open}
-      onClose={handleClose}
-      aria-labelledby="auth-modal-title"
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+      }}
+      onClick={handleClose}
     >
-      <Box
-        sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 400,
-          bgcolor: 'background.paper',
-          borderRadius: 2,
-          boxShadow: 24,
-          p: 0,
+      <div
+        style={{
+          background: SHARED_BG,
+          borderRadius: '12px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          width: '400px',
+          maxWidth: '90vw',
+          overflow: 'hidden',
+          fontSize: '14px', // Consistent font size
+          fontWeight: 600,  // Consistent font weight
+          color: '#222',    // Consistent font color
         }}
+        onClick={(e) => e.stopPropagation()}
       >
-        <Tabs value={activeTab} onChange={handleTabChange} sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tab label="Login" />
-          <Tab label="Register" />
-        </Tabs>
+        {/* Login/Register Switch Buttons */}
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', alignItems: 'center', margin: '24px 0 16px 0', width: '100%', padding: '0 24px' }}>
+          <Pill
+            fullWidth
+            background={activeTab === 0 ? ARTIFACT_RED_TRANSPARENT_10 : SHARED_BG}
+            color={ARTIFACT_RED}
+            onClick={() => setActiveTab(0)}
+            sx={{
+              flex: 1,
+              textAlign: 'center',
+              fontWeight: 600,
+              fontSize: '14px',
+              border: activeTab === 0 ? `1px solid ${ARTIFACT_RED}` : 'none',
+            }}
+          >
+            login
+          </Pill>
+          <Pill
+            fullWidth
+            background={activeTab === 1 ? ARTIFACT_RED_TRANSPARENT_10 : SHARED_BG}
+            color={ARTIFACT_RED}
+            onClick={() => setActiveTab(1)}
+            sx={{
+              flex: 1,
+              textAlign: 'center',
+              fontWeight: 600,
+              fontSize: '14px',
+              border: activeTab === 1 ? `1px solid ${ARTIFACT_RED}` : 'none',
+            }}
+          >
+            register
+          </Pill>
+        </div>
         
-        <Box sx={{ p: 3 }}>
+        <div style={{ padding: '24px' }}>
           {activeTab === 0 ? (
             // Login Form
-            <form onSubmit={handleLogin}>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Login to Make Offers
-              </Typography>
-              <Stack spacing={2}>
-                <TextField
-                  label="Email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
+            <div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                {/* Email Input */}
+                <div>
+                  <Pill fullWidth>
+                    <input
+                      type="email"
+                      placeholder="enter your email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      style={{
+                        width: '100%',
+                        background: 'transparent',
+                        border: 'none',
+                        outline: 'none',
+                        color: 'inherit',
+                        fontWeight: 'inherit',
+                        fontSize: 'inherit',
+                        lineHeight: 'inherit',
+                        textAlign: 'center',
+                      }}
+                    />
+                  </Pill>
+                </div>
+
+                {/* Password Input */}
+                <div>
+                  <Pill fullWidth>
+                    <input
+                      type="password"
+                      placeholder="enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      style={{
+                        width: '100%',
+                        background: 'transparent',
+                        border: 'none',
+                        outline: 'none',
+                        color: 'inherit',
+                        fontWeight: 'inherit',
+                        fontSize: 'inherit',
+                        lineHeight: 'inherit',
+                        textAlign: 'center',
+                      }}
+                    />
+                  </Pill>
+                </div>
+              </div>
+
+              {/* Error/Success Messages */}
+              {error && (
+                <Pill
                   fullWidth
-                />
-                <TextField
-                  label="Password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  fullWidth
-                />
-                {error && <Alert severity="error">{error}</Alert>}
-                {success && <Alert severity="success">{success}</Alert>}
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={loading}
+                  background="#ffebee"
+                  color="#c62828"
                   sx={{
-                    bgcolor: '#d32f2f',
-                    '&:hover': { bgcolor: '#b71c1c' }
+                    borderRadius: '8px',
+                    py: 1.5,
+                    px: 2,
+                    marginBottom: '16px',
+                    border: '1px solid #ffcdd2',
+                    fontSize: '14px',
+                    fontWeight: 500,
                   }}
                 >
-                  {loading ? 'Logging in...' : 'Login'}
-                </Button>
-              </Stack>
-            </form>
+                  {error}
+                </Pill>
+              )}
+              
+              {success && (
+                <Pill
+                  fullWidth
+                  background="#e8f5e8"
+                  color="#2e7d32"
+                  sx={{
+                    borderRadius: '8px',
+                    py: 1.5,
+                    px: 2,
+                    marginBottom: '16px',
+                    border: '1px solid #c8e6c9',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                  }}
+                >
+                  {success}
+                </Pill>
+              )}
+
+              {/* Login Button */}
+              <Pill
+                fullWidth
+                background={ARTIFACT_RED}
+                color="white"
+                onClick={handleLogin}
+                sx={{
+                  py: 0.5,
+                  px: 2,
+                  marginBottom: '16px',
+                  border: 'none',
+                  textAlign: 'center',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.7 : 1,
+                  '&:hover': {
+                    background: ARTIFACT_RED_DARK,
+                  },
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {loading ? 'logging in...' : 'login'}
+              </Pill>
+            </div>
           ) : (
             // Register Form
-            <form onSubmit={handleRegister}>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Create Account
-              </Typography>
-              <Stack spacing={2}>
-                <TextField
-                  label="First Name"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  required
+            <div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                {/* First Name Input */}
+                <div>
+                  <Pill fullWidth>
+                    <input
+                      type="text"
+                      placeholder="enter your first name"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      required
+                      style={{
+                        width: '100%',
+                        background: 'transparent',
+                        border: 'none',
+                        outline: 'none',
+                        color: 'inherit',
+                        fontWeight: 'inherit',
+                        fontSize: 'inherit',
+                        lineHeight: 'inherit',
+                        textAlign: 'center',
+                      }}
+                    />
+                  </Pill>
+                </div>
+
+                {/* Last Name Input */}
+                <div>
+                  <Pill fullWidth>
+                    <input
+                      type="text"
+                      placeholder="enter your last name"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      required
+                      style={{
+                        width: '100%',
+                        background: 'transparent',
+                        border: 'none',
+                        outline: 'none',
+                        color: 'inherit',
+                        fontWeight: 'inherit',
+                        fontSize: 'inherit',
+                        lineHeight: 'inherit',
+                        textAlign: 'center',
+                      }}
+                    />
+                  </Pill>
+                </div>
+
+                {/* Email Input */}
+                <div>
+                  <Pill fullWidth>
+                    <input
+                      type="email"
+                      placeholder="enter your email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      style={{
+                        width: '100%',
+                        background: 'transparent',
+                        border: 'none',
+                        outline: 'none',
+                        color: 'inherit',
+                        fontWeight: 'inherit',
+                        fontSize: 'inherit',
+                        lineHeight: 'inherit',
+                        textAlign: 'center',
+                      }}
+                    />
+                  </Pill>
+                </div>
+
+                {/* Password Input */}
+                <div>
+                  <Pill fullWidth>
+                    <input
+                      type="password"
+                      placeholder="enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      style={{
+                        width: '100%',
+                        background: 'transparent',
+                        border: 'none',
+                        outline: 'none',
+                        color: 'inherit',
+                        fontWeight: 'inherit',
+                        fontSize: 'inherit',
+                        lineHeight: 'inherit',
+                        textAlign: 'center',
+                      }}
+                    />
+                  </Pill>
+                </div>
+              </div>
+
+              {/* Error/Success Messages */}
+              {error && (
+                <Pill
                   fullWidth
-                />
-                <TextField
-                  label="Last Name"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  required
-                  fullWidth
-                />
-                <TextField
-                  label="Email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  fullWidth
-                />
-                <TextField
-                  label="Password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  fullWidth
-                />
-                {error && <Alert severity="error">{error}</Alert>}
-                {success && <Alert severity="success">{success}</Alert>}
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={loading}
+                  background="#ffebee"
+                  color="#c62828"
                   sx={{
-                    bgcolor: '#d32f2f',
-                    '&:hover': { bgcolor: '#b71c1c' }
+                    borderRadius: '8px',
+                    py: 1.5,
+                    px: 2,
+                    marginBottom: '16px',
+                    border: '1px solid #ffcdd2',
+                    fontSize: '14px',
+                    fontWeight: 500,
                   }}
                 >
-                  {loading ? 'Creating Account...' : 'Create Account'}
-                </Button>
-              </Stack>
-            </form>
+                  {error}
+                </Pill>
+              )}
+              
+              {success && (
+                <Pill
+                  fullWidth
+                  background="#e8f5e8"
+                  color="#2e7d32"
+                  sx={{
+                    borderRadius: '8px',
+                    py: 1.5,
+                    px: 2,
+                    marginBottom: '16px',
+                    border: '1px solid #c8e6c9',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                  }}
+                >
+                  {success}
+                </Pill>
+              )}
+
+              {/* Register Button */}
+              <Pill
+                fullWidth
+                background={ARTIFACT_RED}
+                color="white"
+                onClick={handleRegister}
+                sx={{
+                  py: 0.5,
+                  px: 2,
+                  marginBottom: '16px',
+                  border: 'none',
+                  textAlign: 'center',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.7 : 1,
+                  '&:hover': {
+                    background: ARTIFACT_RED_DARK,
+                  },
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {loading ? 'creating account...' : 'create account'}
+              </Pill>
+            </div>
           )}
           
-          <Button
+          {/* Cancel Button */}
+          <Pill
+            fullWidth
+            background={ARTIFACT_RED}
+            color="white"
             onClick={handleClose}
-            sx={{ mt: 2, width: '100%' }}
+            sx={{
+              py: 0.5,
+              px: 2,
+              border: 'none',
+              textAlign: 'center',
+              cursor: 'pointer',
+              '&:hover': {
+                background: ARTIFACT_RED_DARK,
+              },
+              transition: 'all 0.2s ease',
+            }}
           >
-            Cancel
-          </Button>
-        </Box>
-      </Box>
-    </Modal>
+            cancel
+          </Pill>
+        </div>
+      </div>
+    </div>
   );
 };
 

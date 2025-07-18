@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
 import { Box, SxProps, Theme } from '@mui/material';
+import { 
+  ARTIFACT_RED, 
+  ARTIFACT_RED_TRANSPARENT_10, 
+  ARTIFACT_RED_TRANSPARENT_05,
+  getBorderStyle,
+  getHoverBorderStyle 
+} from '../constants/colors';
 
 interface PillProps {
   children: React.ReactNode;
@@ -10,40 +17,33 @@ interface PillProps {
   sx?: SxProps<Theme>;
 }
 
-const Pill: React.FC<PillProps> = ({ children, color = '#d32f2f', background = 'transparent', fullWidth = false, onClick, sx }) => {
+const Pill: React.FC<PillProps> = ({ children, color = ARTIFACT_RED, background = 'transparent', fullWidth = false, onClick, sx }) => {
   const [active, setActive] = useState(false);
-
-  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-    setActive(true);
-    onClick?.(event);
-  };
 
   return (
     <Box
+      onClick={onClick}
       sx={{
-        display: fullWidth ? 'block' : 'inline-block',
-        width: fullWidth ? '100%' : undefined,
-        px: 1.5,
-        py: 0.5,
-        borderRadius: 999,
-        border: active ? `0.5px solid ${color}` : `0.5px dashed ${color}`,
-        color,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '4px 12px',
+        borderRadius: '16px',
         background,
-        fontWeight: 600,
-        fontSize: 'inherit',
-        lineHeight: 1.2,
-        whiteSpace: 'nowrap',
-        textOverflow: 'ellipsis',
-        overflow: 'hidden',
-        maxWidth: '100%',
-        minWidth: 0,
-        minHeight: '1.2em',
-        transition: 'all 0.2s',
+        color,
+        border: active ? `0.5px solid ${color}` : getBorderStyle().replace(ARTIFACT_RED, color),
         cursor: onClick ? 'pointer' : 'default',
+        transition: 'all 0.2s ease',
+        minHeight: '1.2em',
+        fontSize: 'inherit',
+        fontWeight: 'inherit',
+        ...(fullWidth && { width: '100%' }),
         ...sx,
+        '&:hover': onClick ? {
+          background: active ? ARTIFACT_RED_TRANSPARENT_10 : ARTIFACT_RED_TRANSPARENT_05,
+          border: getHoverBorderStyle().replace(ARTIFACT_RED, color),
+        } : {},
       }}
-      title={typeof children === 'string' ? children : undefined}
-      onClick={handleClick}
     >
       {children}
     </Box>

@@ -41,6 +41,14 @@ import WarningIcon from '@mui/icons-material/Warning';
 import { useNavigate } from 'react-router-dom';
 import CenteredMessage from '../components/CenteredMessage';
 import { formatSimpleDate } from '../utils/dateFormatter';
+import { usePageLayout } from '../hooks/usePageLayout';
+import { useSubheaderData } from '../hooks/useSubheaderData';
+import AuthGuard from '../components/AuthGuard';
+import { 
+  ARTIFACT_RED, 
+  ARTIFACT_RED_DARK,
+  getBorderStyle 
+} from '../constants/colors';
 
 interface UserData {
   id: number;
@@ -71,7 +79,7 @@ interface FormFieldConfig {
 // Reusable pill input field component
 const PillField: React.FC<FieldConfig> = ({ icon, label, value }) => (
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-    <Box sx={{ color: '#d32f2f', fontSize: 20, flexShrink: 0, width: 24 }}>
+    <Box sx={{ color: ARTIFACT_RED, fontSize: 20, flexShrink: 0, width: 24 }}>
       {icon}
     </Box>
     <TextField
@@ -121,13 +129,13 @@ const FormField: React.FC<{
             onChange={(e) => onChange(e.target.checked)}
             sx={{
               '& .MuiSwitch-switchBase.Mui-checked': {
-                color: '#d32f2f',
+                color: ARTIFACT_RED,
                 '&:hover': {
                   backgroundColor: 'rgba(211, 47, 47, 0.08)',
                 },
               },
               '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                backgroundColor: '#d32f2f',
+                backgroundColor: ARTIFACT_RED,
               },
             }}
           />
@@ -155,7 +163,7 @@ const InfoSection: React.FC<{ title: string; children: React.ReactNode }> = ({ t
     elevation={0}
     sx={{
       p: 2,
-      border: '1px dashed #d32f2f',
+      border: `1px dashed ${ARTIFACT_RED}`,
       borderRadius: 2,
       background: 'rgba(255, 255, 255, 0.8)',
       height: 'fit-content',
@@ -182,7 +190,7 @@ const ConfirmationDialog: React.FC<{
   severity?: 'warning' | 'info';
 }> = ({ open, onClose, title, message, confirmText, onConfirm, icon, severity = 'warning' }) => (
   <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-    <DialogTitle sx={{ color: '#d32f2f', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+    <DialogTitle sx={{ color: ARTIFACT_RED, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
       {icon && icon}
       {title}
     </DialogTitle>
@@ -218,14 +226,14 @@ const ConfirmationDialog: React.FC<{
 const pillInputStyle = {
   '& .MuiOutlinedInput-root': {
     borderRadius: '25px',
-    border: '1px dotted #d32f2f',
+    border: `1px dotted ${ARTIFACT_RED}`,
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
     height: '28px',
     '&:hover': {
-      border: '1px solid #d32f2f',
+      border: `1px solid ${ARTIFACT_RED}`,
     },
     '&.Mui-focused': {
-      border: '1px solid #d32f2f',
+      border: `1px solid ${ARTIFACT_RED}`,
       '& .MuiOutlinedInput-notchedOutline': {
         border: 'none',
       },
@@ -249,7 +257,7 @@ const pillInputStyle = {
     color: '#666',
     fontSize: '14px',
     '&.Mui-focused': {
-      color: '#d32f2f',
+      color: ARTIFACT_RED,
     },
     '&.MuiInputLabel-shrink': {
       fontSize: '12px',
@@ -261,17 +269,17 @@ const pillInputStyle = {
 const buttonStyle = {
   outlined: {
     borderRadius: '25px',
-    border: '1px dotted #d32f2f',
-    color: '#d32f2f',
+    border: `1px dotted ${ARTIFACT_RED}`,
+    color: ARTIFACT_RED,
     '&:hover': { 
-      border: '1px solid #d32f2f',
+      border: `1px solid ${ARTIFACT_RED}`,
       backgroundColor: 'rgba(211, 47, 47, 0.04)' 
     }
   },
   contained: {
     borderRadius: '25px',
-    backgroundColor: '#d32f2f',
-    '&:hover': { backgroundColor: '#b71c1c' }
+    backgroundColor: ARTIFACT_RED,
+    '&:hover': { backgroundColor: ARTIFACT_RED_DARK }
   }
 };
 
@@ -568,7 +576,7 @@ const Account: React.FC = () => {
       }}
     >
       {/* Side column left */}
-      <Box sx={{ borderRight: '0.5px dashed #d32f2f', height: '100%' }} />
+      <Box sx={{ borderRight: getBorderStyle(), height: '100%' }} />
       
       {/* Center columns: Account content */}
       <Box
@@ -579,12 +587,12 @@ const Account: React.FC = () => {
           p: 3,
           ...(cardsPerRow === 1 && {
             px: 2,
-            borderRight: '0.5px dashed #d32f2f',
+            borderRight: getBorderStyle(),
           }),
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, color: '#d32f2f' }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: ARTIFACT_RED }}>
             Account Profile
           </Typography>
           <Box sx={{ display: 'flex', gap: 2 }}>
@@ -603,11 +611,11 @@ const Account: React.FC = () => {
                     onClick={() => setDeleteDialogOpen(true)}
                     sx={{ 
                       borderRadius: '50%',
-                      border: '1px dotted #d32f2f',
-                      color: '#d32f2f',
+                      border: `1px dotted ${ARTIFACT_RED}`,
+                      color: ARTIFACT_RED,
                       backgroundColor: 'rgba(255, 255, 255, 0.8)',
                       '&:hover': { 
-                        border: '1px solid #d32f2f',
+                        border: `1px solid ${ARTIFACT_RED}`,
                         backgroundColor: 'rgba(211, 47, 47, 0.04)' 
                       }
                     }}
@@ -640,7 +648,7 @@ const Account: React.FC = () => {
                 elevation={0}
                 sx={{
                   p: 2,
-                  border: '1px dashed #d32f2f',
+                  border: `1px dashed ${ARTIFACT_RED}`,
                   borderRadius: 2,
                   background: 'rgba(255, 255, 255, 0.8)',
                 }}
@@ -650,7 +658,7 @@ const Account: React.FC = () => {
                     sx={{
                       width: 80,
                       height: 80,
-                      bgcolor: '#d32f2f',
+                      bgcolor: ARTIFACT_RED,
                       fontSize: 32,
                       fontWeight: 700,
                       mr: 3,
@@ -675,8 +683,8 @@ const Account: React.FC = () => {
                         variant="outlined"
                         size="small"
                         sx={{ 
-                          borderColor: '#d32f2f', 
-                          color: '#d32f2f',
+                          borderColor: ARTIFACT_RED, 
+                          color: ARTIFACT_RED,
                           fontWeight: 600 
                         }}
                       />
@@ -710,11 +718,11 @@ const Account: React.FC = () => {
       </Box>
       
       {/* Side column right */}
-      <Box sx={{ borderLeft: '0.5px dashed #d32f2f', height: '100%' }} />
+      <Box sx={{ borderLeft: getBorderStyle(), height: '100%' }} />
 
       {/* Edit Profile Dialog */}
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ color: '#d32f2f', fontWeight: 700 }}>
+        <DialogTitle sx={{ color: ARTIFACT_RED, fontWeight: 700 }}>
           Edit Profile
         </DialogTitle>
         <DialogContent>
@@ -756,7 +764,7 @@ const Account: React.FC = () => {
         message="Are you sure you want to delete your account? This action cannot be undone."
         confirmText="Delete Account"
         onConfirm={handleDeleteAccount}
-        icon={<WarningIcon sx={{ color: '#d32f2f' }} />}
+        icon={<WarningIcon sx={{ color: ARTIFACT_RED }} />}
         severity="warning"
       />
 

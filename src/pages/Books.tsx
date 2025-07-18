@@ -9,6 +9,8 @@ import DataTable from '../components/DataTable';
 import AuthGuard from '../components/AuthGuard';
 import SEO from '../utils/seo';
 import { formatSimpleDate } from '../utils/dateFormatter';
+import { getCardsPerRow } from '../utils/helpers';
+import { getBorderStyle } from '../constants/colors';
 
 interface BooksProps {
   setSubheaderData?: (data: any[]) => void;
@@ -117,7 +119,7 @@ const Books: React.FC<BooksProps> = ({ setSubheaderData, setTargetElement }) => 
         }}
       >
         {/* Side column left */}
-        <Box sx={{ borderRight: '0.5px dashed #d32f2f', height: '100%' }} />
+        <Box sx={{ borderRight: getBorderStyle(), height: '100%' }} />
         {/* Center columns: table */}
         <DataTable
           cardsPerRow={cardsPerRow}
@@ -129,7 +131,7 @@ const Books: React.FC<BooksProps> = ({ setSubheaderData, setTargetElement }) => 
           rowKey="id"
         />
         {/* Side column right */}
-        <Box sx={{ borderLeft: '0.5px dashed #d32f2f', height: '100%' }} />
+        <Box sx={{ borderLeft: getBorderStyle(), height: '100%' }} />
       </Box>
     </AuthGuard>
   );

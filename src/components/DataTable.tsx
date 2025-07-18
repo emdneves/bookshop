@@ -8,9 +8,14 @@ import {
   Skeleton, 
   Box,
   Typography,
-  IconButton
+  IconButton,
+  TextField,
+  InputAdornment,
+  Menu,
+  MenuItem,
+  Chip
 } from '@mui/material';
-import { ArrowUpward, ArrowDownward } from '@mui/icons-material';
+import { ArrowUpward, ArrowDownward, FilterList } from '@mui/icons-material';
 import {
   useReactTable,
   getCoreRowModel,
@@ -20,8 +25,16 @@ import {
   ColumnDef,
   SortingState,
   ColumnResizeMode,
+  FilterFn,
+  ColumnFiltersState,
+  GlobalFilterTableState,
 } from '@tanstack/react-table';
 import { getCardsPerRow } from '../utils/helpers';
+import { 
+  ARTIFACT_RED, 
+  ARTIFACT_RED_TRANSPARENT_04,
+  getBorderStyle 
+} from '../constants/colors';
 
 // Column definition interface
 export interface Column<T = any> {
@@ -64,6 +77,7 @@ const DataTable = <T extends Record<string, any>>({
 }: DataTableProps<T>) => {
   const [cardsPerRow, setCardsPerRow] = useState(propCardsPerRow || getCardsPerRow());
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   useEffect(() => {
     if (!propCardsPerRow) {
@@ -134,10 +148,42 @@ const DataTable = <T extends Record<string, any>>({
     };
   };
 
+  // Determine if a column should be filterable and its filter type
+  const getColumnFilterInfo = (column: Column<T>) => {
+    // Auto-determine filterability and type based on column key
+    if (column.key === 'status') {
+      return { filterable: true, filterType: 'select' };
+    } else if (['book', 'name', 'author', 'publisher', 'buyer', 'seller'].includes(column.key)) {
+      return { filterable: true, filterType: 'text' };
+    } else if (['price', 'counter', 'my_offer', 'proposal'].includes(column.key)) {
+      return { filterable: true, filterType: 'number' };
+    } else if (column.key === 'created_at') {
+      return { filterable: true, filterType: 'date' };
+    }
+    
+    return { filterable: false, filterType: 'text' };
+  };
+
+  // Get unique values for select filters
+  const getUniqueValues = (columnKey: string) => {
+    const values = new Set<string>();
+    data.forEach(row => {
+      let value = '';
+      if (columnKey.includes('.')) {
+        value = columnKey.split('.').reduce((obj: any, key) => obj?.[key], row) || '';
+      } else {
+        value = row[columnKey] || '';
+      }
+      if (value) values.add(String(value));
+    });
+    return Array.from(values).sort();
+  };
+
   // Convert our column format to TanStack Table format
   const tableColumns = useMemo<ColumnDef<T>[]>(() => {
     return columns.map(column => {
       const sortInfo = getColumnSortInfo(column);
+      const filterInfo = getColumnFilterInfo(column);
       
       return {
         id: column.key,
@@ -147,6 +193,7 @@ const DataTable = <T extends Record<string, any>>({
         minSize: 80,
         maxSize: 600,
         enableSorting: sortInfo.sortable,
+        enableColumnFilter: filterInfo.filterable,
         accessorFn: (row: T) => {
           if (sortInfo.sortKey && sortInfo.sortKey !== column.key) {
             return getSortValue(row, { ...column, sortKey: sortInfo.sortKey });
@@ -170,13 +217,16 @@ const DataTable = <T extends Record<string, any>>({
     columns: tableColumns,
     state: {
       sorting,
+      columnFilters,
     },
     onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     columnResizeMode: 'onChange' as ColumnResizeMode,
     enableColumnResizing: true,
+    enableFilters: true,
   });
 
   // Check if we're on the 2 smallest breakpoints
@@ -184,6 +234,17 @@ const DataTable = <T extends Record<string, any>>({
 
   const tableContent = (
     <Box sx={{ width: '100%', overflow: 'auto' }}>
+      {/* Filter Status */}
+      {columnFilters.length > 0 && (
+        <Box sx={{ mb: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
+          <Chip
+            label={`${table.getFilteredRowModel().rows.length} of ${table.getPreFilteredRowModel().rows.length} rows`}
+            size="small"
+            sx={{ backgroundColor: ARTIFACT_RED, color: 'white' }}
+          />
+        </Box>
+      )}
+
       <Table 
         size={size} 
         sx={{
@@ -207,6 +268,7 @@ const DataTable = <T extends Record<string, any>>({
               {headerGroup.headers.map(header => {
                 const column = columns.find(col => col.key === header.id);
                 const sortInfo = column ? getColumnSortInfo(column) : { sortable: false };
+                const filterInfo = column ? getColumnFilterInfo(column) : { filterable: false, filterType: 'text' };
                 
                 return (
                   <TableCell
@@ -217,7 +279,7 @@ const DataTable = <T extends Record<string, any>>({
                       minWidth: header.getSize(),
                       fontWeight: 600,
                       color: '#222',
-                      borderBottom: '1px solid #d32f2f',
+                      borderBottom: getBorderStyle(),
                       padding: size === 'small' ? '8px 16px' : '16px',
                       fontSize: '14px',
                       cursor: sortInfo.sortable ? 'pointer' : 'default',
@@ -239,25 +301,126 @@ const DataTable = <T extends Record<string, any>>({
                       width: '100%'
                     }}>
                       <span>{column?.label || header.id}</span>
-                      {sortInfo.sortable && (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', ml: 1 }}>
-                          <ArrowUpward 
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        {sortInfo.sortable && (
+                          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                            <ArrowUpward 
+                              sx={{ 
+                                fontSize: '12px', 
+                                color: header.column.getIsSorted() === 'asc' ? ARTIFACT_RED : '#666',
+                                opacity: header.column.getIsSorted() === 'asc' ? 1 : 0.8
+                              }} 
+                            />
+                            <ArrowDownward 
+                              sx={{ 
+                                fontSize: '12px', 
+                                color: header.column.getIsSorted() === 'desc' ? ARTIFACT_RED : '#666',
+                                opacity: header.column.getIsSorted() === 'desc' ? 1 : 0.8
+                              }} 
+                            />
+                          </Box>
+                        )}
+                        {filterInfo.filterable && (
+                          <FilterList 
                             sx={{ 
-                              fontSize: '12px', 
-                              color: header.column.getIsSorted() === 'asc' ? '#d32f2f' : '#666',
-                              opacity: header.column.getIsSorted() === 'asc' ? 1 : 0.8
-                            }} 
+                              fontSize: '14px', 
+                              color: header.column.getIsFiltered() ? ARTIFACT_RED : '#666',
+                              opacity: header.column.getIsFiltered() ? 1 : 0.8,
+                              cursor: 'pointer'
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Toggle filter input visibility
+                              const filterInput = document.getElementById(`filter-${header.id}`);
+                              if (filterInput) {
+                                filterInput.style.display = filterInput.style.display === 'none' ? 'block' : 'none';
+                              }
+                            }}
                           />
-                          <ArrowDownward 
-                            sx={{ 
-                              fontSize: '12px', 
-                              color: header.column.getIsSorted() === 'desc' ? '#d32f2f' : '#666',
-                              opacity: header.column.getIsSorted() === 'desc' ? 1 : 0.8
-                            }} 
-                          />
-                        </Box>
-                      )}
+                        )}
+                      </Box>
                     </Box>
+                    {/* Column Filter Input */}
+                    {filterInfo.filterable && (
+                      <Box
+                        id={`filter-${header.id}`}
+                        sx={{
+                          display: 'none',
+                          mt: 1,
+                          '&:hover': { display: 'block' }
+                        }}
+                      >
+                        {filterInfo.filterType === 'text' && (
+                          <TextField
+                            placeholder={`Filter ${column?.label}...`}
+                            value={(header.column.getFilterValue() as string) ?? ''}
+                            onChange={(e) => header.column.setFilterValue(e.target.value)}
+                            size="small"
+                            fullWidth
+                            sx={{ 
+                              '& .MuiInputBase-root': { 
+                                fontSize: '12px',
+                                height: '32px'
+                              }
+                            }}
+                          />
+                        )}
+                        {filterInfo.filterType === 'number' && (
+                          <TextField
+                            type="number"
+                            placeholder={`Min ${column?.label}...`}
+                            value={(header.column.getFilterValue() as string) ?? ''}
+                            onChange={(e) => header.column.setFilterValue(e.target.value)}
+                            size="small"
+                            fullWidth
+                            sx={{ 
+                              '& .MuiInputBase-root': { 
+                                fontSize: '12px',
+                                height: '32px'
+                              }
+                            }}
+                          />
+                        )}
+                        {filterInfo.filterType === 'date' && (
+                          <TextField
+                            type="date"
+                            value={(header.column.getFilterValue() as string) ?? ''}
+                            onChange={(e) => header.column.setFilterValue(e.target.value)}
+                            size="small"
+                            fullWidth
+                            sx={{ 
+                              '& .MuiInputBase-root': { 
+                                fontSize: '12px',
+                                height: '32px'
+                              }
+                            }}
+                          />
+                        )}
+                        {filterInfo.filterType === 'select' && (
+                          <TextField
+                            select
+                            placeholder={`Filter ${column?.label}...`}
+                            value={(header.column.getFilterValue() as string) ?? ''}
+                            onChange={(e) => header.column.setFilterValue(e.target.value)}
+                            size="small"
+                            fullWidth
+                            sx={{ 
+                              '& .MuiInputBase-root': { 
+                                fontSize: '12px',
+                                height: '32px'
+                              }
+                            }}
+                          >
+                            <MenuItem value="">All</MenuItem>
+                            {getUniqueValues(column?.key || header.id).map((value) => (
+                              <MenuItem key={value} value={value}>
+                                {value}
+                              </MenuItem>
+                            ))}
+                          </TextField>
+                        )}
+                      </Box>
+                    )}
                     {/* Column resize handle */}
                     {!isSmallBreakpoint && (
                       <Box
@@ -273,7 +436,7 @@ const DataTable = <T extends Record<string, any>>({
                           userSelect: 'none',
                           touchAction: 'none',
                           '&:hover': {
-                            backgroundColor: '#d32f2f',
+                            backgroundColor: ARTIFACT_RED,
                           },
                         }}
                       />
@@ -307,7 +470,7 @@ const DataTable = <T extends Record<string, any>>({
                 sx={{
                   cursor: onRowClick ? 'pointer' : 'default',
                   '&:hover': hover ? {
-                    backgroundColor: 'rgba(211, 47, 47, 0.04)',
+                    backgroundColor: ARTIFACT_RED_TRANSPARENT_04,
                   } : {},
                   '&:last-child td': { border: 0 },
                 }}
@@ -320,7 +483,7 @@ const DataTable = <T extends Record<string, any>>({
                       key={cell.id}
                       align={column?.align || 'left'}
                       sx={{
-                        borderBottom: '0.5px dashed #d32f2f',
+                        borderBottom: getBorderStyle(),
                         padding: size === 'small' ? '8px 16px' : '16px',
                         fontSize: '14px',
                         width: cell.column.getSize(),
@@ -360,7 +523,7 @@ const DataTable = <T extends Record<string, any>>({
           overflow: isSmallBreakpoint ? 'auto' : 'visible', // Horizontal scroll only on small breakpoints
           ...(cardsPerRow === 1 && {
             px: 0,
-            borderRight: '0.5px dashed #d32f2f',
+            borderRight: getBorderStyle(),
           }),
         }}
       >

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Box } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Typography } from '@mui/material';
 import { useApiData } from '../hooks/useApiData';
 import { usePageLayout } from '../hooks/usePageLayout';
 import { useSubheaderData } from '../hooks/useSubheaderData';
@@ -9,6 +9,8 @@ import DataTable from '../components/DataTable';
 import AuthGuard from '../components/AuthGuard';
 import { formatSimpleDate } from '../utils/dateFormatter';
 import EditableField from '../components/EditableField';
+import { getCardsPerRow } from '../utils/helpers';
+import { getBorderStyle } from '../constants/colors';
 
 interface BuyProps {
   setSubheaderData?: (data: any[]) => void;
@@ -117,7 +119,7 @@ const Buy: React.FC<BuyProps> = ({ setSubheaderData, setTargetElement }) => {
         }}
       >
         {/* Side column left */}
-        <Box sx={{ borderRight: '0.5px dashed #d32f2f', height: '100%' }} />
+        <Box sx={{ borderRight: getBorderStyle(), height: '100%' }} />
         {/* Center columns: table */}
         <DataTable
           cardsPerRow={cardsPerRow}
@@ -129,7 +131,7 @@ const Buy: React.FC<BuyProps> = ({ setSubheaderData, setTargetElement }) => {
           rowKey="id"
         />
         {/* Side column right */}
-        <Box sx={{ borderLeft: '0.5px dashed #d32f2f', height: '100%' }} />
+        <Box sx={{ borderLeft: getBorderStyle(), height: '100%' }} />
       </Box>
     </AuthGuard>
   );
