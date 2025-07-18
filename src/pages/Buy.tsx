@@ -6,17 +6,16 @@ import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config/api';
 import CenteredMessage from '../components/CenteredMessage';
 import ScrollableTable from '../components/ScrollableTable';
+import { formatSimpleDate } from '../utils/dateFormatter';
 
 const ORDERS_CONTENT_TYPE_ID = 'cec824c6-1e37-4b1f-8cf6-b69cd39e52b2';
 const BOOKS_CONTENT_TYPE_ID = '481a065c-8733-4e97-9adf-dc64acacf5fb';
 
 interface BuyProps {
-  search: string;
-  onSearchChange: (value: string) => void;
   setSubheaderData?: (data: any[]) => void;
   setTargetElement?: (element: string) => void;
 }
-const Buy: React.FC<BuyProps> = ({ search, onSearchChange, setSubheaderData, setTargetElement }) => {
+const Buy: React.FC<BuyProps> = ({ setSubheaderData, setTargetElement }) => {
   const { token, isAuthenticated } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
   const [books, setBooks] = useState<any[]>([]);
@@ -99,21 +98,7 @@ const Buy: React.FC<BuyProps> = ({ search, onSearchChange, setSubheaderData, set
     fetchBooks();
   }, []);
 
-  // Filter orders by book name, author, or ISBN (case-insensitive)
-  const filteredOrders = orders.filter(order => {
-    const book = books.find(b => b.id === order.data.book);
-    if (!book) return false;
-    
-    const title = book.data?.name || '';
-    const author = book.data?.author || '';
-    const isbn = book.data?.isbn ? String(book.data.isbn) : '';
-    const q = search.toLowerCase();
-    return (
-      title.toLowerCase().includes(q) ||
-      author.toLowerCase().includes(q) ||
-      isbn.toLowerCase().includes(q)
-    );
-  });
+  const filteredOrders = orders;
 
   if (!isAuthenticated && showAuthMessage) {
     return (
@@ -206,7 +191,7 @@ const Buy: React.FC<BuyProps> = ({ search, onSearchChange, setSubheaderData, set
                       }}
                     />
                   </TableCell>
-                  <TableCell>{new Date(order.created_at).toLocaleString()}</TableCell>
+                  <TableCell>{formatSimpleDate(order.created_at)}</TableCell>
                 </TableRow>
               );
             })

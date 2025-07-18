@@ -6,18 +6,17 @@ import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config/api';
 import CenteredMessage from '../components/CenteredMessage';
 import ScrollableTable from '../components/ScrollableTable';
+import { formatSimpleDate } from '../utils/dateFormatter';
 
 const BOOKS_CONTENT_TYPE_ID = '481a065c-8733-4e97-9adf-dc64acacf5fb';
 const ORDERS_CONTENT_TYPE_ID = 'cec824c6-1e37-4b1f-8cf6-b69cd39e52b2';
 
 interface SellProps {
-  search: string;
-  onSearchChange: (value: string) => void;
   setSubheaderData?: (data: any[]) => void;
   setTargetElement?: (element: string) => void;
 }
 
-const Sell: React.FC<SellProps> = ({ search, onSearchChange, setSubheaderData, setTargetElement }) => {
+const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
   const { token, isAuthenticated } = useAuth();
   const [books, setBooks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,21 +104,7 @@ const Sell: React.FC<SellProps> = ({ search, onSearchChange, setSubheaderData, s
   // Offers received for my books
   const offersForMyBooks = orders.filter(order => myBookIds.includes(order.data.book));
 
-  // Filter offers by book name, author, or ISBN (case-insensitive)
-  const filteredOffers = offersForMyBooks.filter(order => {
-    const book = books.find(b => b.id === order.data.book);
-    if (!book) return false;
-    
-    const title = book.data?.name || '';
-    const author = book.data?.author || '';
-    const isbn = book.data?.isbn ? String(book.data.isbn) : '';
-    const q = search.toLowerCase();
-    return (
-      title.toLowerCase().includes(q) ||
-      author.toLowerCase().includes(q) ||
-      isbn.toLowerCase().includes(q)
-    );
-  });
+  const filteredOffers = offersForMyBooks;
 
   // Save counter offer to backend and update local state
   const handleCounterBlur = async (orderId: string) => {
@@ -348,7 +333,7 @@ const Sell: React.FC<SellProps> = ({ search, onSearchChange, setSubheaderData, s
                       <MenuItem value="pending" sx={{'&.Mui-selected, &:hover': { backgroundColor: 'rgba(211, 47, 47, 0.08) !important' }}}>Pending</MenuItem>
                     </Select>
                   </TableCell>
-                  <TableCell>{new Date(order.created_at).toLocaleString()}</TableCell>
+                  <TableCell>{formatSimpleDate(order.created_at)}</TableCell>
                 </TableRow>
               );
             })

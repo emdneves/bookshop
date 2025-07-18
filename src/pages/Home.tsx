@@ -11,8 +11,12 @@ import {
 import Skeleton from '@mui/material/Skeleton';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSearch } from '../context/SearchContext';
 import { API_BASE_URL } from '../config/api';
 import SEO from '../components/SEO';
+import Subheader from '../components/Subheader';
+import SubheaderSearchBar from '../components/SubheaderSearchBar';
+import SubheaderFilterButton from '../components/SubheaderFilterButton';
 
 
 // Remove the old BookCard interface and replace with a new one for API data
@@ -192,23 +196,18 @@ const PlaceholderImage = styled(Box)({
 
 
 
-interface HomeProps {
-  search: string;
-  onSearchChange: (value: string) => void;
-  filterAnchorEl: null | HTMLElement;
-  onFilterClick: (event: React.MouseEvent<HTMLElement>) => void;
-  onFilterClose: () => void;
-  filterOpen: boolean;
-}
+interface HomeProps {}
 
-const Home: React.FC<HomeProps> = ({
-  search,
-  onSearchChange,
-  filterAnchorEl,
-  onFilterClick,
-  onFilterClose,
-  filterOpen,
-}) => {
+// Subheader slot components for Home
+const HomeSubheaderLeft = ({ fullWidth }: { fullWidth?: boolean }) => (
+  <SubheaderSearchBar fullWidth={fullWidth} />
+);
+
+const HomeSubheaderRight = ({ fullWidth }: { fullWidth?: boolean }) => (
+  <SubheaderFilterButton fullWidth={fullWidth} />
+);
+
+const Home: React.FC<HomeProps> = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const [bookCards, setBookCards] = useState<BookCard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -216,6 +215,7 @@ const Home: React.FC<HomeProps> = ({
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [orders, setOrders] = useState<Order[]>([]);
   const [cardsPerRow, setCardsPerRow] = useState(getCardsPerRow());
+  const { searchTerm } = useSearch();
   const totalColumns = cardsPerRow + 2;
   const mainRows = Math.ceil(bookCards.length / cardsPerRow);
   const totalRows = mainRows + 2; // +2 for top and bottom half-height rows
@@ -312,7 +312,9 @@ const Home: React.FC<HomeProps> = ({
 
   // Filter books based on search term
   const filteredBooks = bookCards.filter(book => 
-    book.title.toLowerCase().includes(search.toLowerCase())
+    book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    String(book.isbn).toLowerCase().includes(searchTerm.toLowerCase())
   );
   
   const allCards = [...filteredBooks]; // Only books in main area
@@ -352,7 +354,9 @@ const Home: React.FC<HomeProps> = ({
         url="https://theartifact.shop"
         type="website"
       />
-    <PageWrapper cardsPerRow={cardsPerRow}
+      {/* Export subheader slot elements for use in App.tsx */}
+      {/* This is a placeholder for the actual Subheader component */}
+      <PageWrapper cardsPerRow={cardsPerRow}
       sx={{
         gridTemplateColumns: cardsPerRow === 1 ? '0.125fr 0.75fr 0.125fr' : `0.5fr repeat(${cardsPerRow}, 1fr) 0.5fr`,
         gridTemplateRows: `repeat(${mainRows}, 1fr)`,
@@ -547,4 +551,5 @@ const Home: React.FC<HomeProps> = ({
   );
 };
 
+export { HomeSubheaderLeft, HomeSubheaderRight };
 export default Home;

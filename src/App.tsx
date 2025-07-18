@@ -3,12 +3,13 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { HelmetProvider } from 'react-helmet-async';
 import Layout from './components/Layout';
-import Home from './pages/Home';
+import Home, { HomeSubheaderLeft, HomeSubheaderRight } from './pages/Home';
 import Product from './pages/Product';
 import Buy from './pages/Buy';
 import Sell from './pages/Sell';
 import Books from './pages/Books';
 import Account from './pages/Account';
+import { SearchProvider } from './context/SearchContext';
 
 const theme = createTheme({
   typography: {
@@ -31,56 +32,30 @@ const App: React.FC = () => {
   // Determine if current page should show subheader
   const showSubheader = location.pathname === '/' || location.pathname === '/buy' || location.pathname === '/sell' || location.pathname === '/books';
   
-  // State for subheader functionality (only used on landing page)
-  const [search, setSearch] = useState('');
-  const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
-  
-  const handleFilterClick = (event: React.MouseEvent<HTMLElement>) => {
-    setFilterAnchorEl(event.currentTarget);
-  };
-  
-  const handleFilterClose = () => {
-    setFilterAnchorEl(null);
-  };
-  
-  const filterOpen = Boolean(filterAnchorEl);
+
 
   return (
     <HelmetProvider>
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Layout
-        showSubheader={showSubheader}
-        subheaderProps={{
-          search,
-          onSearchChange: setSearch,
-          filterAnchorEl,
-          onFilterClick: handleFilterClick,
-          onFilterClose: handleFilterClose,
-          filterOpen,
-        }}
-      >
-        <Routes>
-          <Route 
-            path="/" 
-            element={
-              <Home 
-                search={search}
-                onSearchChange={setSearch}
-                filterAnchorEl={filterAnchorEl}
-                onFilterClick={handleFilterClick}
-                onFilterClose={handleFilterClose}
-                filterOpen={filterOpen}
-              />
-            } 
-          />
-          <Route path="/book/:id" element={<Product />} />
-          <Route path="/buy" element={<Buy search={search} onSearchChange={setSearch} />} />
-          <Route path="/sell" element={<Sell search={search} onSearchChange={setSearch} />} />
-          <Route path="/books" element={<Books search={search} onSearchChange={setSearch} />} />
-          <Route path="/account" element={<Account />} />
-        </Routes>
-      </Layout>
+      <SearchProvider>
+        <Layout
+          showSubheader={showSubheader}
+          subheaderProps={{
+            left: <HomeSubheaderLeft />,
+            right: <HomeSubheaderRight />,
+          }}
+        >
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/book/:id" element={<Product />} />
+            <Route path="/buy" element={<Buy />} />
+            <Route path="/sell" element={<Sell />} />
+            <Route path="/books" element={<Books />} />
+            <Route path="/account" element={<Account />} />
+          </Routes>
+        </Layout>
+      </SearchProvider>
     </ThemeProvider>
     </HelmetProvider>
   );

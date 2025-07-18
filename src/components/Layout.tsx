@@ -10,13 +10,10 @@ interface LayoutProps {
   children: React.ReactNode;
   showSubheader?: boolean;
   subheaderProps?: {
-    search?: string;
-    onSearchChange?: (value: string) => void;
-    filterAnchorEl?: null | HTMLElement;
-    onFilterClick?: (event: React.MouseEvent<HTMLElement>) => void;
-    onFilterClose?: () => void;
-    filterOpen?: boolean;
+    left?: React.ReactElement<any>;
+    right?: React.ReactElement<any>;
   };
+  onSearchChange?: (value: string) => void;
 }
 
 const Layout: React.FC<LayoutProps> = ({ 
@@ -38,12 +35,8 @@ const Layout: React.FC<LayoutProps> = ({
       {showSubheader && (
         <Subheader
           cardsPerRow={cardsPerRow}
-          search={subheaderProps.search || ''}
-          onSearchChange={subheaderProps.onSearchChange || (() => {})}
-          filterAnchorEl={subheaderProps.filterAnchorEl || null}
-          onFilterClick={subheaderProps.onFilterClick || (() => {})}
-          onFilterClose={subheaderProps.onFilterClose || (() => {})}
-          filterOpen={subheaderProps.filterOpen || false}
+          left={subheaderProps.left}
+          right={subheaderProps.right}
         />
       )}
       <main style={{ flex: 1, minHeight: 'calc(100vh - 128px)' }}>

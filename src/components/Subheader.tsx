@@ -5,22 +5,23 @@ import { SHARED_BG } from './bg';
 
 interface SubheaderProps {
   cardsPerRow: number;
-  search: string;
-  onSearchChange: (value: string) => void;
-  filterAnchorEl: null | HTMLElement;
-  onFilterClick: (event: React.MouseEvent<HTMLElement>) => void;
-  onFilterClose: () => void;
-  filterOpen: boolean;
+  left?: React.ReactElement<any>;
+  right?: React.ReactElement<any>;
+}
+
+// Helper to safely clone with fullWidth if possible
+function cloneWithFullWidth(node: React.ReactNode) {
+  if (React.isValidElement(node) && typeof node.type !== 'string') {
+    // Type assertion: we know our slot components accept fullWidth
+    return React.cloneElement(node as React.ReactElement<{ fullWidth?: boolean }>, { fullWidth: true });
+  }
+  return node;
 }
 
 const Subheader: React.FC<SubheaderProps> = ({
   cardsPerRow,
-  search,
-  onSearchChange,
-  filterAnchorEl,
-  onFilterClick,
-  onFilterClose,
-  filterOpen,
+  left,
+  right,
 }) => {
   const totalColumns = cardsPerRow + 2;
   const gridTemplateColumns = cardsPerRow === 1 ? '0.125fr 0.75fr 0.125fr' : `0.5fr repeat(${cardsPerRow}, 1fr) 0.5fr`;
@@ -68,7 +69,7 @@ const Subheader: React.FC<SubheaderProps> = ({
         <Box sx={{ borderRight: '0.5px dashed #d32f2f', height: '100%' }} />
         {/* Center columns */}
         {Array.from({ length: cardsPerRow }).map((_, i) => {
-          // Single column case: both search and filter in one column
+          // Single column: merge left and right into center slot
           if (cardsPerRow === 1) {
             return (
               <Box
@@ -83,119 +84,79 @@ const Subheader: React.FC<SubheaderProps> = ({
                   maxHeight: 40,
                   borderRight: '0.5px dashed #d32f2f',
                   gap: 1,
+                  minWidth: 0,
                 }}
               >
-                <TextField
-                  size="small"
-                  variant="outlined"
-                  placeholder="Search by book name, author, or ISBN"
-                  value={search}
-                  onChange={e => onSearchChange(e.target.value)}
-                  sx={{ 
-                    width: '60%',
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'transparent',
-                      borderRadius: '20px',
-                      height: 32,
-                      minHeight: 32,
-                      maxHeight: 32,
-                      fontSize: 14,
-                      '& fieldset': {
-                        border: '0.5px dashed #d32f2f',
-                      },
-                      '&:hover fieldset': {
-                        border: '0.5px dashed #d32f2f',
-                      },
-                      '&.Mui-focused fieldset': {
-                        border: '0.5px dashed #d32f2f',
-                      },
-                    },
-                    '& .MuiInputBase-input': {
-                      fontSize: 14,
-                      height: '1.2em',
-                      padding: '8px 12px',
-                    },
-                  }}
-                />
-                <Button
-                  onClick={onFilterClick}
-                  size="small"
-                  startIcon={<FilterListIcon />}
-                  sx={{
-                    border: '0.5px dashed #d32f2f',
-                    bgcolor: 'floralwhite',
-                    color: '#d32f2f',
-                    height: 32,
-                    minHeight: 32,
-                    maxHeight: 32,
-                    fontSize: 14,
-                    borderRadius: '20px',
-                    px: 1.5,
-                    textTransform: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    boxShadow: 'none',
-                    '&:hover': {
-                      bgcolor: 'rgba(211, 47, 47, 0.08)',
-                      borderColor: '#d32f2f',
-                      color: '#d32f2f',
-                    },
-                  }}
-                >
-                  Filter
-                </Button>
-                <Popover
-                  open={filterOpen}
-                  anchorEl={filterAnchorEl}
-                  onClose={onFilterClose}
-                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-                  PaperProps={{ sx: {
-                    p: 2,
-                    minWidth: 200,
-                    bgcolor: 'floralwhite !important',
-                    backgroundColor: 'floralwhite !important',
-                    border: '1px dashed #d32f2f',
-                    boxShadow: '0 4px 12px rgba(211,47,47,0.08)',
-                    '& *': {
-                      backgroundColor: 'floralwhite !important',
-                    },
-                    '& .MuiButton-root, & .MuiMenuItem-root': {
-                      backgroundColor: 'floralwhite !important',
-                      color: '#d32f2f',
-                      borderColor: '#d32f2f',
-                    },
-                    '& .MuiButton-root:hover, & .MuiMenuItem-root:hover, & .MuiMenuItem-root.Mui-selected': {
-                      backgroundColor: 'rgba(211, 47, 47, 0.08) !important',
-                      color: '#d32f2f',
-                    },
-                    '& .MuiButton-contained': {
-                      backgroundColor: '#d32f2f !important',
-                      color: 'floralwhite !important',
-                    },
-                    '& .MuiButton-contained:hover': {
-                      backgroundColor: '#b71c1c !important',
-                    },
-                  } }}
-                >
-                  <Typography variant="subtitle1" sx={{ mb: 1, color: '#d32f2f', fontWeight: 700 }}>
-                    Filters
-                  </Typography>
-                  {/* Placeholder filter options */}
-                  <Button fullWidth variant="outlined" sx={{ mb: 1, borderColor: '#d32f2f', color: '#d32f2f', bgcolor: 'floralwhite', '&:hover': { bgcolor: 'rgba(211, 47, 47, 0.08)', borderColor: '#d32f2f' } }}>
-                    Example Filter
-                  </Button>
-                  <Button fullWidth variant="contained" onClick={onFilterClose} sx={{ bgcolor: '#d32f2f', color: 'floralwhite', fontWeight: 700, '&:hover': { bgcolor: '#b71c1c' } }}>
-                    Apply
-                  </Button>
-                </Popover>
+                <Box sx={{
+                  width: '50%',
+                  minWidth: 0,
+                  maxWidth: '100%',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  display: 'block',
+                }}>{left && React.cloneElement(left, { fullWidth: true })}</Box>
+                <Box sx={{
+                  width: '50%',
+                  minWidth: 0,
+                  maxWidth: '100%',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  display: 'block',
+                }}>{right && React.cloneElement(right, { fullWidth: true })}</Box>
               </Box>
             );
           }
-          
-          // Multiple columns case: separate search and filter
-          // First center column: search
+          // Special case: 2 columns, left in first, right in second
+          if (cardsPerRow === 2) {
+            if (i === 0) {
+              return (
+                <Box
+                  key={i}
+                  sx={{
+                    px: 1,
+                    display: 'block',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    height: '100%',
+                    minHeight: 40,
+                    maxHeight: 40,
+                    borderRight: '0.5px dashed #d32f2f',
+                    minWidth: 0,
+                    maxWidth: '100%',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {left && React.cloneElement(left, { fullWidth: true })}
+                </Box>
+              );
+            }
+            if (i === 1) {
+              return (
+                <Box
+                  key={i}
+                  sx={{
+                    px: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-end',
+                    height: '100%',
+                    minHeight: 40,
+                    maxHeight: 40,
+                    borderRight: '0.5px dashed #d32f2f',
+                  }}
+                >
+                  {right && React.cloneElement(right, { fullWidth: true })}
+                </Box>
+              );
+            }
+            // Should never hit this, but just in case
+            return <Box key={i} sx={{ borderRight: '0.5px dashed #d32f2f', height: '100%', minHeight: 40, maxHeight: 40 }} />;
+          }
+          // Multiple columns: left in first, right in last
           if (i === 0) {
             return (
               <Box
@@ -204,49 +165,20 @@ const Subheader: React.FC<SubheaderProps> = ({
                   px: 1,
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
+                  justifyContent: 'flex-start',
                   height: '100%',
                   minHeight: 40,
                   maxHeight: 40,
                   borderRight: '0.5px dashed #d32f2f',
+                  minWidth: 0,
+                  maxWidth: '100%',
+                  overflow: 'hidden',
                 }}
               >
-                <TextField
-                  size="small"
-                  variant="outlined"
-                  placeholder="Search by book name, author, or ISBN"
-                  value={search}
-                  onChange={e => onSearchChange(e.target.value)}
-                  sx={{ 
-                    width: '80%',
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'transparent',
-                      borderRadius: '20px',
-                      height: 32,
-                      minHeight: 32,
-                      maxHeight: 32,
-                      fontSize: 14,
-                      '& fieldset': {
-                        border: '0.5px dashed #d32f2f',
-                      },
-                      '&:hover fieldset': {
-                        border: '0.5px dashed #d32f2f',
-                      },
-                      '&.Mui-focused fieldset': {
-                        border: '0.5px dashed #d32f2f',
-                      },
-                    },
-                    '& .MuiInputBase-input': {
-                      fontSize: 14,
-                      height: '1.2em',
-                      padding: '8px 12px',
-                    },
-                  }}
-                />
+                {left && React.cloneElement(left, { fullWidth: true })}
               </Box>
             );
           }
-          // Last center column: filter
           if (i === cardsPerRow - 1) {
             return (
               <Box
@@ -255,54 +187,14 @@ const Subheader: React.FC<SubheaderProps> = ({
                   px: 1,
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
+                  justifyContent: 'flex-end',
                   height: '100%',
                   minHeight: 40,
                   maxHeight: 40,
                   borderRight: '0.5px dashed #d32f2f',
                 }}
               >
-                <Button
-                  onClick={onFilterClick}
-                  size="small"
-                  startIcon={<FilterListIcon />}
-                  sx={{
-                    border: '0.5px dashed #d32f2f',
-                    bgcolor: 'transparent',
-                    color: '#d32f2f',
-                    height: 32,
-                    minHeight: 32,
-                    maxHeight: 32,
-                    fontSize: 14,
-                    borderRadius: '20px',
-                    px: 1.5,
-                    textTransform: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                  }}
-                >
-                  Filter
-                </Button>
-                <Popover
-                  open={filterOpen}
-                  anchorEl={filterAnchorEl}
-                  onClose={onFilterClose}
-                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-                  PaperProps={{ sx: { p: 2, minWidth: 200 } }}
-                >
-                  <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                    Filters
-                  </Typography>
-                  {/* Placeholder filter options */}
-                  <Button fullWidth variant="outlined" sx={{ mb: 1 }}>
-                    Example Filter
-                  </Button>
-                  <Button fullWidth variant="contained" onClick={onFilterClose}>
-                    Apply
-                  </Button>
-                </Popover>
+                {right && React.cloneElement(right, { fullWidth: true })}
               </Box>
             );
           }

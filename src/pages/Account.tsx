@@ -40,6 +40,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import WarningIcon from '@mui/icons-material/Warning';
 import { useNavigate } from 'react-router-dom';
 import CenteredMessage from '../components/CenteredMessage';
+import { formatSimpleDate } from '../utils/dateFormatter';
 
 interface UserData {
   id: number;
@@ -543,16 +544,6 @@ const Account: React.FC = () => {
     );
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   // Field configurations
   const accountInfoFields: FieldConfig[] = userData ? [
     { icon: <EmailIcon />, label: 'Email Address', value: userData.email },
@@ -561,9 +552,9 @@ const Account: React.FC = () => {
   ] : [];
 
   const accountActivityFields: FieldConfig[] = userData ? [
-    { icon: <CalendarTodayIcon />, label: 'Member Since', value: formatDate(userData.created_at) },
-    { icon: <AccessTimeIcon />, label: 'Last Login', value: formatDate(userData.last_login) },
-    { icon: <CalendarTodayIcon />, label: 'Last Updated', value: formatDate(userData.updated_at) }
+    { icon: <CalendarTodayIcon />, label: 'Member Since', value: formatSimpleDate(userData.created_at) },
+    { icon: <AccessTimeIcon />, label: 'Last Login', value: formatSimpleDate(userData.last_login) },
+    { icon: <CalendarTodayIcon />, label: 'Last Updated', value: formatSimpleDate(userData.updated_at) }
   ] : [];
 
   return (

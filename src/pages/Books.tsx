@@ -7,18 +7,17 @@ import { API_BASE_URL } from '../config/api';
 import SEO from '../components/SEO';
 import CenteredMessage from '../components/CenteredMessage';
 import ScrollableTable from '../components/ScrollableTable';
+import { formatSimpleDate } from '../utils/dateFormatter';
 
 const BOOKS_CONTENT_TYPE_ID = '481a065c-8733-4e97-9adf-dc64acacf5fb';
 const ORDERS_CONTENT_TYPE_ID = 'cec824c6-1e37-4b1f-8cf6-b69cd39e52b2';
 
 interface BooksProps {
-  search: string;
-  onSearchChange: (value: string) => void;
   setSubheaderData?: (data: any[]) => void;
   setTargetElement?: (element: string) => void;
 }
 
-const Books: React.FC<BooksProps> = ({ search, onSearchChange, setSubheaderData, setTargetElement }) => {
+const Books: React.FC<BooksProps> = ({ setSubheaderData, setTargetElement }) => {
   const { token, isAuthenticated } = useAuth();
   const [books, setBooks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,18 +97,7 @@ const Books: React.FC<BooksProps> = ({ search, onSearchChange, setSubheaderData,
     fetchOrders();
   }, [token]);
 
-  // Filter books by title, author, or ISBN (case-insensitive)
-  const filteredBooks = books.filter(book => {
-    const title = book.data?.name || '';
-    const author = book.data?.author || '';
-    const isbn = book.data?.isbn ? String(book.data.isbn) : '';
-    const q = search.toLowerCase();
-    return (
-      title.toLowerCase().includes(q) ||
-      author.toLowerCase().includes(q) ||
-      isbn.toLowerCase().includes(q)
-    );
-  });
+  const filteredBooks = books;
 
   if (!isAuthenticated && showAuthMessage) {
     return (
@@ -208,7 +196,7 @@ const Books: React.FC<BooksProps> = ({ search, onSearchChange, setSubheaderData,
                     )}
                   </TableCell>
                   <TableCell>
-                    {new Date(book.created_at).toLocaleDateString()}
+                    {formatSimpleDate(book.created_at)}
                   </TableCell>
                 </TableRow>
               );

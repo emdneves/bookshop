@@ -4,6 +4,8 @@ import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AuthModal from '../components/AuthModal';
 import { API_BASE_URL } from '../config/api';
+import Subheader from '../components/Subheader';
+import Breadcrumbs from '../components/Breadcrumbs';
 
 
 const theme = createTheme({
@@ -201,36 +203,36 @@ const getCardLayout = (columns: number) => {
       {
         type: 'image',
         gridColumn: 2,
+        gridRow: 1,
+        gridColumnEnd: 3,
+        gridRowEnd: 2,
+      },
+      {
+        type: 'info',
+        gridColumn: 2,
         gridRow: 2,
         gridColumnEnd: 3,
+        gridRowEnd: 3,
+      },
+    ];
+  }
+  
+  if (columns === 2) {
+    // 2 columns bp: img on top (2x2 squares), details below (2x2 squares)
+    return [
+      {
+        type: 'image',
+        gridColumn: 2,
+        gridRow: 1,
+        gridColumnEnd: 4,
         gridRowEnd: 3,
       },
       {
         type: 'info',
         gridColumn: 2,
         gridRow: 3,
-        gridColumnEnd: 3,
-        gridRowEnd: 4,
-      },
-    ];
-  }
-  
-  if (columns === 2) {
-    // 2 columns bp: img on top (2x2 squares), details below (2x2 squares) - no blank row
-    return [
-      {
-        type: 'image',
-        gridColumn: 2,
-        gridRow: 2,
         gridColumnEnd: 4,
-        gridRowEnd: 4,
-      },
-      {
-        type: 'info',
-        gridColumn: 2,
-        gridRow: 4,
-        gridColumnEnd: 4,
-        gridRowEnd: 6,
+        gridRowEnd: 5,
       },
     ];
   }
@@ -241,16 +243,16 @@ const getCardLayout = (columns: number) => {
       {
         type: 'image',
         gridColumn: 2,
-        gridRow: 2,
+        gridRow: 1,
         gridColumnEnd: 4,
-        gridRowEnd: 4,
+        gridRowEnd: 3,
       },
       {
         type: 'info',
         gridColumn: 4,
-        gridRow: 2,
+        gridRow: 1,
         gridColumnEnd: 6,
-        gridRowEnd: 4,
+        gridRowEnd: 3,
       },
     ];
   }
@@ -261,16 +263,16 @@ const getCardLayout = (columns: number) => {
       {
         type: 'image',
         gridColumn: 2,
-        gridRow: 2,
+        gridRow: 1,
         gridColumnEnd: 4,
-        gridRowEnd: 4,
+        gridRowEnd: 3,
       },
       {
         type: 'info',
         gridColumn: 5,
-        gridRow: 2,
+        gridRow: 1,
         gridColumnEnd: 7,
-        gridRowEnd: 4,
+        gridRowEnd: 3,
       },
     ];
   }
@@ -448,196 +450,188 @@ const Product: React.FC = () => {
 
   let gridTemplateColumns, gridTemplateRows;
   if (columns === 1) {
-    // Use the same calculation as header/footer for columns
-    // 0.125fr 0.75fr 0.125fr, but in px based on container width
-    // Let containerWidth = 100vw
-    // left = 0.125 * 100vw = 12.5vw
-    // center = 0.75 * 100vw = 75vw
-    // right = 0.125 * 100vw = 12.5vw
     gridTemplateColumns = '12.5vw 75vw 12.5vw';
-    // Use fr units for rows since they're relative to available height
-    gridTemplateRows = '0.125fr 0.75fr 0.75fr 0.125fr';
+    // Only two main rows, no top or bottom space
+    gridTemplateRows = '0.75fr 0.75fr';
   } else if (columns === 2) {
     gridTemplateColumns = `calc(0.5 * ${squareSize}) repeat(${columns}, ${squareSize}) calc(0.5 * ${squareSize})`;
-    gridTemplateRows = `calc(0.25 * ${squareSize}) ${squareSize} ${squareSize} ${squareSize} ${squareSize} calc(0.25 * ${squareSize})`;
+    // Only four main rows, no top or bottom space
+    gridTemplateRows = `${squareSize} ${squareSize} ${squareSize} ${squareSize}`;
   } else {
     gridTemplateColumns = `calc(0.5 * ${squareSize}) repeat(${columns}, ${squareSize}) calc(0.5 * ${squareSize})`;
-    gridTemplateRows = `calc(0.25 * ${squareSize}) ${squareSize} ${squareSize} calc(0.25 * ${squareSize})`;
+    // Only two main rows, no top or bottom space
+    gridTemplateRows = `${squareSize} ${squareSize}`;
   }
 
+  // Find the book name (from book state or fallback)
+  const bookName = book?.name || 'Book';
+
   return (
-    <Box
-      sx={{
-        display: 'grid',
-        width: '100vw',
-        minHeight: '100vh',
-        gridTemplateColumns,
-        gridTemplateRows,
-      }}
-    >
-        {/* Top border row */}
-        <Box style={{ ...getCellBorder(0, 0), gridColumn: 1, gridRow: 1 }} />
-        {Array.from({ length: columns }).map((_, i) => (
-          <Box key={`top-${i}`} style={{ ...getCellBorder(i + 1, 0), gridColumn: i + 2, gridRow: 1 }} />
-        ))}
-        <Box style={{ ...getCellBorder(colCount - 1, 0), gridColumn: colCount, gridRow: 1 }} />
+    <>
+      <Subheader cardsPerRow={columns} left={<Breadcrumbs bookName={bookName} />} />
+      <Box
+        sx={{
+          display: 'grid',
+          width: '100vw',
+          minHeight: '100vh',
+          gridTemplateColumns,
+          gridTemplateRows,
+        }}
+      >
+          {/* Removed top border row */}
 
-        {/* Side and middle rows for 1-column layout */}
-        {columns === 1 && Array.from({ length: 2 }).map((_, rowIdx) => (
-          <React.Fragment key={rowIdx}>
-            <Box style={{ ...getCellBorder(0, rowIdx + 1), gridColumn: 1, gridRow: rowIdx + 2 }} />
-            <Box style={{ ...getCellBorder(1, rowIdx + 1), gridColumn: 2, gridRow: rowIdx + 2 }} />
-            <Box style={{ ...getCellBorder(colCount - 1, rowIdx + 1), gridColumn: colCount, gridRow: rowIdx + 2 }} />
-          </React.Fragment>
-        ))}
-        
-        {/* Side and middle rows for 2-column layout */}
-        {columns === 2 && Array.from({ length: 4 }).map((_, rowIdx) => (
-          <React.Fragment key={rowIdx}>
-            <Box style={{ ...getCellBorder(0, rowIdx + 1), gridColumn: 1, gridRow: rowIdx + 2 }} />
-            <Box style={{ ...getCellBorder(1, rowIdx + 1), gridColumn: 2, gridRow: rowIdx + 2 }} />
-            <Box style={{ ...getCellBorder(2, rowIdx + 1), gridColumn: 3, gridRow: rowIdx + 2 }} />
-            <Box style={{ ...getCellBorder(colCount - 1, rowIdx + 1), gridColumn: colCount, gridRow: rowIdx + 2 }} />
-          </React.Fragment>
-        ))}
-        
-        {/* Side and middle rows for 4/5-column layout */}
-        {(columns === 4 || columns === 5) && [1, 2].map((rowIdx) => (
-          <React.Fragment key={rowIdx}>
-            <Box style={{ ...getCellBorder(0, rowIdx), gridColumn: 1, gridRow: rowIdx + 1 }} />
-            {Array.from({ length: columns }).map((_, i) => (
-              <Box
-                key={`mid-${rowIdx}-${i}`}
-                style={{
-                  ...getCellBorder(i + 1, rowIdx),
-                  gridColumn: i + 2,
-                  gridRow: rowIdx + 1,
-                  padding: 8,
-                }}
-              >
-                <Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 2, bgcolor: 'transparent' }} />
-              </Box>
-            ))}
-            <Box style={{ ...getCellBorder(colCount - 1, rowIdx), gridColumn: colCount, gridRow: rowIdx + 1 }} />
-          </React.Fragment>
-        ))}
+          {/* Side and middle rows for 1-column layout */}
+          {columns === 1 && Array.from({ length: 2 }).map((_, rowIdx) => (
+            <React.Fragment key={rowIdx}>
+              <Box style={{ ...getCellBorder(0, rowIdx), gridColumn: 1, gridRow: rowIdx + 1 }} />
+              <Box style={{ ...getCellBorder(1, rowIdx), gridColumn: 2, gridRow: rowIdx + 1 }} />
+              <Box style={{ ...getCellBorder(colCount - 1, rowIdx), gridColumn: colCount, gridRow: rowIdx + 1 }} />
+            </React.Fragment>
+          ))}
 
-        {/* Bottom border row */}
-        <Box style={{ ...getCellBorder(0, rowCount - 1), gridColumn: 1, gridRow: rowCount }} />
-        {Array.from({ length: columns }).map((_, i) => (
-          <Box key={`bot-${i}`} style={{ ...getCellBorder(i + 1, rowCount - 1), gridColumn: i + 2, gridRow: rowCount }} />
-        ))}
-        <Box style={{ ...getCellBorder(colCount - 1, rowCount - 1), gridColumn: colCount, gridRow: rowCount }} />
+          {/* Side and middle rows for 2-column layout */}
+          {columns === 2 && Array.from({ length: 4 }).map((_, rowIdx) => (
+            <React.Fragment key={rowIdx}>
+              <Box style={{ ...getCellBorder(0, rowIdx), gridColumn: 1, gridRow: rowIdx + 1 }} />
+              <Box style={{ ...getCellBorder(1, rowIdx), gridColumn: 2, gridRow: rowIdx + 1 }} />
+              <Box style={{ ...getCellBorder(2, rowIdx), gridColumn: 3, gridRow: rowIdx + 1 }} />
+              <Box style={{ ...getCellBorder(colCount - 1, rowIdx), gridColumn: colCount, gridRow: rowIdx + 1 }} />
+            </React.Fragment>
+          ))}
+
+          {/* Side and middle rows for 4/5-column layout */}
+          {(columns === 4 || columns === 5) && [0, 1].map((rowIdx) => (
+            <React.Fragment key={rowIdx}>
+              <Box style={{ ...getCellBorder(0, rowIdx), gridColumn: 1, gridRow: rowIdx + 1 }} />
+              {Array.from({ length: columns }).map((_, i) => (
+                <Box
+                  key={`mid-${rowIdx}-${i}`}
+                  style={{
+                    ...getCellBorder(i + 1, rowIdx),
+                    gridColumn: i + 2,
+                    gridRow: rowIdx + 1,
+                    padding: 8,
+                  }}
+                >
+                  <Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 2, bgcolor: 'transparent' }} />
+                </Box>
+              ))}
+              <Box style={{ ...getCellBorder(colCount - 1, rowIdx), gridColumn: colCount, gridRow: rowIdx + 1 }} />
+            </React.Fragment>
+          ))}
+
+          {/* Removed bottom border row */}
 
 
-        {/* Main content cards (info and image) rendered via config */}
-        {getCardLayout(columns).map((card, idx) => (
-          <MainCard
-            key={card.type + idx}
-            gridColumn={card.gridColumn}
-            gridRow={card.gridRow}
-            gridColumnEnd={card.gridColumnEnd}
-            gridRowEnd={card.gridRowEnd}
-            color="#111"
+          {/* Main content cards (info and image) rendered via config */}
+          {getCardLayout(columns).map((card, idx) => (
+            <MainCard
+              key={card.type + idx}
+              gridColumn={card.gridColumn}
+              gridRow={card.gridRow}
+              gridColumnEnd={card.gridColumnEnd}
+              gridRowEnd={card.gridRowEnd}
+              color="#111"
+            >
+              {card.type === 'info'
+                ? renderInfoCard(loading, book, orders, () => {
+                    if (isAuthenticated) {
+                      setOfferModalOpen(true);
+                    } else {
+                      setAuthModalOpen(true);
+                    }
+                  }, getHighestOffer, isAuthenticated)
+                : renderImageCard(loading, book)}
+            </MainCard>
+          ))}
+
+          {/* Offer Modal */}
+          <Modal
+            open={offerModalOpen}
+            onClose={() => setOfferModalOpen(false)}
+            aria-labelledby="offer-modal-title"
+            aria-describedby="offer-modal-description"
           >
-            {card.type === 'info'
-              ? renderInfoCard(loading, book, orders, () => {
-                  if (isAuthenticated) {
-                    setOfferModalOpen(true);
-                  } else {
-                    setAuthModalOpen(true);
-                  }
-                }, getHighestOffer, isAuthenticated)
-              : renderImageCard(loading, book)}
-          </MainCard>
-        ))}
-
-        {/* Offer Modal */}
-        <Modal
-          open={offerModalOpen}
-          onClose={() => setOfferModalOpen(false)}
-          aria-labelledby="offer-modal-title"
-          aria-describedby="offer-modal-description"
-        >
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 400,
-              bgcolor: 'background.paper',
-              borderRadius: 2,
-              boxShadow: 24,
-              p: 4,
-            }}
-          >
-            <Typography id="offer-modal-title" variant="h6" component="h2" sx={{ mb: 2 }}>
-              Make an Offer
-            </Typography>
-            {book && (
-              <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-                Book: <strong>{book.name}</strong><br />
-                Author: {book.author}<br />
-                {book['Original price'] && `Original Price: $${book['Original price']}`}
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 400,
+                bgcolor: 'background.paper',
+                borderRadius: 2,
+                boxShadow: 24,
+                p: 4,
+              }}
+            >
+              <Typography id="offer-modal-title" variant="h6" component="h2" sx={{ mb: 2 }}>
+                Make an Offer
               </Typography>
-            )}
-            <TextField
-              fullWidth
-              label="Your Offer Price ($)"
-              type="number"
-              value={offerPrice}
-              onChange={(e) => setOfferPrice(e.target.value)}
-              sx={{ mb: 3 }}
-              inputProps={{ min: 0, step: 0.01 }}
-            />
-            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-              <Button
-                onClick={() => setOfferModalOpen(false)}
-                disabled={submittingOffer}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="contained"
-                onClick={handleSubmitOffer}
-                disabled={submittingOffer || !offerPrice}
-                sx={{
-                  bgcolor: '#d32f2f',
-                  '&:hover': { bgcolor: '#b71c1c' }
-                }}
-              >
-                {submittingOffer ? 'Submitting...' : 'Submit Offer'}
-              </Button>
+              {book && (
+                <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                  Book: <strong>{book.name}</strong><br />
+                  Author: {book.author}<br />
+                  {book['Original price'] && `Original Price: $${book['Original price']}`}
+                </Typography>
+              )}
+              <TextField
+                fullWidth
+                label="Your Offer Price ($)"
+                type="number"
+                value={offerPrice}
+                onChange={(e) => setOfferPrice(e.target.value)}
+                sx={{ mb: 3 }}
+                inputProps={{ min: 0, step: 0.01 }}
+              />
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Button
+                  onClick={() => setOfferModalOpen(false)}
+                  disabled={submittingOffer}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={handleSubmitOffer}
+                  disabled={submittingOffer || !offerPrice}
+                  sx={{
+                    bgcolor: '#d32f2f',
+                    '&:hover': { bgcolor: '#b71c1c' }
+                  }}
+                >
+                  {submittingOffer ? 'Submitting...' : 'Submit Offer'}
+                </Button>
+              </Box>
             </Box>
-          </Box>
-        </Modal>
+          </Modal>
 
-        {/* Snackbar for notifications */}
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={6000}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
-          <Alert
+          {/* Snackbar for notifications */}
+          <Snackbar
+            open={snackbar.open}
+            autoHideDuration={6000}
             onClose={() => setSnackbar({ ...snackbar, open: false })}
-            severity={snackbar.severity}
-            sx={{ width: '100%' }}
           >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
+            <Alert
+              onClose={() => setSnackbar({ ...snackbar, open: false })}
+              severity={snackbar.severity}
+              sx={{ width: '100%' }}
+            >
+              {snackbar.message}
+            </Alert>
+          </Snackbar>
 
-        {/* Authentication Modal */}
-        <AuthModal
-          open={authModalOpen}
-          onClose={() => setAuthModalOpen(false)}
-          onSuccess={() => {
-            setAuthModalOpen(false);
-            setOfferModalOpen(true);
-          }}
-        />
-      </Box>
+          {/* Authentication Modal */}
+          <AuthModal
+            open={authModalOpen}
+            onClose={() => setAuthModalOpen(false)}
+            onSuccess={() => {
+              setAuthModalOpen(false);
+              setOfferModalOpen(true);
+            }}
+          />
+        </Box>
+    </>
   );
 };
 
