@@ -200,18 +200,6 @@ const Header: React.FC = () => {
                           </Typography>
                           <IconButton 
                             {...iconStyle}
-                            sx={{
-                              ...iconStyle.sx,
-                              background: '#d32f2f',
-                              '& svg': {
-                                color: '#fff',
-                                transition: 'color 0.2s',
-                                fontSize: '1.2rem',
-                              },
-                              '&:hover': {
-                                background: '#b71c1c',
-                              },
-                            }}
                           >
                             <PowerSettingsNewIcon />
                           </IconButton>
@@ -227,7 +215,21 @@ const Header: React.FC = () => {
                         <Typography variant="caption" sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#222', mb: 0.25 }}>
                           Login
                         </Typography>
-                        <IconButton {...iconStyle}>
+                        <IconButton 
+                          {...iconStyle}
+                          sx={{
+                            ...iconStyle.sx,
+                            background: '#d32f2f',
+                            '& svg': {
+                              color: '#fff',
+                              transition: 'color 0.2s',
+                              fontSize: '1.2rem',
+                            },
+                            '&:hover': {
+                              background: '#b71c1c',
+                            },
+                          }}
+                        >
                           <PowerSettingsNewIcon />
                         </IconButton>
                       </Box>
@@ -268,17 +270,6 @@ const Header: React.FC = () => {
                       </Typography>
                       <IconButton
                         {...desktopIconStyle}
-                        sx={{
-                          ...desktopIconStyle.sx,
-                          background: '#d32f2f',
-                          '& svg': {
-                            color: '#fff',
-                            transition: 'color 0.2s',
-                          },
-                          '&:hover': {
-                            background: '#b71c1c',
-                          },
-                        }}
                       >
                         <PowerSettingsNewIcon />
                       </IconButton>
@@ -294,7 +285,20 @@ const Header: React.FC = () => {
                     <Typography variant="caption" sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#222', mb: 0.5 }}>
                       Login
                     </Typography>
-                    <IconButton {...desktopIconStyle}>
+                    <IconButton 
+                      {...desktopIconStyle}
+                      sx={{
+                        ...desktopIconStyle.sx,
+                        background: '#d32f2f',
+                        '& svg': {
+                          color: '#fff',
+                          transition: 'color 0.2s',
+                        },
+                        '&:hover': {
+                          background: '#b71c1c',
+                        },
+                      }}
+                    >
                       <PowerSettingsNewIcon />
                     </IconButton>
                   </Box>
