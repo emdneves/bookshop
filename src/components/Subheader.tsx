@@ -93,7 +93,7 @@ const Subheader: React.FC<SubheaderProps> = ({
                   sx={{ 
                     width: '60%',
                     '& .MuiOutlinedInput-root': {
-                      backgroundColor: '#fafafa',
+                      backgroundColor: 'transparent',
                       borderRadius: '20px',
                       height: 32,
                       minHeight: 32,

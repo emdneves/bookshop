@@ -25,7 +25,7 @@ const Footer: React.FC<FooterProps> = ({ cardsPerRow }) => {
       <Box sx={{ borderRight: '0.5px dashed #d32f2f', height: '100%' }} />
       {/* Center columns */}
       {Array.from({ length: cardsPerRow }).map((_, i) => {
-        // First center column: copyright
+        // First center column: copyright and meta info
         if (i === 0) {
           return (
             <Box
@@ -33,6 +33,7 @@ const Footer: React.FC<FooterProps> = ({ cardsPerRow }) => {
               sx={{
                 px: 1,
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 height: '100%',
@@ -46,12 +47,23 @@ const Footer: React.FC<FooterProps> = ({ cardsPerRow }) => {
                   fontSize: '0.8rem',
                 }}
               >
-                © 2024 Red Spine Books
+                © {new Date().getFullYear()} the artifact<br />
+                Modern Book Marketplace
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: '#999',
+                  fontSize: '0.7rem',
+                  mt: 0.5,
+                }}
+              >
+                Contact: <a href="mailto:support@theartifact.shop" style={{ color: '#d32f2f', textDecoration: 'none' }}>support@theartifact.shop</a>
               </Typography>
             </Box>
           );
         }
-        // Last center column: contact
+        // Last center column: short about or legal
         if (i === cardsPerRow - 1) {
           return (
             <Box
@@ -70,9 +82,11 @@ const Footer: React.FC<FooterProps> = ({ cardsPerRow }) => {
                 sx={{
                   color: '#666',
                   fontSize: '0.8rem',
+                  textAlign: 'center',
                 }}
               >
-                Contact Us
+                All rights reserved.<br />
+                <span style={{ fontSize: '0.7em', color: '#999' }}>A modern marketplace for buying and selling books.</span>
               </Typography>
             </Box>
           );
