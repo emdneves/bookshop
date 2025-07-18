@@ -472,7 +472,6 @@ const Product: React.FC = () => {
       <Subheader 
         cardsPerRow={columns} 
         left={<Breadcrumbs bookName={bookName} />} 
-        fullWidthLeft={columns > 1}
       />
       <Box
         sx={{
