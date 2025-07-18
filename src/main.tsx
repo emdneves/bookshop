@@ -10,7 +10,7 @@ const root = ReactDOM.createRoot(
 
 // Set global background color
 if (typeof document !== 'undefined') {
-  document.body.style.background = 'floralwhite';
+  document.body.style.background = 'rgba(250,250,250,0.5)'; // #fafafa at 50% opacity
 }
 
 root.render(
