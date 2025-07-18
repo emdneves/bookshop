@@ -30,6 +30,11 @@ const theme = createTheme({
 const App: React.FC = () => {
   const location = useLocation();
   
+  // Scroll to top when location changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+  
   // Determine if current page should show subheader
   const showSubheader = location.pathname === '/' || location.pathname === '/buy' || location.pathname === '/sell' || location.pathname === '/books';
   
