@@ -116,18 +116,14 @@ const Subheader: React.FC<SubheaderProps> = ({
                   key={i}
                   sx={{
                     px: 1,
-                    display: 'block',
+                    display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'flex-start',
+                    justifyContent: 'center',
                     height: '100%',
                     minHeight: 40,
                     maxHeight: 40,
                     borderRight: '0.5px dashed #d32f2f',
-                    minWidth: 0,
-                    maxWidth: '100%',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
+                    width: '100%',
                   }}
                 >
                   {left && React.cloneElement(left, { fullWidth: true })}
@@ -142,11 +138,12 @@ const Subheader: React.FC<SubheaderProps> = ({
                     px: 1,
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'flex-end',
+                    justifyContent: 'center',
                     height: '100%',
                     minHeight: 40,
                     maxHeight: 40,
                     borderRight: '0.5px dashed #d32f2f',
+                    width: '100%',
                   }}
                 >
                   {right && React.cloneElement(right, { fullWidth: true })}
@@ -165,14 +162,12 @@ const Subheader: React.FC<SubheaderProps> = ({
                   px: 1,
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'flex-start',
+                  justifyContent: 'center',
                   height: '100%',
                   minHeight: 40,
                   maxHeight: 40,
                   borderRight: '0.5px dashed #d32f2f',
-                  minWidth: 0,
-                  maxWidth: '100%',
-                  overflow: 'hidden',
+                  width: '100%',
                 }}
               >
                 {left && React.cloneElement(left, { fullWidth: true })}
@@ -187,11 +182,12 @@ const Subheader: React.FC<SubheaderProps> = ({
                   px: 1,
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'flex-end',
+                  justifyContent: 'center',
                   height: '100%',
                   minHeight: 40,
                   maxHeight: 40,
                   borderRight: '0.5px dashed #d32f2f',
+                  width: '100%',
                 }}
               >
                 {right && React.cloneElement(right, { fullWidth: true })}

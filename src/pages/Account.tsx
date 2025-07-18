@@ -618,51 +618,51 @@ const Account: React.FC = () => {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {/* Profile Header */}
             <Box
-              sx={{
-                p: 2,
+                sx={{
+                  p: 2,
                 border: getBorderStyle(),
-                borderRadius: 2,
-                background: 'rgba(255, 255, 255, 0.8)',
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Avatar
-                  sx={{
-                    width: 80,
-                    height: 80,
+                  borderRadius: 2,
+                  background: 'rgba(255, 255, 255, 0.8)',
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Avatar
+                    sx={{
+                      width: 80,
+                      height: 80,
                     bgcolor: ARTIFACT_RED,
-                    fontSize: 32,
-                    fontWeight: 700,
-                    mr: 3,
-                  }}
-                >
-                  {userData.first_name.charAt(0).toUpperCase()}
-                </Avatar>
-                <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#222', mb: 1 }}>
-                    {userData.first_name} {userData.last_name}
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Chip
-                      icon={userData.is_active ? <CheckCircleIcon /> : <CancelIcon />}
-                      label={userData.is_active ? 'Active' : 'Inactive'}
-                      color={userData.is_active ? 'success' : 'error'}
-                      size="small"
-                      sx={{ fontWeight: 600 }}
-                    />
-                    <Chip
-                      label={userData.role}
-                      variant="outlined"
-                      size="small"
-                      sx={{ 
+                      fontSize: 32,
+                      fontWeight: 700,
+                      mr: 3,
+                    }}
+                  >
+                    {userData.first_name.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h5" sx={{ fontWeight: 700, color: '#222', mb: 1 }}>
+                      {userData.first_name} {userData.last_name}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Chip
+                        icon={userData.is_active ? <CheckCircleIcon /> : <CancelIcon />}
+                        label={userData.is_active ? 'Active' : 'Inactive'}
+                        color={userData.is_active ? 'success' : 'error'}
+                        size="small"
+                        sx={{ fontWeight: 600 }}
+                      />
+                      <Chip
+                        label={userData.role}
+                        variant="outlined"
+                        size="small"
+                        sx={{ 
                         borderColor: ARTIFACT_RED, 
                         color: ARTIFACT_RED,
-                        fontWeight: 600 
-                      }}
-                    />
+                          fontWeight: 600 
+                        }}
+                      />
+                    </Box>
                   </Box>
                 </Box>
-              </Box>
             </Box>
 
             {/* Account Information Table */}
