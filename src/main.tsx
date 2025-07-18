@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import App from './App';
+import { SHARED_BG } from './components/bg';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -10,7 +11,7 @@ const root = ReactDOM.createRoot(
 
 // Set global background color
 if (typeof document !== 'undefined') {
-  document.body.style.background = 'rgba(250,250,250,0.5)'; // #fafafa at 50% opacity
+  document.body.style.background = SHARED_BG;
 }
 
 root.render(

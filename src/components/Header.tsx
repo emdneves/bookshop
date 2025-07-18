@@ -10,6 +10,7 @@ import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined
 import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
 
 import { getCardsPerRow } from '../utils/helpers';
+import { SHARED_BG } from './bg';
 
 const Header: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
@@ -124,7 +125,7 @@ const Header: React.FC = () => {
       sx={{
         width: '100%',
         borderBottom: '1px dashed #d32f2f',
-        background: 'floralwhite',
+        background: SHARED_BG,
         position: 'sticky',
         top: 0,
         zIndex: 10,

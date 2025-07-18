@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, TextField, IconButton, Popover, Button, Typography } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import { SHARED_BG } from './bg';
 
 interface SubheaderProps {
   cardsPerRow: number;
@@ -56,7 +57,7 @@ const Subheader: React.FC<SubheaderProps> = ({
           height: 40,
           minHeight: 40,
           maxHeight: 40,
-          background: 'floralwhite',
+          background: SHARED_BG,
           borderBottom: '0.5px dashed #d32f2f',
           position: 'sticky',
           top: '80px', // Header height

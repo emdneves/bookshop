@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
+import { SHARED_BG } from './bg';
 
 interface FooterProps {
   cardsPerRow: number;
@@ -16,7 +17,7 @@ const Footer: React.FC<FooterProps> = ({ cardsPerRow }) => {
         gridTemplateColumns,
         alignItems: 'center',
         minHeight: 64,
-        background: 'floralwhite',
+        background: SHARED_BG,
         borderTop: '0.5px dashed #d32f2f',
         zIndex: 9,
       }}
