@@ -5,19 +5,21 @@ interface PillProps {
   children: React.ReactNode;
   color?: string;
   background?: string;
+  fullWidth?: boolean;
 }
 
-const Pill: React.FC<PillProps> = ({ children, color = '#d32f2f', background = 'transparent' }) => {
+const Pill: React.FC<PillProps> = ({ children, color = '#d32f2f', background = 'transparent', fullWidth = false }) => {
   const [active, setActive] = useState(false);
 
   return (
     <Box
       sx={{
-        display: 'inline-block',
+        display: fullWidth ? 'block' : 'inline-block',
+        width: fullWidth ? '100%' : undefined,
         px: 1.5,
         py: 0.5,
         borderRadius: 999,
-        border: active ? `1px solid ${color}` : `1.5px dashed ${color}`,
+        border: active ? `0.5px solid ${color}` : `0.5px dashed ${color}`,
         color,
         background,
         fontWeight: 600,
@@ -28,7 +30,6 @@ const Pill: React.FC<PillProps> = ({ children, color = '#d32f2f', background = '
         overflow: 'hidden',
         maxWidth: '100%',
         minWidth: 0,
-        width: active ? '100%' : undefined,
         transition: 'all 0.2s',
         cursor: 'pointer',
       }}

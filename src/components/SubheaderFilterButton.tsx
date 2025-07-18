@@ -33,36 +33,32 @@ const SubheaderFilterButton: React.FC<SubheaderFilterButtonProps> = ({ fullWidth
           whiteSpace: 'nowrap',
         }}
       >
-        <Box
-          component="button"
-          onClick={handleClick}
-          aria-describedby={id}
-          sx={{
-            width: '100%',
-            px: 1.5,
-            py: 0.5,
-            borderRadius: 999,
-            border: '1.5px dashed #d32f2f',
-            color: '#d32f2f',
-            background: 'transparent',
-            fontWeight: 600,
-            fontSize: '0.98em',
-            lineHeight: 1.2,
-            outline: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 0.5,
-            '&:hover': {
-              border: '1px solid #d32f2f',
-            },
-            '&:focus': {
-              border: '1px solid #d32f2f',
-            },
-          }}
-        >
-          <FilterListIcon sx={{ fontSize: '1em' }} />
-          Filter
+        <Box sx={{ width: fullWidth ? '100%' : 'auto' }}>
+          <Pill fullWidth={fullWidth}>
+            <Box
+              component="button"
+              onClick={handleClick}
+              aria-describedby={id}
+              sx={{
+                width: '100%',
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                color: 'inherit',
+                fontWeight: 'inherit',
+                fontSize: 'inherit',
+                lineHeight: 'inherit',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 0.5,
+              }}
+            >
+              <FilterListIcon sx={{ fontSize: '1em' }} />
+              Filter
+            </Box>
+          </Pill>
         </Box>
       </Box>
       <Popover
