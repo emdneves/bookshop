@@ -215,10 +215,10 @@ const Header: React.FC = () => {
                 >
                   {user ? (
                     <>
-                      {createNavIcon('/buy', 'Buy', <ShoppingCartOutlinedIcon />, 'Compras', true)}
-                      {createNavIcon('/sell', 'Sell', <StoreOutlinedIcon />, 'Vendas', true)}
-                      {createNavIcon('/books', 'MyBooks', <MenuBookOutlinedIcon />, 'Ofertas', true)}
-                      {createNavIcon('/account', 'Account', <AccountCircleOutlinedIcon />, 'Account', true)}
+                      {createNavIcon('/buy', 'buy', <ShoppingCartOutlinedIcon />, 'Compras', true)}
+                      {createNavIcon('/sell', 'sell', <StoreOutlinedIcon />, 'Vendas', true)}
+                      {createNavIcon('/books', 'mybooks', <MenuBookOutlinedIcon />, 'Ofertas', true)}
+                      {createNavIcon('/account', 'account', <AccountCircleOutlinedIcon />, 'Account', true)}
                       <Tooltip title="Logout" arrow>
                         <Box 
                           onClick={handleLogout}
@@ -285,10 +285,10 @@ const Header: React.FC = () => {
             >
               {user ? (
                 <>
-                  {createNavIcon('/buy', 'Buy', <ShoppingCartOutlinedIcon />, 'Compras', false)}
+                  {createNavIcon('/buy', 'buy', <ShoppingCartOutlinedIcon />, 'Compras', false)}
                   {createNavIcon('/sell', 'Sell', <StoreOutlinedIcon />, 'Vendas', false)}
-                  {createNavIcon('/books', 'MyBooks', <MenuBookOutlinedIcon />, 'Ofertas', false)}
-                  {createNavIcon('/account', 'Account', <AccountCircleOutlinedIcon />, 'Account', false)}
+                  {createNavIcon('/books', 'mybooks', <MenuBookOutlinedIcon />, 'Ofertas', false)}
+                  {createNavIcon('/account', 'account', <AccountCircleOutlinedIcon />, 'Account', false)}
                   <Tooltip title="Logout" arrow>
                     <Box 
                       onClick={handleLogout}
