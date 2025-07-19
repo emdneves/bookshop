@@ -1,14 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, IconButton, Tooltip } from '@mui/material';
+import { 
+  Box, 
+  Typography, 
+  IconButton, 
+  useTheme, 
+  useMediaQuery,
+  Menu,
+  MenuItem,
+  Avatar,
+  Divider,
+  Tooltip,
+  Button
+} from '@mui/material';
+import { 
+  ShoppingCart as ShoppingCartIcon,
+  Print as PrintIcon,
+  Book as BookIcon,
+  Person as PersonIcon,
+  Refresh as RefreshIcon,
+  Menu as MenuIcon,
+  Close as CloseIcon,
+  AccountCircle as AccountCircleIcon,
+  Logout as LogoutIcon,
+  Settings as SettingsIcon,
+  ShoppingCartOutlined as ShoppingCartOutlinedIcon,
+  StoreOutlined as StoreOutlinedIcon,
+  MenuBookOutlined as MenuBookOutlinedIcon,
+  AccountCircleOutlined as AccountCircleOutlinedIcon,
+  PowerSettingsNew as PowerSettingsNewIcon
+} from '@mui/icons-material';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AuthModal from './AuthModal';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
-import StoreOutlinedIcon from '@mui/icons-material/StoreOutlined';
-import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
-import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
-import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
-
 import { getCardsPerRow } from '../utils/helpers';
 import { 
   SHARED_BG, 
@@ -16,6 +39,7 @@ import {
   ARTIFACT_RED_DARK,
   getBorderStyle 
 } from '../constants/colors';
+import { FONT_SIZES } from '../constants/typography';
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
@@ -72,7 +96,7 @@ const Header: React.FC = () => {
       '& svg': {
         color: '#222',
         transition: 'color 0.2s',
-        fontSize: '1.2rem',
+        fontSize: FONT_SIZES.LARGE,
       },
       '&:hover svg': { color: ARTIFACT_RED },
     }
@@ -111,7 +135,7 @@ const Header: React.FC = () => {
     <Tooltip title={tooltip} arrow>
       <Link to={to} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
         <Typography variant="caption" sx={{ 
-          fontSize: isMobile ? '0.8rem' : '0.75rem', 
+          fontSize: isMobile ? FONT_SIZES.SMALL : FONT_SIZES.SMALL, 
           fontWeight: 600, 
           color: '#222', 
           mb: isMobile ? 0.25 : 0.5 
@@ -171,7 +195,7 @@ const Header: React.FC = () => {
                     letterSpacing: 1,
                     textAlign: 'center',
                     width: '100%',
-                    fontSize: cardsPerRow === 1 ? '2rem' : '2.125rem', // Increased from 1.5rem to 2rem for mobile
+                    fontSize: cardsPerRow === 1 ? FONT_SIZES.XLARGE : FONT_SIZES.XLARGE, // Using XLARGE for titles
                   }}
                 >
                   the artifact
@@ -200,7 +224,7 @@ const Header: React.FC = () => {
                           onClick={handleLogout}
                           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
                         >
-                          <Typography variant="caption" sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#222', mb: 0.25 }}>
+                          <Typography variant="caption" sx={{ fontSize: FONT_SIZES.SMALL, fontWeight: 600, color: '#222', mb: 0.25 }}>
                             Logout
                           </Typography>
                           <IconButton 
@@ -217,7 +241,7 @@ const Header: React.FC = () => {
                         onClick={() => setIsAuthModalOpen(true)}
                         style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
                       >
-                        <Typography variant="caption" sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#222', mb: 0.25 }}>
+                        <Typography variant="caption" sx={{ fontSize: FONT_SIZES.SMALL, fontWeight: 600, color: '#222', mb: 0.25 }}>
                           Login
                         </Typography>
                         <IconButton 
@@ -228,7 +252,7 @@ const Header: React.FC = () => {
                             '& svg': {
                               color: '#fff',
                               transition: 'color 0.2s',
-                              fontSize: '1.2rem',
+                              fontSize: FONT_SIZES.LARGE,
                             },
                             '&:hover': {
                               background: ARTIFACT_RED_DARK,
@@ -270,7 +294,7 @@ const Header: React.FC = () => {
                       onClick={handleLogout}
                       style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
                     >
-                      <Typography variant="caption" sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#222', mb: 0.5 }}>
+                      <Typography variant="caption" sx={{ fontSize: FONT_SIZES.SMALL, fontWeight: 600, color: '#222', mb: 0.5 }}>
                         Logout
                       </Typography>
                       <IconButton
@@ -287,7 +311,7 @@ const Header: React.FC = () => {
             onClick={() => setIsAuthModalOpen(true)}
                     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
                   >
-                    <Typography variant="caption" sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#222', mb: 0.5 }}>
+                    <Typography variant="caption" sx={{ fontSize: FONT_SIZES.SMALL, fontWeight: 600, color: '#222', mb: 0.25 }}>
                       Login
                     </Typography>
                     <IconButton 

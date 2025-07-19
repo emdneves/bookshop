@@ -12,6 +12,7 @@ import { formatSimpleDate } from '../utils/dateFormatter';
 import EditableField from '../components/EditableField';
 import { getCardsPerRow } from '../utils/helpers';
 import { getBorderStyle } from '../constants/colors';
+import { FONT_SIZES } from '../constants/typography';
 
 interface SellProps {
   setSubheaderData?: (data: any[]) => void;
@@ -186,7 +187,7 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
             key={status}
             onClick={() => handleStatusChange(status)}
                       sx={{
-              fontSize: '14px',
+              fontSize: FONT_SIZES.SMALL,
               py: 1,
             }}
           >

@@ -35,6 +35,7 @@ import {
   ARTIFACT_RED_TRANSPARENT_04,
   getBorderStyle 
 } from '../constants/colors';
+import { FONT_SIZES } from '../constants/typography';
 
 // Column definition interface
 export interface Column<T = any> {
@@ -284,7 +285,7 @@ const DataTable = <T extends Record<string, any>>({
                       color: '#222',
                       borderBottom: getBorderStyle(),
                       padding: size === 'small' ? '8px 16px' : '16px',
-                      fontSize: '14px',
+                      fontSize: FONT_SIZES.MEDIUM,
                       cursor: sortInfo.sortable ? 'pointer' : 'default',
                       userSelect: 'none',
                       position: 'relative',
@@ -309,14 +310,14 @@ const DataTable = <T extends Record<string, any>>({
                           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                             <ArrowUpward 
                               sx={{ 
-                                fontSize: '12px', 
+                                fontSize: FONT_SIZES.SMALL, 
                                 color: header.column.getIsSorted() === 'asc' ? ARTIFACT_RED : '#666',
                                 opacity: header.column.getIsSorted() === 'asc' ? 1 : 0.8
                               }} 
                             />
                             <ArrowDownward 
                               sx={{ 
-                                fontSize: '12px', 
+                                fontSize: FONT_SIZES.SMALL, 
                                 color: header.column.getIsSorted() === 'desc' ? ARTIFACT_RED : '#666',
                                 opacity: header.column.getIsSorted() === 'desc' ? 1 : 0.8
                               }} 
@@ -326,7 +327,7 @@ const DataTable = <T extends Record<string, any>>({
                         {filterInfo.filterable && (
                           <FilterList 
                             sx={{ 
-                              fontSize: '14px', 
+                              fontSize: FONT_SIZES.MEDIUM, 
                               color: header.column.getIsFiltered() ? ARTIFACT_RED : '#666',
                               opacity: header.column.getIsFiltered() ? 1 : 0.8,
                               cursor: 'pointer'
@@ -362,7 +363,7 @@ const DataTable = <T extends Record<string, any>>({
                             fullWidth
                             sx={{ 
                               '& .MuiInputBase-root': { 
-                                fontSize: '12px',
+                                fontSize: FONT_SIZES.SMALL,
                                 height: '32px'
                               }
                             }}
@@ -378,7 +379,7 @@ const DataTable = <T extends Record<string, any>>({
                             fullWidth
                             sx={{ 
                               '& .MuiInputBase-root': { 
-                                fontSize: '12px',
+                                fontSize: FONT_SIZES.SMALL,
                                 height: '32px'
                               }
                             }}
@@ -393,7 +394,7 @@ const DataTable = <T extends Record<string, any>>({
                             fullWidth
                             sx={{ 
                               '& .MuiInputBase-root': { 
-                                fontSize: '12px',
+                                fontSize: FONT_SIZES.SMALL,
                                 height: '32px'
                               }
                             }}
@@ -409,7 +410,7 @@ const DataTable = <T extends Record<string, any>>({
                             fullWidth
                             sx={{ 
                               '& .MuiInputBase-root': { 
-                                fontSize: '12px',
+                                fontSize: FONT_SIZES.SMALL,
                                 height: '32px'
                               }
                             }}
@@ -488,7 +489,7 @@ const DataTable = <T extends Record<string, any>>({
                       sx={{
                         borderBottom: getBorderStyle(),
                         padding: size === 'small' ? '8px 16px' : '16px',
-                        fontSize: '14px',
+                        fontSize: FONT_SIZES.MEDIUM,
                         width: cell.column.getSize(),
                         minWidth: cell.column.getSize(),
                         maxWidth: cell.column.getSize(), // Prevent expansion

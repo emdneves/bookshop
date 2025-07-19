@@ -23,16 +23,31 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ bookName }) => (
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap',
       width: '100%',
+      maxWidth: '100%',
+      minWidth: 0,
     }}>
       <Box sx={{
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
         width: '100%',
+        maxWidth: '100%',
+        minWidth: 0,
+        display: 'flex',
+        alignItems: 'center',
       }}>
-        <span style={{ color: ARTIFACT_RED, fontWeight: 600 }}>Home</span>
-        <span style={{ color: '#888', fontWeight: 600, margin: '0 0.5em' }}>&gt;</span>
-        <span style={{ color: '#222', fontWeight: 600 }}>{bookName}</span>
+        <span style={{ color: ARTIFACT_RED, fontWeight: 600, flexShrink: 0 }}>Home</span>
+        <span style={{ color: '#888', fontWeight: 600, margin: '0 0.5em', flexShrink: 0 }}>&gt;</span>
+        <span style={{ 
+          color: '#222', 
+          fontWeight: 600, 
+          overflow: 'hidden', 
+          textOverflow: 'ellipsis', 
+          whiteSpace: 'nowrap', 
+          minWidth: 0,
+          flex: 1,
+          maxWidth: '100%',
+        }}>{bookName}</span>
       </Box>
     </Pill>
   </Box>

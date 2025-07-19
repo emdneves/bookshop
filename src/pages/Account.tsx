@@ -48,6 +48,7 @@ import {
   ARTIFACT_RED_DARK,
   getBorderStyle 
 } from '../constants/colors';
+import { FONT_SIZES } from '../constants/typography';
 
 interface UserData {
   id: number;
@@ -205,17 +206,17 @@ const pillInputStyle = {
     },
     '& .MuiInputBase-input': {
       padding: '2px 6px',
-      fontSize: '13px',
+      fontSize: FONT_SIZES.MEDIUM,
     },
   },
   '& .MuiInputLabel-root': {
     color: '#666',
-    fontSize: '14px',
+    fontSize: FONT_SIZES.MEDIUM,
     '&.Mui-focused': {
       color: ARTIFACT_RED,
     },
     '&.MuiInputLabel-shrink': {
-      fontSize: '12px',
+      fontSize: FONT_SIZES.SMALL,
     },
   },
 };
@@ -694,7 +695,7 @@ const Account: React.FC = () => {
                   width: 200,
                   render: (value, row) => (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Box sx={{ color: ARTIFACT_RED, fontSize: 20 }}>
+                      <Box sx={{ color: ARTIFACT_RED, fontSize: FONT_SIZES.MEDIUM }}>
                         {row.icon}
                       </Box>
                       <span>{value === 'first_name' ? 'First Name' : 
@@ -709,60 +710,55 @@ const Account: React.FC = () => {
                   render: (value, row) => {
                     if (row.editable && editingField === row.field) {
                       return (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Pill fullWidth sx={{ 
-                            justifyContent: 'flex-start',
-                            padding: '2px 8px',
-                            minHeight: '28px',
-                          }}>
-                            <Box
-                              component="input"
-                              value={editValue}
-                              onChange={(e) => setEditValue(e.target.value)}
-                              onBlur={() => handleInlineSave(row.field)}
-                              onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                  handleInlineSave(row.field);
-                                } else if (e.key === 'Escape') {
-                                  handleInlineCancel();
-                                }
-                              }}
-                              autoFocus
-                              placeholder={row.field === 'first_name' ? 'Enter first name' : 'Enter last name'}
-                              style={{
-                                width: '100%',
-                                background: 'transparent',
-                                border: 'none',
-                                outline: 'none',
-                                color: 'inherit',
-                                fontSize: '14px',
-                              }}
-                            />
-                          </Pill>
-                        </Box>
+                        <Pill fullWidth sx={{ 
+                          justifyContent: 'flex-start',
+                          padding: '2px 8px',
+                          minHeight: '28px',
+                        }}>
+                          <input
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onBlur={() => handleInlineSave(row.field)}
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                handleInlineSave(row.field);
+                              } else if (e.key === 'Escape') {
+                                handleInlineCancel();
+                              }
+                            }}
+                            autoFocus
+                            placeholder={row.field === 'first_name' ? 'Enter first name' : 'Enter last name'}
+                            style={{
+                              width: '100%',
+                              background: 'transparent',
+                              border: 'none',
+                              outline: 'none',
+                              color: 'inherit',
+                              fontSize: FONT_SIZES.MEDIUM,
+                            }}
+                          />
+                        </Pill>
                       );
                     }
                     
                     return (
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                        {row.editable ? (
-                          <Pill
-                            fullWidth
-                            onClick={() => handleInlineEdit(row.field, value)}
-                            sx={{ 
-                              cursor: 'pointer',
-                              '&:hover': { 
-                                backgroundColor: 'rgba(139, 0, 0, 0.04)',
-                                border: `1px solid ${ARTIFACT_RED}`,
-                              }
-                            }}
-                          >
-                            {value}
-                          </Pill>
-                        ) : (
-                          <span>{value}</span>
-                        )}
-                      </Box>
+                      row.editable ? (
+                        <Pill
+                          fullWidth
+                          onClick={() => handleInlineEdit(row.field, value)}
+                          sx={{ 
+                            cursor: 'pointer',
+                            '&:hover': { 
+                              backgroundColor: 'rgba(139, 0, 0, 0.04)',
+                              border: `1px solid ${ARTIFACT_RED}`,
+                            }
+                          }}
+                        >
+                          {value}
+                        </Pill>
+                      ) : (
+                        <span>{value}</span>
+                      )
                     );
                   },
                 },
@@ -798,10 +794,12 @@ const Account: React.FC = () => {
                   width: 200,
                   render: (value, row) => (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Box sx={{ color: ARTIFACT_RED, fontSize: 20 }}>
+                      <Box sx={{ color: ARTIFACT_RED, fontSize: FONT_SIZES.MEDIUM }}>
                         {row.icon}
                       </Box>
-                      <span>{value}</span>
+                      <Typography sx={{ fontSize: FONT_SIZES.MEDIUM }}>
+                        {value}
+                      </Typography>
                     </Box>
                   ),
                 },

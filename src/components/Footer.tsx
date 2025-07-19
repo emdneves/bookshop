@@ -6,6 +6,7 @@ import {
   ARTIFACT_RED, 
   getBorderStyle 
 } from '../constants/colors';
+import { FONT_SIZES } from '../constants/typography';
 
 interface FooterProps {
   children?: React.ReactNode;
@@ -13,7 +14,7 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ children }) => {
   const cardsPerRow = getCardsPerRow();
-  const gridTemplateColumns = `1fr repeat(${cardsPerRow}, 1fr) 1fr`;
+  const gridTemplateColumns = cardsPerRow === 1 ? '0.125fr 0.75fr 0.125fr' : `0.5fr repeat(${cardsPerRow}, 1fr) 0.5fr`;
 
   return (
     <Box
@@ -29,11 +30,11 @@ const Footer: React.FC<FooterProps> = ({ children }) => {
       }}
     >
       {/* Side column left */}
-      <Box sx={{ borderRight: getBorderStyle(), height: '100%' }} />
+      <Box sx={{ height: '100%' }} />
       {/* Center columns */}
       {Array.from({ length: cardsPerRow }).map((_, i) => {
         if (i === 0) {
-          // First center column: logo and contact
+          // First center column: contact
           return (
             <Box
               key={i}
@@ -51,7 +52,7 @@ const Footer: React.FC<FooterProps> = ({ children }) => {
                 sx={{
                   textAlign: 'center',
                   color: '#666',
-                  fontSize: '12px',
+                  fontSize: FONT_SIZES.SMALL,
                   lineHeight: 1.2,
                   mb: 1,
                 }}
@@ -79,7 +80,7 @@ const Footer: React.FC<FooterProps> = ({ children }) => {
                 sx={{
                   textAlign: 'center',
                   color: '#666',
-                  fontSize: '12px',
+                  fontSize: FONT_SIZES.SMALL,
                   lineHeight: 1.2,
                 }}
               >
@@ -92,7 +93,7 @@ const Footer: React.FC<FooterProps> = ({ children }) => {
         return <Box key={i} sx={{ borderRight: getBorderStyle(), height: '100%' }} />;
       })}
       {/* Side column right */}
-      <Box />
+      <Box sx={{ height: '100%' }} />
     </Box>
   );
 };

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { Box, Typography } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import Pill from './Pill';
-import { SHARED_BG, ARTIFACT_RED, ARTIFACT_RED_DARK, getBorderStyle, ARTIFACT_RED_TRANSPARENT_10 } from '../constants/colors';
+import { ARTIFACT_RED, ARTIFACT_RED_DARK, ARTIFACT_RED_TRANSPARENT_10, SHARED_BG } from '../constants/colors';
+import { FONT_SIZES } from '../constants/typography';
 
 interface AuthModalProps {
   open: boolean;
@@ -100,99 +102,91 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
           width: '400px',
           maxWidth: '90vw',
           overflow: 'hidden',
-          fontSize: '14px', // Consistent font size
+          fontSize: FONT_SIZES.MEDIUM, // Consistent font size
           fontWeight: 600,  // Consistent font weight
           color: '#222',    // Consistent font color
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Login/Register Switch Buttons */}
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', alignItems: 'center', margin: '24px 0 16px 0', width: '100%', padding: '0 24px' }}>
-          <Pill
-            fullWidth
-            background={activeTab === 0 ? ARTIFACT_RED_TRANSPARENT_10 : SHARED_BG}
-            color={ARTIFACT_RED}
-            onClick={() => setActiveTab(0)}
-            sx={{
-              flex: 1,
-              textAlign: 'center',
-              fontWeight: 600,
-              fontSize: '14px',
-              border: activeTab === 0 ? `1px solid ${ARTIFACT_RED}` : 'none',
-            }}
-          >
-            login
-          </Pill>
-          <Pill
-            fullWidth
-            background={activeTab === 1 ? ARTIFACT_RED_TRANSPARENT_10 : SHARED_BG}
-            color={ARTIFACT_RED}
-            onClick={() => setActiveTab(1)}
-            sx={{
-              flex: 1,
-              textAlign: 'center',
-              fontWeight: 600,
-              fontSize: '14px',
-              border: activeTab === 1 ? `1px solid ${ARTIFACT_RED}` : 'none',
-            }}
-          >
-            register
-          </Pill>
-        </div>
-        
-        <div style={{ padding: '24px' }}>
+        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Login/Register Switch Buttons */}
+          <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
+            <Pill
+              sx={{
+                width: '50%',
+                textAlign: 'center',
+                fontWeight: 600,
+                fontSize: FONT_SIZES.MEDIUM,
+                border: activeTab === 0 ? `1px solid ${ARTIFACT_RED}` : 'none',
+              }}
+              background={activeTab === 0 ? ARTIFACT_RED_TRANSPARENT_10 : SHARED_BG}
+              color={ARTIFACT_RED}
+              onClick={() => setActiveTab(0)}
+            >
+              login
+            </Pill>
+            <Pill
+              sx={{
+                width: '50%',
+                textAlign: 'center',
+                fontWeight: 600,
+                fontSize: FONT_SIZES.MEDIUM,
+                border: activeTab === 1 ? `1px solid ${ARTIFACT_RED}` : 'none',
+              }}
+              background={activeTab === 1 ? ARTIFACT_RED_TRANSPARENT_10 : SHARED_BG}
+              color={ARTIFACT_RED}
+              onClick={() => setActiveTab(1)}
+            >
+              register
+            </Pill>
+          </div>
+
           {activeTab === 0 ? (
             // Login Form
-            <div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-                {/* Email Input */}
-                <div>
-                  <Pill fullWidth>
-                    <input
-                      type="email"
-                      placeholder="enter your email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      style={{
-                        width: '100%',
-                        background: 'transparent',
-                        border: 'none',
-                        outline: 'none',
-                        color: 'inherit',
-                        fontWeight: 'inherit',
-                        fontSize: 'inherit',
-                        lineHeight: 'inherit',
-                        textAlign: 'center',
-                      }}
-                    />
-                  </Pill>
-                </div>
+            <>
+              {/* Email Input */}
+              <Pill fullWidth>
+                <input
+                  type="email"
+                  placeholder="enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: 'inherit',
+                    fontWeight: 'inherit',
+                    fontSize: FONT_SIZES.MEDIUM,
+                    lineHeight: 'inherit',
+                    textAlign: 'center',
+                  }}
+                />
+              </Pill>
 
-                {/* Password Input */}
-                <div>
-                  <Pill fullWidth>
-                    <input
-                      type="password"
-                      placeholder="enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      style={{
-                        width: '100%',
-                        background: 'transparent',
-                        border: 'none',
-                        outline: 'none',
-                        color: 'inherit',
-                        fontWeight: 'inherit',
-                        fontSize: 'inherit',
-                        lineHeight: 'inherit',
-                        textAlign: 'center',
-                      }}
-                    />
-                  </Pill>
-                </div>
-              </div>
+              {/* Password Input */}
+              <Pill fullWidth>
+                <input
+                  type="password"
+                  placeholder="enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: 'inherit',
+                    fontWeight: 'inherit',
+                    fontSize: FONT_SIZES.MEDIUM,
+                    lineHeight: 'inherit',
+                    textAlign: 'center',
+                  }}
+                />
+              </Pill>
 
               {/* Error/Success Messages */}
               {error && (
@@ -201,12 +195,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
                   background="#ffebee"
                   color="#c62828"
                   sx={{
-                    borderRadius: '8px',
-                    py: 1.5,
-                    px: 2,
-                    marginBottom: '16px',
                     border: '1px solid #ffcdd2',
-                    fontSize: '14px',
                     fontWeight: 500,
                   }}
                 >
@@ -220,12 +209,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
                   background="#e8f5e8"
                   color="#2e7d32"
                   sx={{
-                    borderRadius: '8px',
-                    py: 1.5,
-                    px: 2,
-                    marginBottom: '16px',
                     border: '1px solid #c8e6c9',
-                    fontSize: '14px',
                     fontWeight: 500,
                   }}
                 >
@@ -240,11 +224,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
                 color="white"
                 onClick={handleLogin}
                 sx={{
-                  py: 0.5,
-                  px: 2,
-                  marginBottom: '16px',
-                  border: 'none',
-                  textAlign: 'center',
                   cursor: loading ? 'not-allowed' : 'pointer',
                   opacity: loading ? 0.7 : 1,
                   '&:hover': {
@@ -255,107 +234,97 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
               >
                 {loading ? 'logging in...' : 'login'}
               </Pill>
-            </div>
+            </>
           ) : (
             // Register Form
-            <div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-                {/* First Name Input */}
-                <div>
-                  <Pill fullWidth>
-                    <input
-                      type="text"
-                      placeholder="enter your first name"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      required
-                      style={{
-                        width: '100%',
-                        background: 'transparent',
-                        border: 'none',
-                        outline: 'none',
-                        color: 'inherit',
-                        fontWeight: 'inherit',
-                        fontSize: 'inherit',
-                        lineHeight: 'inherit',
-                        textAlign: 'center',
-                      }}
-                    />
-                  </Pill>
-                </div>
+            <>
+              {/* First Name Input */}
+              <Pill fullWidth>
+                <input
+                  type="text"
+                  placeholder="enter your first name"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: 'inherit',
+                    fontWeight: 'inherit',
+                    fontSize: FONT_SIZES.MEDIUM,
+                    lineHeight: 'inherit',
+                    textAlign: 'center',
+                  }}
+                />
+              </Pill>
 
-                {/* Last Name Input */}
-                <div>
-                  <Pill fullWidth>
-                    <input
-                      type="text"
-                      placeholder="enter your last name"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      required
-                      style={{
-                        width: '100%',
-                        background: 'transparent',
-                        border: 'none',
-                        outline: 'none',
-                        color: 'inherit',
-                        fontWeight: 'inherit',
-                        fontSize: 'inherit',
-                        lineHeight: 'inherit',
-                        textAlign: 'center',
-                      }}
-                    />
-                  </Pill>
-                </div>
+              {/* Last Name Input */}
+              <Pill fullWidth>
+                <input
+                  type="text"
+                  placeholder="enter your last name"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: 'inherit',
+                    fontWeight: 'inherit',
+                    fontSize: FONT_SIZES.MEDIUM,
+                    lineHeight: 'inherit',
+                    textAlign: 'center',
+                  }}
+                />
+              </Pill>
 
-                {/* Email Input */}
-                <div>
-                  <Pill fullWidth>
-                    <input
-                      type="email"
-                      placeholder="enter your email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      style={{
-                        width: '100%',
-                        background: 'transparent',
-                        border: 'none',
-                        outline: 'none',
-                        color: 'inherit',
-                        fontWeight: 'inherit',
-                        fontSize: 'inherit',
-                        lineHeight: 'inherit',
-                        textAlign: 'center',
-                      }}
-                    />
-                  </Pill>
-                </div>
+              {/* Email Input */}
+              <Pill fullWidth>
+                <input
+                  type="email"
+                  placeholder="enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: 'inherit',
+                    fontWeight: 'inherit',
+                    fontSize: FONT_SIZES.MEDIUM,
+                    lineHeight: 'inherit',
+                    textAlign: 'center',
+                  }}
+                />
+              </Pill>
 
-                {/* Password Input */}
-                <div>
-                  <Pill fullWidth>
-                    <input
-                      type="password"
-                      placeholder="enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      style={{
-                        width: '100%',
-                        background: 'transparent',
-                        border: 'none',
-                        outline: 'none',
-                        color: 'inherit',
-                        fontWeight: 'inherit',
-                        fontSize: 'inherit',
-                        lineHeight: 'inherit',
-                        textAlign: 'center',
-                      }}
-                    />
-                  </Pill>
-                </div>
-              </div>
+              {/* Password Input */}
+              <Pill fullWidth>
+                <input
+                  type="password"
+                  placeholder="enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: 'inherit',
+                    fontWeight: 'inherit',
+                    fontSize: FONT_SIZES.MEDIUM,
+                    lineHeight: 'inherit',
+                    textAlign: 'center',
+                  }}
+                />
+              </Pill>
 
               {/* Error/Success Messages */}
               {error && (
@@ -364,12 +333,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
                   background="#ffebee"
                   color="#c62828"
                   sx={{
-                    borderRadius: '8px',
-                    py: 1.5,
-                    px: 2,
-                    marginBottom: '16px',
                     border: '1px solid #ffcdd2',
-                    fontSize: '14px',
                     fontWeight: 500,
                   }}
                 >
@@ -383,12 +347,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
                   background="#e8f5e8"
                   color="#2e7d32"
                   sx={{
-                    borderRadius: '8px',
-                    py: 1.5,
-                    px: 2,
-                    marginBottom: '16px',
                     border: '1px solid #c8e6c9',
-                    fontSize: '14px',
                     fontWeight: 500,
                   }}
                 >
@@ -403,11 +362,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
                 color="white"
                 onClick={handleRegister}
                 sx={{
-                  py: 0.5,
-                  px: 2,
-                  marginBottom: '16px',
-                  border: 'none',
-                  textAlign: 'center',
                   cursor: loading ? 'not-allowed' : 'pointer',
                   opacity: loading ? 0.7 : 1,
                   '&:hover': {
@@ -418,7 +372,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
               >
                 {loading ? 'creating account...' : 'create account'}
               </Pill>
-            </div>
+            </>
           )}
           
           {/* Cancel Button */}
@@ -428,10 +382,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
             color="white"
             onClick={handleClose}
             sx={{
-              py: 0.5,
-              px: 2,
-              border: 'none',
-              textAlign: 'center',
               cursor: 'pointer',
               '&:hover': {
                 background: ARTIFACT_RED_DARK,

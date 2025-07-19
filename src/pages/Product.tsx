@@ -6,7 +6,9 @@ import AuthModal from '../components/AuthModal';
 import { API_BASE_URL } from '../config/api';
 import Subheader from '../components/subheader/Subheader';
 import Breadcrumbs from '../components/subheader/Breadcrumbs';
+import Pill from '../components/Pill';
 import { ARTIFACT_RED, ARTIFACT_RED_DARK } from '../constants/colors';
+import { FONT_SIZES } from '../constants/typography';
 
 
 const theme = createTheme({
@@ -82,7 +84,7 @@ const MainCard = ({ children, gridColumn, gridRow, gridColumnEnd, gridRowEnd, ba
 );
 
 // Card content renderers
-const renderInfoCard = (loading: boolean, book: any, orders: any[], onMakeOffer: () => void, getHighestOffer: () => number, isAuthenticated: boolean) =>
+const renderInfoCard = (loading: boolean, book: any, orders: any[], onMakeOffer: () => void, getHighestOffer: () => number, isAuthenticated: boolean, offerPrice: string, setOfferPrice: (value: string) => void) =>
   loading || !book ? (
     <Skeleton variant="rectangular" width="100%" height={120} sx={{ borderRadius: 3, mb: 2, bgcolor: 'transparent' }} />
   ) : (
@@ -95,35 +97,35 @@ const renderInfoCard = (loading: boolean, book: any, orders: any[], onMakeOffer:
     }}>
       {/* Fixed content area */}
       <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#222', mb: 0.5, fontSize: '0.95rem', lineHeight: 1.10 }}>
+        <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#222', mb: 0.5, fontSize: FONT_SIZES.MEDIUM, lineHeight: 1.10 }}>
           <strong>Title:</strong> {book.name || '-'}
         </Typography>
-        <Typography variant="body2" sx={{ mb: 0.5, fontSize: '0.85rem', lineHeight: 1.10 }}>
+        <Typography variant="body2" sx={{ mb: 0.5, fontSize: FONT_SIZES.MEDIUM, lineHeight: 1.10 }}>
           <strong>Author:</strong> {book.author || '-'}
         </Typography>
-        <Typography variant="body2" sx={{ mb: 0.5, fontSize: '0.85rem', lineHeight: 1.10 }}>
+        <Typography variant="body2" sx={{ mb: 0.5, fontSize: FONT_SIZES.MEDIUM, lineHeight: 1.10 }}>
           <strong>ISBN:</strong> {book.isbn || '-'}
         </Typography>
-        <Typography variant="body2" sx={{ mb: 0.5, fontSize: '0.85rem', lineHeight: 1.10 }}>
+        <Typography variant="body2" sx={{ mb: 0.5, fontSize: FONT_SIZES.MEDIUM, lineHeight: 1.10 }}>
           <strong>Publisher:</strong> {book.publisher || '-'}
         </Typography>
-        <Typography variant="body2" sx={{ mb: 0.5, fontSize: '0.85rem', lineHeight: 1.10 }}>
+        <Typography variant="body2" sx={{ mb: 0.5, fontSize: FONT_SIZES.MEDIUM, lineHeight: 1.10 }}>
           <strong>Publication date:</strong> {book['publication date'] || '-'}
         </Typography>
-        <Typography variant="body2" sx={{ mb: 0.5, fontSize: '0.85rem', lineHeight: 1.10 }}>
+        <Typography variant="body2" sx={{ mb: 0.5, fontSize: FONT_SIZES.MEDIUM, lineHeight: 1.10 }}>
           <strong>Edition:</strong> {book.ed || '-'}
         </Typography>
-        <Typography variant="body2" sx={{ mb: 0.5, fontSize: '0.85rem', lineHeight: 1.10 }}>
+        <Typography variant="body2" sx={{ mb: 0.5, fontSize: FONT_SIZES.MEDIUM, lineHeight: 1.10 }}>
           <strong>Original price:</strong> {book['Original price'] || '-'}
         </Typography>
-        <Typography variant="body2" sx={{ mb: 0.5, fontSize: '0.85rem', lineHeight: 1.10 }}>
+        <Typography variant="body2" sx={{ mb: 0.5, fontSize: FONT_SIZES.MEDIUM, lineHeight: 1.10 }}>
           <strong>Pages:</strong> {book.Pages || '-'}
         </Typography>
-        <Typography variant="body2" sx={{ mb: 0.5, fontSize: '0.85rem', lineHeight: 1.10 }}>
+        <Typography variant="body2" sx={{ mb: 0.5, fontSize: FONT_SIZES.MEDIUM, lineHeight: 1.10 }}>
           <strong>Language:</strong> {book.Language || '-'}
         </Typography>
         
-        <Typography variant="body2" sx={{ mt: 1, mb: 0.5, fontSize: '0.85rem', lineHeight: 1.10 }}>
+        <Typography variant="body2" sx={{ mt: 1, mb: 0.5, fontSize: FONT_SIZES.MEDIUM, lineHeight: 1.10 }}>
           <strong>Description:</strong>
         </Typography>
         <Typography 
@@ -137,39 +139,75 @@ const renderInfoCard = (loading: boolean, book: any, orders: any[], onMakeOffer:
             WebkitBoxOrient: 'vertical',
             lineHeight: 1.2,
             flex: 1,
-            fontSize: '0.85rem',
+            fontSize: FONT_SIZES.MEDIUM,
+            wordBreak: 'break-word',
+            hyphens: 'auto',
           }}
         >
           {book.Description || '-'}
         </Typography>
         
-        <Typography variant="body2" sx={{ mb: 0.5, fontSize: '0.85rem', lineHeight: 1.10 }}>
+        <Typography variant="body2" sx={{ mb: 0.5, fontSize: FONT_SIZES.MEDIUM, lineHeight: 1.10 }}>
           <strong>Offers:</strong>
         </Typography>
         {getHighestOffer() > 0 ? (
-          <Typography variant="body2" sx={{ color: ARTIFACT_RED, fontWeight: 'bold', mb: 1, fontSize: '0.85rem', lineHeight: 1.10 }}>
+          <Typography variant="body2" sx={{ color: ARTIFACT_RED, fontWeight: 'bold', mb: 1, fontSize: FONT_SIZES.MEDIUM, lineHeight: 1.10 }}>
             Highest Offer: ${getHighestOffer()}
           </Typography>
         ) : (
-          <Typography variant="body2" sx={{ color: '#666', fontStyle: 'italic', mb: 1, fontSize: '0.85rem', lineHeight: 1.10 }}>
+          <Typography variant="body2" sx={{ color: '#666', fontStyle: 'italic', mb: 1, fontSize: FONT_SIZES.MEDIUM, lineHeight: 1.10 }}>
             No offers yet
           </Typography>
         )}
       </Box>
       
       {/* Fixed button area at bottom */}
-      <Box sx={{ mt: 'auto', pt: 1 }}>
-        <Button
-          variant="contained"
+      <Box sx={{ mt: 'auto', pt: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        {isAuthenticated && (
+          <Pill
+            fullWidth
+            background="white"
+            sx={{
+              border: `1px dashed ${ARTIFACT_RED}`,
+              '&:hover': { 
+                border: `1px solid ${ARTIFACT_RED}`,
+              }
+            }}
+          >
+            <Box
+              component="input"
+              type="number"
+              placeholder="Enter your offer amount"
+              value={offerPrice}
+              onChange={(e) => setOfferPrice(e.target.value)}
+              style={{
+                width: '100%',
+                height: '100%',
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                color: 'inherit',
+                fontSize: FONT_SIZES.MEDIUM,
+                padding: '0',
+                boxSizing: 'border-box',
+              }}
+            />
+          </Pill>
+        )}
+        <Pill
           onClick={onMakeOffer}
           fullWidth
+          background={ARTIFACT_RED}
+          color="white"
           sx={{
-            bgcolor: ARTIFACT_RED,
-            '&:hover': { bgcolor: ARTIFACT_RED_DARK }
+            cursor: 'pointer',
+            '&:hover': { 
+              backgroundColor: ARTIFACT_RED_DARK,
+            }
           }}
         >
           {isAuthenticated ? 'Make Offer' : 'Login to Make Offer'}
-        </Button>
+        </Pill>
       </Box>
     </Box>
   );
@@ -289,7 +327,6 @@ const Product: React.FC = () => {
   const [loading, setLoading] = React.useState(true);
   const [book, setBook] = React.useState<any>(null);
   const [orders, setOrders] = React.useState<any[]>([]);
-  const [offerModalOpen, setOfferModalOpen] = React.useState(false);
   const [authModalOpen, setAuthModalOpen] = React.useState(false);
   const [offerPrice, setOfferPrice] = React.useState('');
   const [submittingOffer, setSubmittingOffer] = React.useState(false);
@@ -371,9 +408,8 @@ const Product: React.FC = () => {
         severity: 'success'
       });
       
-      // Refresh orders and close modal
+      // Refresh orders and clear input
       await fetchOrders();
-      setOfferModalOpen(false);
       setOfferPrice('');
     } catch (err: any) {
       setSnackbar({
@@ -540,75 +576,14 @@ const Product: React.FC = () => {
               {card.type === 'info'
                 ? renderInfoCard(loading, book, orders, () => {
                     if (isAuthenticated) {
-                      setOfferModalOpen(true);
+                      handleSubmitOffer();
                     } else {
                       setAuthModalOpen(true);
                     }
-                  }, getHighestOffer, isAuthenticated)
+                  }, getHighestOffer, isAuthenticated, offerPrice, setOfferPrice)
                 : renderImageCard(loading, book)}
             </MainCard>
           ))}
-
-          {/* Offer Modal */}
-          <Modal
-            open={offerModalOpen}
-            onClose={() => setOfferModalOpen(false)}
-            aria-labelledby="offer-modal-title"
-            aria-describedby="offer-modal-description"
-          >
-            <Box
-              sx={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: 400,
-                bgcolor: 'background.paper',
-                borderRadius: 2,
-                boxShadow: 24,
-                p: 4,
-              }}
-            >
-              <Typography id="offer-modal-title" variant="h6" component="h2" sx={{ mb: 2 }}>
-                Make an Offer
-              </Typography>
-              {book && (
-                <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-                  Book: <strong>{book.name}</strong><br />
-                  Author: {book.author}<br />
-                  {book['Original price'] && `Original Price: €${book['Original price']}`}
-                </Typography>
-              )}
-              <TextField
-                fullWidth
-                label="Your Offer Price (€)"
-                type="number"
-                value={offerPrice}
-                onChange={(e) => setOfferPrice(e.target.value)}
-                sx={{ mb: 3 }}
-                inputProps={{ min: 0, step: 0.01 }}
-              />
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                <Button
-                  onClick={() => setOfferModalOpen(false)}
-                  disabled={submittingOffer}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="contained"
-                  onClick={handleSubmitOffer}
-                  disabled={submittingOffer || !offerPrice}
-                  sx={{
-                    bgcolor: ARTIFACT_RED,
-                    '&:hover': { bgcolor: ARTIFACT_RED_DARK }
-                  }}
-                >
-                  {submittingOffer ? 'Submitting...' : 'Submit Offer'}
-                </Button>
-              </Box>
-            </Box>
-          </Modal>
 
           {/* Snackbar for notifications */}
           <Snackbar
@@ -631,7 +606,6 @@ const Product: React.FC = () => {
             onClose={() => setAuthModalOpen(false)}
             onSuccess={() => {
               setAuthModalOpen(false);
-              setOfferModalOpen(true);
             }}
           />
         </Box>

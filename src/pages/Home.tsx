@@ -19,6 +19,7 @@ import SearchBar from '../components/subheader/SearchBar';
 import FilterButton from '../components/subheader/FilterButton';
 import { getCardsPerRow, getTotalColumns } from '../utils/helpers';
 import { ARTIFACT_RED, getBorderStyle, getHoverBorderStyle } from '../constants/colors';
+import { FONT_SIZES } from '../constants/typography';
 
 // Remove the old BookCard interface and replace with a new one for API data
 interface BookCard {
@@ -49,7 +50,7 @@ const theme = createTheme({
   typography: {
     fontFamily: 'Arial, sans-serif',
     body2: {
-      fontSize: '0.6rem',
+      fontSize: FONT_SIZES.MEDIUM,
       lineHeight: 1.1,
     },
   },
@@ -422,7 +423,7 @@ const Home: React.FC<HomeProps> = () => {
                                     style={{
                                       gridColumn: '1 / span 2',
                                       fontWeight: 700,
-                                      fontSize: '0.95rem',
+                                      fontSize: FONT_SIZES.SMALL,
                                       lineHeight: 1.10,
                                       overflow: 'hidden',
                                       textOverflow: 'ellipsis',
@@ -440,7 +441,7 @@ const Home: React.FC<HomeProps> = () => {
                                   <span
                                     style={{
                                       gridColumn: '1 / span 2',
-                                      fontSize: '0.85rem',
+                                      fontSize: FONT_SIZES.SMALL,
                                       lineHeight: 1.10,
                                       color: '#444',
                                       overflow: 'hidden',
@@ -457,7 +458,7 @@ const Home: React.FC<HomeProps> = () => {
                                   {/* ISBN (left) and Original price (right): row 3 */}
                                   <span
                                     style={{
-                                      fontSize: '0.85rem',
+                                      fontSize: FONT_SIZES.SMALL,
                                       lineHeight: 1.10,
                                       color: '#444',
                                       overflow: 'hidden',
@@ -473,7 +474,7 @@ const Home: React.FC<HomeProps> = () => {
                                   </span>
                                   <span
                                     style={{
-                                      fontSize: '0.85rem',
+                                      fontSize: FONT_SIZES.SMALL,
                                       lineHeight: 1.10,
                                       color: cell.highestOffer && cell.highestOffer > 0 ? '#888' : '#444',
                                       textDecoration: cell.highestOffer && cell.highestOffer > 0 ? 'line-through' : 'none',
@@ -490,7 +491,7 @@ const Home: React.FC<HomeProps> = () => {
                                   {/* Publisher (left) and Highest offer (right): row 4 */}
                                   <span
                                     style={{
-                                      fontSize: '0.85rem',
+                                      fontSize: FONT_SIZES.SMALL,
                                       lineHeight: 1.10,
                                       color: '#444',
                                       overflow: 'hidden',
@@ -506,7 +507,7 @@ const Home: React.FC<HomeProps> = () => {
                                     </span>
                                   <span
                                     style={{
-                                      fontSize: '0.85rem',
+                                      fontSize: FONT_SIZES.SMALL,
                                       lineHeight: 1.1,
                                       color: cell.highestOffer && cell.highestOffer > 0 ? ARTIFACT_RED : '#666',
                                       fontWeight: cell.highestOffer && cell.highestOffer > 0 ? 700 : 400,

@@ -9,6 +9,7 @@ import Buy from './pages/Buy';
 import Sell from './pages/Sell';
 import Books from './pages/Books';
 import Account from './pages/Account';
+import { FONT_SIZES } from './constants/typography';
 
 import { SearchProvider } from './context/SearchContext';
 
@@ -16,7 +17,7 @@ const theme = createTheme({
   typography: {
     fontFamily: 'Arial, sans-serif',
     body2: {
-      fontSize: '0.6rem',
+      fontSize: FONT_SIZES.MEDIUM,
       lineHeight: 1.1,
     },
   },
