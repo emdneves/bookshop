@@ -3,7 +3,7 @@ import { Box, Typography } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import Pill from './Pill';
 import { ARTIFACT_RED, ARTIFACT_RED_DARK, ARTIFACT_RED_TRANSPARENT_10, SHARED_BG } from '../constants/colors';
-import { FONT_SIZES } from '../constants/typography';
+import { FONT_SIZES, FONT_WEIGHTS } from '../constants/typography';
 
 interface AuthModalProps {
   open: boolean;
@@ -103,19 +103,30 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
           maxWidth: '90vw',
           overflow: 'hidden',
           fontSize: FONT_SIZES.MEDIUM, // Consistent font size
-          fontWeight: 600,  // Consistent font weight
+          fontWeight: FONT_WEIGHTS.BOLD,  // Consistent font weight
           color: '#222',    // Consistent font color
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Website Title */}
+          <div style={{ 
+            textAlign: 'center', 
+            marginBottom: '8px',
+            fontSize: FONT_SIZES.XLARGE,
+            fontWeight: FONT_WEIGHTS.BOLD,
+            color: ARTIFACT_RED,
+          }}>
+            theartifact
+          </div>
+
           {/* Login/Register Switch Buttons */}
           <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
             <Pill
               sx={{
                 width: '50%',
                 textAlign: 'center',
-                fontWeight: 600,
+                fontWeight: FONT_WEIGHTS.BOLD,
                 fontSize: FONT_SIZES.MEDIUM,
                 border: activeTab === 0 ? `1px solid ${ARTIFACT_RED}` : 'none',
               }}
@@ -129,7 +140,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
               sx={{
                 width: '50%',
                 textAlign: 'center',
-                fontWeight: 600,
+                fontWeight: FONT_WEIGHTS.BOLD,
                 fontSize: FONT_SIZES.MEDIUM,
                 border: activeTab === 1 ? `1px solid ${ARTIFACT_RED}` : 'none',
               }}
@@ -158,7 +169,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
                     border: 'none',
                     outline: 'none',
                     color: 'inherit',
-                    fontWeight: 'inherit',
+                    fontWeight: FONT_WEIGHTS.BOLD,
                     fontSize: FONT_SIZES.MEDIUM,
                     lineHeight: 'inherit',
                     textAlign: 'center',
@@ -180,7 +191,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
                     border: 'none',
                     outline: 'none',
                     color: 'inherit',
-                    fontWeight: 'inherit',
+                    fontWeight: FONT_WEIGHTS.BOLD,
                     fontSize: FONT_SIZES.MEDIUM,
                     lineHeight: 'inherit',
                     textAlign: 'center',
@@ -196,7 +207,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
                   color="#c62828"
                   sx={{
                     border: '1px solid #ffcdd2',
-                    fontWeight: 500,
+                    fontWeight: FONT_WEIGHTS.BOLD,
                   }}
                 >
                   {error}
@@ -210,7 +221,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
                   color="#2e7d32"
                   sx={{
                     border: '1px solid #c8e6c9',
-                    fontWeight: 500,
+                    fontWeight: FONT_WEIGHTS.BOLD,
                   }}
                 >
                   {success}
@@ -252,7 +263,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
                     border: 'none',
                     outline: 'none',
                     color: 'inherit',
-                    fontWeight: 'inherit',
+                    fontWeight: FONT_WEIGHTS.BOLD,
                     fontSize: FONT_SIZES.MEDIUM,
                     lineHeight: 'inherit',
                     textAlign: 'center',
@@ -274,7 +285,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
                     border: 'none',
                     outline: 'none',
                     color: 'inherit',
-                    fontWeight: 'inherit',
+                    fontWeight: FONT_WEIGHTS.BOLD,
                     fontSize: FONT_SIZES.MEDIUM,
                     lineHeight: 'inherit',
                     textAlign: 'center',
@@ -296,7 +307,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
                     border: 'none',
                     outline: 'none',
                     color: 'inherit',
-                    fontWeight: 'inherit',
+                    fontWeight: FONT_WEIGHTS.BOLD,
                     fontSize: FONT_SIZES.MEDIUM,
                     lineHeight: 'inherit',
                     textAlign: 'center',
@@ -318,7 +329,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
                     border: 'none',
                     outline: 'none',
                     color: 'inherit',
-                    fontWeight: 'inherit',
+                    fontWeight: FONT_WEIGHTS.BOLD,
                     fontSize: FONT_SIZES.MEDIUM,
                     lineHeight: 'inherit',
                     textAlign: 'center',
@@ -334,7 +345,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
                   color="#c62828"
                   sx={{
                     border: '1px solid #ffcdd2',
-                    fontWeight: 500,
+                    fontWeight: FONT_WEIGHTS.BOLD,
                   }}
                 >
                   {error}
@@ -348,7 +359,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
                   color="#2e7d32"
                   sx={{
                     border: '1px solid #c8e6c9',
-                    fontWeight: 500,
+                    fontWeight: FONT_WEIGHTS.BOLD,
                   }}
                 >
                   {success}

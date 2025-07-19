@@ -48,7 +48,7 @@ import {
   ARTIFACT_RED_DARK,
   getBorderStyle 
 } from '../constants/colors';
-import { FONT_SIZES } from '../constants/typography';
+import { FONT_SIZES, FONT_WEIGHTS } from '../constants/typography';
 
 interface UserData {
   id: number;
@@ -146,7 +146,7 @@ const ConfirmationDialog: React.FC<{
   severity?: 'warning' | 'info';
 }> = ({ open, onClose, title, message, confirmText, onConfirm, icon, severity = 'warning' }) => (
   <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-    <DialogTitle sx={{ color: ARTIFACT_RED, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <DialogTitle sx={{ color: ARTIFACT_RED, fontWeight: FONT_WEIGHTS.BOLD, display: 'flex', alignItems: 'center', gap: 1 }}>
       {icon && icon}
       {title}
     </DialogTitle>
@@ -567,7 +567,7 @@ const Account: React.FC = () => {
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, color: ARTIFACT_RED }}>
+          <Typography variant="h4" sx={{ fontWeight: FONT_WEIGHTS.BOLD, color: ARTIFACT_RED }}>
             Account Profile
           </Typography>
           <Box sx={{ display: 'flex', gap: 2 }}>
@@ -633,14 +633,14 @@ const Account: React.FC = () => {
                       height: 80,
                     bgcolor: ARTIFACT_RED,
                       fontSize: 32,
-                      fontWeight: 700,
+                      fontWeight: FONT_WEIGHTS.BOLD,
                       mr: 3,
                     }}
                   >
                     {userData.first_name.charAt(0).toUpperCase()}
                   </Avatar>
                   <Box>
-                    <Typography variant="h5" sx={{ fontWeight: 700, color: '#222', mb: 1 }}>
+                    <Typography variant="h5" sx={{ fontWeight: FONT_WEIGHTS.BOLD, color: '#222', mb: 1 }}>
                       {userData.first_name} {userData.last_name}
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -649,7 +649,7 @@ const Account: React.FC = () => {
                         label={userData.is_active ? 'Active' : 'Inactive'}
                         color={userData.is_active ? 'success' : 'error'}
                         size="small"
-                        sx={{ fontWeight: 600 }}
+                        sx={{ fontWeight: FONT_WEIGHTS.SEMIBOLD }}
                       />
                       <Chip
                         label={userData.role}
@@ -658,7 +658,7 @@ const Account: React.FC = () => {
                         sx={{ 
                         borderColor: ARTIFACT_RED, 
                         color: ARTIFACT_RED,
-                          fontWeight: 600 
+                          fontWeight: FONT_WEIGHTS.SEMIBOLD 
                         }}
                       />
                     </Box>
@@ -824,7 +824,7 @@ const Account: React.FC = () => {
 
       {/* Edit Profile Dialog */}
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ color: ARTIFACT_RED, fontWeight: 700 }}>
+        <DialogTitle sx={{ color: ARTIFACT_RED, fontWeight: FONT_WEIGHTS.BOLD }}>
           Edit Profile
         </DialogTitle>
         <DialogContent>

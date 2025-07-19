@@ -3,7 +3,7 @@ export const FONT_SIZES = {
   SMALL: '10px',
   MEDIUM: '12px',
   LARGE: '14px',
-  XLARGE: '16px',
+  XLARGE: '24px',
 } as const;
 
 // Font weight constants

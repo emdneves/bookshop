@@ -35,7 +35,7 @@ import {
   ARTIFACT_RED_TRANSPARENT_04,
   getBorderStyle 
 } from '../constants/colors';
-import { FONT_SIZES } from '../constants/typography';
+import { FONT_SIZES, FONT_WEIGHTS } from '../constants/typography';
 
 // Column definition interface
 export interface Column<T = any> {
@@ -281,7 +281,7 @@ const DataTable = <T extends Record<string, any>>({
                       width: header.getSize(),
                       minWidth: header.getSize(),
                       maxWidth: header.getSize(), // Prevent expansion
-                      fontWeight: 600,
+                      fontWeight: FONT_WEIGHTS.SEMIBOLD,
                       color: '#222',
                       borderBottom: getBorderStyle(),
                       padding: size === 'small' ? '8px 16px' : '16px',

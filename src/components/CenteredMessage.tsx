@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Typography, CircularProgress } from '@mui/material';
 import WarningIcon from '@mui/icons-material/Warning';
 import { ARTIFACT_RED } from '../constants/colors';
+import { FONT_WEIGHTS } from '../constants/typography';
 
 interface CenteredMessageProps {
   icon?: React.ReactNode;
@@ -31,7 +32,7 @@ const CenteredMessage: React.FC<CenteredMessageProps> = ({
     }}
   >
     {icon}
-    <Typography variant="h5" sx={{ fontWeight: 700, color, mb: 1 }}>
+    <Typography variant="h5" sx={{ fontWeight: FONT_WEIGHTS.BOLD, color, mb: 1 }}>
       {title}
     </Typography>
     {description && (

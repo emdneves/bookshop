@@ -39,7 +39,7 @@ import {
   ARTIFACT_RED_DARK,
   getBorderStyle 
 } from '../constants/colors';
-import { FONT_SIZES } from '../constants/typography';
+import { FONT_SIZES, FONT_WEIGHTS } from '../constants/typography';
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
@@ -136,7 +136,7 @@ const Header: React.FC = () => {
       <Link to={to} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
         <Typography variant="caption" sx={{ 
           fontSize: isMobile ? FONT_SIZES.SMALL : FONT_SIZES.SMALL, 
-          fontWeight: 600, 
+                      fontWeight: FONT_WEIGHTS.SEMIBOLD, 
           color: '#222', 
           mb: isMobile ? 0.25 : 0.5 
         }}>
@@ -190,7 +190,7 @@ const Header: React.FC = () => {
                 <Typography
                   variant="h3"
                   sx={{
-                    fontWeight: 700,
+                    fontWeight: FONT_WEIGHTS.BOLD,
                     color: '#222',
                     letterSpacing: 1,
                     textAlign: 'center',
@@ -224,7 +224,7 @@ const Header: React.FC = () => {
                           onClick={handleLogout}
                           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
                         >
-                          <Typography variant="caption" sx={{ fontSize: FONT_SIZES.SMALL, fontWeight: 600, color: '#222', mb: 0.25 }}>
+                          <Typography variant="caption" sx={{ fontSize: FONT_SIZES.SMALL, fontWeight: FONT_WEIGHTS.SEMIBOLD, color: '#222', mb: 0.25 }}>
                             Logout
                           </Typography>
                           <IconButton 
@@ -241,7 +241,7 @@ const Header: React.FC = () => {
                         onClick={() => setIsAuthModalOpen(true)}
                         style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
                       >
-                        <Typography variant="caption" sx={{ fontSize: FONT_SIZES.SMALL, fontWeight: 600, color: '#222', mb: 0.25 }}>
+                        <Typography variant="caption" sx={{ fontSize: FONT_SIZES.SMALL, fontWeight: FONT_WEIGHTS.SEMIBOLD, color: '#222', mb: 0.25 }}>
                           Login
                         </Typography>
                         <IconButton 
@@ -294,7 +294,7 @@ const Header: React.FC = () => {
                       onClick={handleLogout}
                       style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
                     >
-                      <Typography variant="caption" sx={{ fontSize: FONT_SIZES.SMALL, fontWeight: 600, color: '#222', mb: 0.5 }}>
+                      <Typography variant="caption" sx={{ fontSize: FONT_SIZES.SMALL, fontWeight: FONT_WEIGHTS.SEMIBOLD, color: '#222', mb: 0.5 }}>
                         Logout
                       </Typography>
                       <IconButton
@@ -311,7 +311,7 @@ const Header: React.FC = () => {
             onClick={() => setIsAuthModalOpen(true)}
                     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
                   >
-                    <Typography variant="caption" sx={{ fontSize: FONT_SIZES.SMALL, fontWeight: 600, color: '#222', mb: 0.25 }}>
+                    <Typography variant="caption" sx={{ fontSize: FONT_SIZES.SMALL, fontWeight: FONT_WEIGHTS.SEMIBOLD, color: '#222', mb: 0.25 }}>
                       Login
                     </Typography>
                     <IconButton 

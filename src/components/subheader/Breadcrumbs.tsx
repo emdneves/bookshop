@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
 import Pill from '../Pill';
 import { ARTIFACT_RED } from '../../constants/colors';
+import { FONT_WEIGHTS } from '../../constants/typography';
 
 interface BreadcrumbsProps {
   bookName: string;
@@ -36,11 +37,11 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ bookName }) => (
         display: 'flex',
         alignItems: 'center',
       }}>
-        <span style={{ color: ARTIFACT_RED, fontWeight: 600, flexShrink: 0 }}>Home</span>
-        <span style={{ color: '#888', fontWeight: 600, margin: '0 0.5em', flexShrink: 0 }}>&gt;</span>
+        <span style={{ color: ARTIFACT_RED, fontWeight: FONT_WEIGHTS.SEMIBOLD, flexShrink: 0 }}>Home</span>
+        <span style={{ color: '#888', fontWeight: FONT_WEIGHTS.SEMIBOLD, margin: '0 0.5em', flexShrink: 0 }}>&gt;</span>
         <span style={{ 
           color: '#222', 
-          fontWeight: 600, 
+          fontWeight: FONT_WEIGHTS.SEMIBOLD, 
           overflow: 'hidden', 
           textOverflow: 'ellipsis', 
           whiteSpace: 'nowrap', 

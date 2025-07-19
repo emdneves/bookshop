@@ -8,7 +8,7 @@ import Subheader from '../components/subheader/Subheader';
 import Breadcrumbs from '../components/subheader/Breadcrumbs';
 import Pill from '../components/Pill';
 import { ARTIFACT_RED, ARTIFACT_RED_DARK } from '../constants/colors';
-import { FONT_SIZES } from '../constants/typography';
+import { FONT_SIZES, FONT_WEIGHTS } from '../constants/typography';
 
 
 const theme = createTheme({
@@ -97,7 +97,7 @@ const renderInfoCard = (loading: boolean, book: any, orders: any[], onMakeOffer:
     }}>
       {/* Fixed content area */}
       <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#222', mb: 0.5, fontSize: FONT_SIZES.MEDIUM, lineHeight: 1.10 }}>
+                        <Typography variant="body2" sx={{ fontWeight: FONT_WEIGHTS.BOLD, color: '#222', mb: 0.5, fontSize: FONT_SIZES.MEDIUM, lineHeight: 1.10 }}>
           <strong>Title:</strong> {book.name || '-'}
         </Typography>
         <Typography variant="body2" sx={{ mb: 0.5, fontSize: FONT_SIZES.MEDIUM, lineHeight: 1.10 }}>
@@ -151,7 +151,7 @@ const renderInfoCard = (loading: boolean, book: any, orders: any[], onMakeOffer:
           <strong>Offers:</strong>
         </Typography>
         {getHighestOffer() > 0 ? (
-          <Typography variant="body2" sx={{ color: ARTIFACT_RED, fontWeight: 'bold', mb: 1, fontSize: FONT_SIZES.MEDIUM, lineHeight: 1.10 }}>
+                          <Typography variant="body2" sx={{ color: ARTIFACT_RED, fontWeight: FONT_WEIGHTS.BOLD, mb: 1, fontSize: FONT_SIZES.MEDIUM, lineHeight: 1.10 }}>
             Highest Offer: ${getHighestOffer()}
           </Typography>
         ) : (
@@ -478,7 +478,7 @@ const Product: React.FC = () => {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontWeight: 700,
+                fontWeight: FONT_WEIGHTS.BOLD,
     minHeight: 0,
     minWidth: 0,
     position: 'relative',

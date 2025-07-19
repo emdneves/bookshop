@@ -19,7 +19,7 @@ import SearchBar from '../components/subheader/SearchBar';
 import FilterButton from '../components/subheader/FilterButton';
 import { getCardsPerRow, getTotalColumns } from '../utils/helpers';
 import { ARTIFACT_RED, getBorderStyle, getHoverBorderStyle } from '../constants/colors';
-import { FONT_SIZES } from '../constants/typography';
+import { FONT_SIZES, FONT_WEIGHTS } from '../constants/typography';
 
 // Remove the old BookCard interface and replace with a new one for API data
 interface BookCard {
@@ -422,7 +422,7 @@ const Home: React.FC<HomeProps> = () => {
                                   <span
                                     style={{
                                       gridColumn: '1 / span 2',
-                                      fontWeight: 700,
+                                      fontWeight: FONT_WEIGHTS.BOLD,
                                       fontSize: FONT_SIZES.SMALL,
                                       lineHeight: 1.10,
                                       overflow: 'hidden',
