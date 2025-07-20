@@ -509,106 +509,106 @@ const Product: React.FC = () => {
         cardsPerRow={columns} 
         left={<Breadcrumbs bookName={bookName} />} 
       />
-      <Box
-        sx={{
-          display: 'grid',
-          width: '100vw',
-          minHeight: '100vh',
+    <Box
+      sx={{
+        display: 'grid',
+        width: '100vw',
+        minHeight: '100vh',
           gridTemplateColumns,
           gridTemplateRows,
-        }}
-      >
+      }}
+    >
           {/* Removed top border row */}
 
-          {/* Side and middle rows for 1-column layout */}
-          {columns === 1 && Array.from({ length: 2 }).map((_, rowIdx) => (
-            <React.Fragment key={rowIdx}>
+        {/* Side and middle rows for 1-column layout */}
+        {columns === 1 && Array.from({ length: 2 }).map((_, rowIdx) => (
+          <React.Fragment key={rowIdx}>
               <Box style={{ ...getCellBorder(0, rowIdx), gridColumn: 1, gridRow: rowIdx + 1 }} />
               <Box style={{ ...getCellBorder(1, rowIdx), gridColumn: 2, gridRow: rowIdx + 1 }} />
               <Box style={{ ...getCellBorder(colCount - 1, rowIdx), gridColumn: colCount, gridRow: rowIdx + 1 }} />
-            </React.Fragment>
-          ))}
-
-          {/* Side and middle rows for 2-column layout */}
-          {columns === 2 && Array.from({ length: 4 }).map((_, rowIdx) => (
-            <React.Fragment key={rowIdx}>
+          </React.Fragment>
+        ))}
+        
+        {/* Side and middle rows for 2-column layout */}
+        {columns === 2 && Array.from({ length: 4 }).map((_, rowIdx) => (
+          <React.Fragment key={rowIdx}>
               <Box style={{ ...getCellBorder(0, rowIdx), gridColumn: 1, gridRow: rowIdx + 1 }} />
               <Box style={{ ...getCellBorder(1, rowIdx), gridColumn: 2, gridRow: rowIdx + 1 }} />
               <Box style={{ ...getCellBorder(2, rowIdx), gridColumn: 3, gridRow: rowIdx + 1 }} />
               <Box style={{ ...getCellBorder(colCount - 1, rowIdx), gridColumn: colCount, gridRow: rowIdx + 1 }} />
-            </React.Fragment>
-          ))}
-
-          {/* Side and middle rows for 4/5-column layout */}
+          </React.Fragment>
+        ))}
+        
+        {/* Side and middle rows for 4/5-column layout */}
           {(columns === 4 || columns === 5) && [0, 1].map((rowIdx) => (
-            <React.Fragment key={rowIdx}>
-              <Box style={{ ...getCellBorder(0, rowIdx), gridColumn: 1, gridRow: rowIdx + 1 }} />
-              {Array.from({ length: columns }).map((_, i) => (
-                <Box
-                  key={`mid-${rowIdx}-${i}`}
-                  style={{
-                    ...getCellBorder(i + 1, rowIdx),
-                    gridColumn: i + 2,
-                    gridRow: rowIdx + 1,
-                    padding: 8,
-                  }}
-                >
-                  <Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 2, bgcolor: 'transparent' }} />
-                </Box>
-              ))}
-              <Box style={{ ...getCellBorder(colCount - 1, rowIdx), gridColumn: colCount, gridRow: rowIdx + 1 }} />
-            </React.Fragment>
-          ))}
+          <React.Fragment key={rowIdx}>
+            <Box style={{ ...getCellBorder(0, rowIdx), gridColumn: 1, gridRow: rowIdx + 1 }} />
+            {Array.from({ length: columns }).map((_, i) => (
+              <Box
+                key={`mid-${rowIdx}-${i}`}
+                style={{
+                  ...getCellBorder(i + 1, rowIdx),
+                  gridColumn: i + 2,
+                  gridRow: rowIdx + 1,
+                  padding: 8,
+                }}
+              >
+                <Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 2, bgcolor: 'transparent' }} />
+              </Box>
+            ))}
+            <Box style={{ ...getCellBorder(colCount - 1, rowIdx), gridColumn: colCount, gridRow: rowIdx + 1 }} />
+          </React.Fragment>
+        ))}
 
           {/* Removed bottom border row */}
 
 
-          {/* Main content cards (info and image) rendered via config */}
-          {getCardLayout(columns).map((card, idx) => (
-            <MainCard
-              key={card.type + idx}
-              gridColumn={card.gridColumn}
-              gridRow={card.gridRow}
-              gridColumnEnd={card.gridColumnEnd}
-              gridRowEnd={card.gridRowEnd}
-              color="#111"
-            >
-              {card.type === 'info'
-                ? renderInfoCard(loading, book, orders, () => {
-                    if (isAuthenticated) {
-                      handleSubmitOffer();
-                    } else {
-                      setAuthModalOpen(true);
-                    }
-                  }, getHighestOffer, isAuthenticated, offerPrice, setOfferPrice)
-                : renderImageCard(loading, book)}
-            </MainCard>
-          ))}
-
-          {/* Snackbar for notifications */}
-          <Snackbar
-            open={snackbar.open}
-            autoHideDuration={6000}
-            onClose={() => setSnackbar({ ...snackbar, open: false })}
+        {/* Main content cards (info and image) rendered via config */}
+        {getCardLayout(columns).map((card, idx) => (
+          <MainCard
+            key={card.type + idx}
+            gridColumn={card.gridColumn}
+            gridRow={card.gridRow}
+            gridColumnEnd={card.gridColumnEnd}
+            gridRowEnd={card.gridRowEnd}
+            color="#111"
           >
-            <Alert
-              onClose={() => setSnackbar({ ...snackbar, open: false })}
-              severity={snackbar.severity}
-              sx={{ width: '100%' }}
-            >
-              {snackbar.message}
-            </Alert>
-          </Snackbar>
+            {card.type === 'info'
+              ? renderInfoCard(loading, book, orders, () => {
+                  if (isAuthenticated) {
+                      handleSubmitOffer();
+                  } else {
+                    setAuthModalOpen(true);
+                  }
+                  }, getHighestOffer, isAuthenticated, offerPrice, setOfferPrice)
+              : renderImageCard(loading, book)}
+          </MainCard>
+        ))}
 
-          {/* Authentication Modal */}
-          <AuthModal
-            open={authModalOpen}
-            onClose={() => setAuthModalOpen(false)}
-            onSuccess={() => {
-              setAuthModalOpen(false);
-            }}
-          />
-        </Box>
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+
+        {/* Authentication Modal */}
+        <AuthModal
+          open={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          onSuccess={() => {
+            setAuthModalOpen(false);
+          }}
+        />
+      </Box>
     </>
   );
 };

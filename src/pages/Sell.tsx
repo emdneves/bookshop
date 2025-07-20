@@ -74,7 +74,7 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
   const handleCounterOfferUpdate = async (orderId: string, newCounterOffer: string) => {
     try {
       const response = await fetch(`${API_BASE_URL}/content/update`, {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -89,6 +89,11 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || 'API returned error');
       }
       
       // Force refresh by updating the dependency
