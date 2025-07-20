@@ -73,6 +73,12 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
 
   const handleCounterOfferUpdate = async (orderId: string, newCounterOffer: string) => {
     try {
+      // Find the existing order to preserve its data
+      const existingOrder = userOrders.find((order: any) => order.id === orderId);
+      if (!existingOrder) {
+        throw new Error('Order not found');
+      }
+
       const response = await fetch(`${API_BASE_URL}/content/update`, {
         method: 'POST',
         headers: {
@@ -82,7 +88,8 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
         body: JSON.stringify({
           id: orderId,
           data: {
-            counter: parseFloat(newCounterOffer)
+            ...existingOrder.data, // Preserve all existing data
+            counter: parseFloat(newCounterOffer) // Only update the counter
           }
         })
       });

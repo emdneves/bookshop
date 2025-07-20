@@ -49,6 +49,12 @@ const Buy: React.FC<BuyProps> = ({ setSubheaderData, setTargetElement }) => {
 
   const handleOfferUpdate = async (orderId: string, newPrice: string) => {
     try {
+      // Find the existing order to preserve its data
+      const existingOrder = orders.find((order: any) => order.id === orderId);
+      if (!existingOrder) {
+        throw new Error('Order not found');
+      }
+
       const response = await fetch(`${API_BASE_URL}/content/update`, {
         method: 'POST',
         headers: {
@@ -58,7 +64,8 @@ const Buy: React.FC<BuyProps> = ({ setSubheaderData, setTargetElement }) => {
         body: JSON.stringify({
           id: orderId,
           data: {
-            price: parseFloat(newPrice)
+            ...existingOrder.data, // Preserve all existing data
+            price: parseFloat(newPrice) // Only update the price
           }
         })
       });
