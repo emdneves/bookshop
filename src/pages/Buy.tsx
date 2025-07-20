@@ -11,6 +11,8 @@ import { formatSimpleDate } from '../utils/dateFormatter';
 import EditableField from '../components/EditableField';
 import { getCardsPerRow } from '../utils/helpers';
 import { getBorderStyle } from '../constants/colors';
+import { API_BASE_URL } from '../config/api';
+import { useAuth } from '../context/AuthContext';
 
 interface BuyProps {
   setSubheaderData?: (data: any[]) => void;
@@ -19,12 +21,15 @@ interface BuyProps {
 
 const Buy: React.FC<BuyProps> = ({ setSubheaderData, setTargetElement }) => {
   const { cardsPerRow, totalColumns, gridTemplateColumns } = usePageLayout();
+  const { token } = useAuth();
+  const [refreshOrders, setRefreshOrders] = useState(false);
 
   // Fetch orders (requires auth)
   const { data: orders, loading } = useApiData({
     contentTypeId: CONTENT_TYPE_IDS.ORDERS,
     endpoint: 'list-by-user',
-    requireAuth: true
+    requireAuth: true,
+    dependencies: [refreshOrders]
   });
 
   // Fetch all books (no auth required)
@@ -41,6 +46,33 @@ const Buy: React.FC<BuyProps> = ({ setSubheaderData, setTargetElement }) => {
     setSubheaderData,
     setTargetElement
   });
+
+  const handleOfferUpdate = async (orderId: string, newPrice: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/content/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          id: orderId,
+          data: {
+            price: parseFloat(newPrice)
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      // Force refresh by updating the dependency
+      setRefreshOrders(prev => !prev);
+    } catch (error) {
+      console.error('Error updating offer price:', error);
+    }
+  };
 
   // Column definitions for Buy page
   const renderPrice = (value: any, row: any) => {
@@ -81,10 +113,7 @@ const Buy: React.FC<BuyProps> = ({ setSubheaderData, setTargetElement }) => {
         <EditableField
           value={row.data?.price || ''}
           placeholder="Offer"
-          onSave={(newValue) => {
-            // TODO: Implement API call to update offer price
-            console.log(`Updating offer ${row.id} price to ${newValue}`);
-          }}
+          onSave={(newValue) => handleOfferUpdate(row.id, newValue)}
         />
       )
     },

@@ -250,19 +250,25 @@ const DataTable = <T extends Record<string, any>>({
         size={size} 
         sx={{
           ...sx,
-          // Horizontal scroll on small breakpoints
-          ...(isSmallBreakpoint && {
-            minWidth: '800px',
-            tableLayout: 'fixed',
-            width: '100%',
-          }),
-          // Fixed layout with ellipsis on larger breakpoints
-          ...(!isSmallBreakpoint && {
-            tableLayout: 'fixed',
-            width: '100%',
-            maxWidth: '100%', // Ensure table doesn't exceed container
-            overflow: 'hidden', // Prevent any overflow
-          })
+          // Use TanStack Table's column sizing system
+          tableLayout: 'fixed',
+          width: '100%',
+          // Ensure proper text handling on mobile
+          '& th, & td': {
+            ...(isSmallBreakpoint && {
+              padding: '8px 4px', // Reduced padding on mobile
+              fontSize: FONT_SIZES.SMALL, // Smaller font on mobile
+              wordBreak: 'break-word', // Allow word breaking
+              whiteSpace: 'normal', // Allow text wrapping
+              overflow: 'visible', // Show all content
+              textOverflow: 'clip', // Don't clip text
+            }),
+            ...(!isSmallBreakpoint && {
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            })
+          }
         }}
       >
         <TableHead>
@@ -274,28 +280,22 @@ const DataTable = <T extends Record<string, any>>({
                 const filterInfo = column ? getColumnFilterInfo(column) : { filterable: false, filterType: 'text' };
                 
                 return (
-                  <TableCell
-                    key={header.id}
-                    align={column?.align || 'left'}
-                    sx={{ 
-                      width: header.getSize(),
-                      minWidth: header.getSize(),
-                      maxWidth: header.getSize(), // Prevent expansion
-                      fontWeight: FONT_WEIGHTS.SEMIBOLD,
-                      color: '#222',
-                      borderBottom: getBorderStyle(),
-                      padding: size === 'small' ? '8px 16px' : '16px',
-                      fontSize: FONT_SIZES.MEDIUM,
-                      cursor: sortInfo.sortable ? 'pointer' : 'default',
-                      userSelect: 'none',
-                      position: 'relative',
-                      // Ellipsis on larger breakpoints
-                      ...(!isSmallBreakpoint && {
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      })
-                    }}
+                                      <TableCell
+                      key={header.id}
+                      align={column?.align || 'left'}
+                      sx={{ 
+                        width: header.getSize(),
+                        minWidth: header.getSize(),
+                        maxWidth: header.getSize(),
+                        fontWeight: FONT_WEIGHTS.SEMIBOLD,
+                        color: '#222',
+                        borderBottom: getBorderStyle(),
+                        padding: size === 'small' ? '8px 16px' : '16px',
+                        fontSize: FONT_SIZES.MEDIUM,
+                        cursor: sortInfo.sortable ? 'pointer' : 'default',
+                        userSelect: 'none',
+                        position: 'relative',
+                      }}
                     onClick={header.column.getToggleSortingHandler()}
                   >
                     <Box sx={{ 
@@ -492,13 +492,7 @@ const DataTable = <T extends Record<string, any>>({
                         fontSize: FONT_SIZES.MEDIUM,
                         width: cell.column.getSize(),
                         minWidth: cell.column.getSize(),
-                        maxWidth: cell.column.getSize(), // Prevent expansion
-                        // Ellipsis on larger breakpoints
-                        ...(!isSmallBreakpoint && {
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        })
+                        maxWidth: cell.column.getSize(),
                       }}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -534,9 +528,9 @@ const DataTable = <T extends Record<string, any>>({
       >
         <Box sx={{
           width: '100%',
-          overflow: isSmallBreakpoint ? 'auto' : 'hidden', // Horizontal scroll only on small breakpoints
+          overflow: isSmallBreakpoint ? 'auto' : 'hidden', // Horizontal scroll on mobile
           ...(isSmallBreakpoint && {
-            minWidth: '800px', // Force minimum width for scrolling on small breakpoints
+            minWidth: '100%', // Allow table to expand beyond container on mobile
           }),
           ...(!isSmallBreakpoint && {
             maxWidth: '100%', // Ensure table doesn't exceed container width on larger breakpoints

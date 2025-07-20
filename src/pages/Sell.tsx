@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Menu, MenuItem, Button } from '@mui/material';
+import { Box, Typography, Menu, MenuItem } from '@mui/material';
 import { useApiData } from '../hooks/useApiData';
 import { usePageLayout } from '../hooks/usePageLayout';
 import { useSubheaderData } from '../hooks/useSubheaderData';
@@ -13,6 +13,8 @@ import EditableField from '../components/EditableField';
 import { getCardsPerRow } from '../utils/helpers';
 import { getBorderStyle } from '../constants/colors';
 import { FONT_SIZES } from '../constants/typography';
+import { API_BASE_URL } from '../config/api';
+import { useAuth } from '../context/AuthContext';
 
 interface SellProps {
   setSubheaderData?: (data: any[]) => void;
@@ -21,8 +23,10 @@ interface SellProps {
 
 const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
   const { cardsPerRow, totalColumns, gridTemplateColumns } = usePageLayout();
+  const { token } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [refreshOrders, setRefreshOrders] = useState(false);
 
   // Fetch books created by the current user
   const { data: books } = useApiData({
@@ -35,7 +39,8 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
   const { data: allOrders, loading } = useApiData({
     contentTypeId: CONTENT_TYPE_IDS.ORDERS,
     endpoint: 'list',
-    requireAuth: false
+    requireAuth: false,
+    dependencies: [refreshOrders]
   });
 
   // Filter orders for books created by the current user
@@ -64,6 +69,33 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
     // TODO: Implement API call to update order status
     console.log(`Updating order ${selectedOrderId} status to ${newStatus}`);
     handleStatusClose();
+  };
+
+  const handleCounterOfferUpdate = async (orderId: string, newCounterOffer: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/content/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          id: orderId,
+          data: {
+            counter: parseFloat(newCounterOffer)
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      // Force refresh by updating the dependency
+      setRefreshOrders(prev => !prev);
+    } catch (error) {
+      console.error('Error updating counter offer:', error);
+    }
   };
 
   const statusOptions = ['Pending', 'Accepted', 'Rejected', 'Completed'];
@@ -111,10 +143,7 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
         <EditableField
           value={row.data?.counter || ''}
           placeholder="Counter offer"
-          onSave={(newValue) => {
-            // TODO: Implement API call to update counter offer
-            console.log(`Updating order ${row.id} counter offer to ${newValue}`);
-          }}
+          onSave={(newValue) => handleCounterOfferUpdate(row.id, newValue)}
         />
       )
     },
