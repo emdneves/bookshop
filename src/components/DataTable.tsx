@@ -15,7 +15,9 @@ import {
   MenuItem,
   Chip
 } from '@mui/material';
-import { ArrowUpward, ArrowDownward, FilterList } from '@mui/icons-material';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import { FilterList } from '@mui/icons-material';
 import {
   useReactTable,
   getCoreRowModel,
@@ -36,6 +38,8 @@ import {
   getBorderStyle 
 } from '../constants/colors';
 import { FONT_SIZES, FONT_WEIGHTS } from '../constants/typography';
+import Pill from './Pill';
+import Dropdown from './Dropdown';
 
 // Column definition interface
 export interface Column<T = any> {
@@ -79,6 +83,8 @@ const DataTable = <T extends Record<string, any>>({
   const [cardsPerRow, setCardsPerRow] = useState(propCardsPerRow || getCardsPerRow());
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  // Filters are always open now
+  const filtersOpen = true;
 
   useEffect(() => {
     if (!propCardsPerRow) {
@@ -168,12 +174,13 @@ const DataTable = <T extends Record<string, any>>({
   // Get unique values for select filters
   const getUniqueValues = (columnKey: string) => {
     const values = new Set<string>();
-    data.forEach(row => {
+    // Use the pre-filtered rows for the current table state
+    table.getPreFilteredRowModel().rows.forEach(row => {
       let value = '';
       if (columnKey.includes('.')) {
-        value = columnKey.split('.').reduce((obj: any, key) => obj?.[key], row) || '';
+        value = columnKey.split('.').reduce((obj: any, key) => obj?.[key], row.original) || '';
       } else {
-        value = row[columnKey] || '';
+        value = row.original[columnKey] || '';
       }
       if (value) values.add(String(value));
     });
@@ -235,17 +242,6 @@ const DataTable = <T extends Record<string, any>>({
 
   const tableContent = (
     <Box sx={{ width: '100%' }}>
-      {/* Filter Status */}
-      {columnFilters.length > 0 && (
-        <Box sx={{ mb: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
-          <Chip
-            label={`${table.getFilteredRowModel().rows.length} of ${table.getPreFilteredRowModel().rows.length} rows`}
-            size="small"
-            sx={{ backgroundColor: ARTIFACT_RED, color: 'white' }}
-          />
-        </Box>
-      )}
-
       <Table 
         size={size} 
         sx={{
@@ -273,14 +269,15 @@ const DataTable = <T extends Record<string, any>>({
       >
         <TableHead>
           {table.getHeaderGroups().map(headerGroup => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map(header => {
-                const column = columns.find(col => col.key === header.id);
-                const sortInfo = column ? getColumnSortInfo(column) : { sortable: false };
-                const filterInfo = column ? getColumnFilterInfo(column) : { filterable: false, filterType: 'text' };
-                
-                return (
-                                      <TableCell
+            <React.Fragment key={headerGroup.id}>
+              <TableRow>
+                {headerGroup.headers.map(header => {
+                  const column = columns.find(col => col.key === header.id);
+                  const sortInfo = column ? getColumnSortInfo(column) : { sortable: false };
+                  const filterInfo = column ? getColumnFilterInfo(column) : { filterable: false, filterType: 'text' };
+                  const isFiltered = header.column.getIsFiltered();
+                  return (
+                    <TableCell
                       key={header.id}
                       align={column?.align || 'left'}
                       sx={{ 
@@ -289,176 +286,189 @@ const DataTable = <T extends Record<string, any>>({
                         maxWidth: header.getSize(),
                         fontWeight: FONT_WEIGHTS.SEMIBOLD,
                         color: '#222',
-                        borderBottom: getBorderStyle(),
-                        padding: size === 'small' ? '8px 16px' : '16px',
+                        borderBottom: 'none',
+                        padding: size === 'small' ? '8px 16px 0 16px' : '12px 16px 0 16px',
                         fontSize: FONT_SIZES.MEDIUM,
                         cursor: sortInfo.sortable ? 'pointer' : 'default',
                         userSelect: 'none',
                         position: 'relative',
                       }}
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    <Box sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'space-between',
-                      width: '100%'
-                    }}>
-                      <span>{column?.label || header.id}</span>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        {sortInfo.sortable && (
-                          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                            <ArrowUpward 
-                              sx={{ 
-                                fontSize: FONT_SIZES.SMALL, 
-                                color: header.column.getIsSorted() === 'asc' ? ARTIFACT_RED : '#666',
-                                opacity: header.column.getIsSorted() === 'asc' ? 1 : 0.8
-                              }} 
-                            />
-                            <ArrowDownward 
-                              sx={{ 
-                                fontSize: FONT_SIZES.SMALL, 
-                                color: header.column.getIsSorted() === 'desc' ? ARTIFACT_RED : '#666',
-                                opacity: header.column.getIsSorted() === 'desc' ? 1 : 0.8
-                              }} 
-                            />
-                          </Box>
-                        )}
-                        {filterInfo.filterable && (
-                          <FilterList 
-                            sx={{ 
-                              fontSize: FONT_SIZES.MEDIUM, 
-                              color: header.column.getIsFiltered() ? ARTIFACT_RED : '#666',
-                              opacity: header.column.getIsFiltered() ? 1 : 0.8,
-                              cursor: 'pointer'
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Toggle filter input visibility
-                              const filterInput = document.getElementById(`filter-${header.id}`);
-                              if (filterInput) {
-                                filterInput.style.display = filterInput.style.display === 'none' ? 'block' : 'none';
-                              }
-                            }}
-                          />
-                        )}
+                      onClick={header.column.getToggleSortingHandler()}
+                    >
+                      <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between',
+                        width: '100%'
+                      }}>
+                        <span>{column?.label || header.id}</span>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          {sortInfo.sortable && (
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                              <KeyboardArrowUpIcon
+                                fontSize="medium"
+                                sx={{
+                                  color: header.column.getIsSorted() === 'asc' ? ARTIFACT_RED : '#666',
+                                  opacity: header.column.getIsSorted() === 'asc' ? 1 : 0.8,
+                                  transition: 'color 0.2s',
+                                  cursor: 'pointer',
+                                  '&:hover': {
+                                    color: ARTIFACT_RED,
+                                  },
+                                }}
+                              />
+                              <KeyboardArrowDownIcon
+                                fontSize="medium"
+                                sx={{
+                                  color: header.column.getIsSorted() === 'desc' ? ARTIFACT_RED : '#666',
+                                  opacity: header.column.getIsSorted() === 'desc' ? 1 : 0.8,
+                                  transition: 'color 0.2s',
+                                  cursor: 'pointer',
+                                  '&:hover': {
+                                    color: ARTIFACT_RED,
+                                  },
+                                }}
+                              />
+                            </Box>
+                          )}
+                        </Box>
                       </Box>
-                    </Box>
-                    {/* Column Filter Input */}
-                    {filterInfo.filterable && (
-                      <Box
-                        id={`filter-${header.id}`}
-                        sx={{
-                          display: 'none',
-                          mt: 1,
-                          '&:hover': { display: 'block' }
-                        }}
-                      >
-                        {filterInfo.filterType === 'text' && (
-                          <TextField
-                            placeholder={`Filter ${column?.label}...`}
-                            value={(header.column.getFilterValue() as string) ?? ''}
-                            onChange={(e) => header.column.setFilterValue(e.target.value)}
-                            size="small"
-                            fullWidth
-                            sx={{ 
-                              '& .MuiInputBase-root': { 
-                                fontSize: FONT_SIZES.SMALL,
-                                height: '32px'
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+              {/* Render filter input row below header, aligned with columns */}
+              <TableRow>
+                {headerGroup.headers.map(header => {
+                  const column = columns.find(col => col.key === header.id);
+                  const filterInfo = column ? getColumnFilterInfo(column) : { filterable: false, filterType: 'text' };
+                  const isFiltered = header.column.getIsFiltered();
+                  return (
+                    <TableCell
+                      key={header.id + '-filter'}
+                      align={column?.align || 'left'}
+                      sx={{
+                        padding: size === 'small' ? '0 16px 12px 16px' : '0 16px 16px 16px',
+                        borderBottom: getBorderStyle(),
+                        background: 'transparent',
+                      }}
+                    >
+                      {filterInfo.filterable && (
+                        <Box
+                          id={`filter-${header.id}`}
+                          sx={{
+                            display: 'block',
+                            width: '100%',
+                          }}
+                        >
+                          {filterInfo.filterType === 'text' && (
+                            <Pill fullWidth>
+                              <input
+                                type="text"
+                                placeholder={`Filter ${column?.label}...`}
+                                value={(header.column.getFilterValue() as string) ?? ''}
+                                onChange={(e) => header.column.setFilterValue(e.target.value)}
+                                style={{
+                                  width: '100%',
+                                  background: 'transparent',
+                                  border: 'none',
+                                  outline: 'none',
+                                  color: 'inherit',
+                                  fontWeight: 'inherit',
+                                  fontSize: 'inherit',
+                                  lineHeight: 'inherit',
+                                  textAlign: 'center',
+                                  padding: '8px 0',
+                                }}
+                              />
+                            </Pill>
+                          )}
+                          {filterInfo.filterType === 'number' && (
+                            <Pill fullWidth>
+                              <input
+                                type="number"
+                                placeholder={`Min ${column?.label}...`}
+                                value={(header.column.getFilterValue() as string) ?? ''}
+                                onChange={(e) => header.column.setFilterValue(e.target.value)}
+                                style={{
+                                  width: '100%',
+                                  background: 'transparent',
+                                  border: 'none',
+                                  outline: 'none',
+                                  color: 'inherit',
+                                  fontWeight: 'inherit',
+                                  fontSize: 'inherit',
+                                  lineHeight: 'inherit',
+                                  textAlign: 'center',
+                                  padding: '8px 0',
+                                }}
+                              />
+                            </Pill>
+                          )}
+                          {filterInfo.filterType === 'date' && (
+                            <Pill fullWidth>
+                              <input
+                                type="date"
+                                value={(header.column.getFilterValue() as string) ?? ''}
+                                onChange={(e) => header.column.setFilterValue(e.target.value)}
+                                style={{
+                                  width: '100%',
+                                  background: 'transparent',
+                                  border: 'none',
+                                  outline: 'none',
+                                  color: 'inherit',
+                                  fontWeight: 'inherit',
+                                  fontSize: 'inherit',
+                                  lineHeight: 'inherit',
+                                  textAlign: 'center',
+                                  padding: '8px 0',
+                                }}
+                              />
+                            </Pill>
+                          )}
+                          {filterInfo.filterType === 'select' && (
+                            <Dropdown
+                              trigger={
+                                <Pill fullWidth>
+                                  {(() => {
+                                    const val = header.column.getFilterValue();
+                                    if (!val) return 'All';
+                                    return val;
+                                  })()}
+                                </Pill>
                               }
-                            }}
-                          />
-                        )}
-                        {filterInfo.filterType === 'number' && (
-                          <TextField
-                            type="number"
-                            placeholder={`Min ${column?.label}...`}
-                            value={(header.column.getFilterValue() as string) ?? ''}
-                            onChange={(e) => header.column.setFilterValue(e.target.value)}
-                            size="small"
-                            fullWidth
-                            sx={{ 
-                              '& .MuiInputBase-root': { 
-                                fontSize: FONT_SIZES.SMALL,
-                                height: '32px'
-                              }
-                            }}
-                          />
-                        )}
-                        {filterInfo.filterType === 'date' && (
-                          <TextField
-                            type="date"
-                            value={(header.column.getFilterValue() as string) ?? ''}
-                            onChange={(e) => header.column.setFilterValue(e.target.value)}
-                            size="small"
-                            fullWidth
-                            sx={{ 
-                              '& .MuiInputBase-root': { 
-                                fontSize: FONT_SIZES.SMALL,
-                                height: '32px'
-                              }
-                            }}
-                          />
-                        )}
-                        {filterInfo.filterType === 'select' && (
-                          <TextField
-                            select
-                            placeholder={`Filter ${column?.label}...`}
-                            value={(header.column.getFilterValue() as string) ?? ''}
-                            onChange={(e) => header.column.setFilterValue(e.target.value)}
-                            size="small"
-                            fullWidth
-                            sx={{ 
-                              '& .MuiInputBase-root': { 
-                                fontSize: FONT_SIZES.SMALL,
-                                height: '32px'
-                              }
-                            }}
-                          >
-                            <MenuItem value="">All</MenuItem>
-                            {getUniqueValues(column?.key || header.id).map((value) => (
-                              <MenuItem key={value} value={value}>
-                                {value}
-                              </MenuItem>
-                            ))}
-                          </TextField>
-                        )}
-                      </Box>
-                    )}
-                    {/* Column resize handle */}
-                    {!isSmallBreakpoint && (
-                      <Box
-                        onMouseDown={header.getResizeHandler()}
-                        onTouchStart={header.getResizeHandler()}
-                        sx={{
-                          position: 'absolute',
-                          right: 0,
-                          top: 0,
-                          height: '100%',
-                          width: '4px',
-                          cursor: 'col-resize',
-                          userSelect: 'none',
-                          touchAction: 'none',
-                          '&:hover': {
-                            backgroundColor: ARTIFACT_RED,
-                          },
-                        }}
-                      />
-                    )}
-                  </TableCell>
-                );
-              })}
-            </TableRow>
+                              options={[
+                                { value: '', label: 'All' },
+                                ...getUniqueValues(column.key === 'status' ? 'data.status' : column.key).map((value) => ({
+                                  value,
+                                  label: value
+                                }))
+                              ]}
+                              onSelect={newValue => header.column.setFilterValue(newValue)}
+                              sx={{ width: '100%' }}
+                            />
+                          )}
+                        </Box>
+                      )}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            </React.Fragment>
           ))}
         </TableHead>
         <TableBody>
           {loading ? (
-            <TableRow>
-              <TableCell colSpan={columns.length} align="center">
-                <Skeleton variant="rectangular" width="100%" height={44} />
-              </TableCell>
-            </TableRow>
-          ) : table.getRowModel().rows.length === 0 ? (
+            Array.from({ length: 5 }).map((_, rowIdx) => (
+              <TableRow key={`skeleton-row-${rowIdx}`}>
+                {columns.map((col, colIdx) => (
+                  <TableCell key={`skeleton-cell-${col.key}-${colIdx}`} align={col.align || 'left'}>
+                    <Skeleton variant="rectangular" width="100%" height={36} sx={{ borderRadius: '999px' }} />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : (!loading && table.getRowModel().rows.length === 0) ? (
             <TableRow>
               <TableCell colSpan={columns.length} align="center">
                 <Typography variant="body2" sx={{ color: '#666', fontStyle: 'italic' }}>
@@ -504,6 +514,18 @@ const DataTable = <T extends Record<string, any>>({
           )}
         </TableBody>
       </Table>
+      {/* Row count as a table row at the bottom */}
+      {columnFilters.length > 0 && (
+        <Table sx={{ width: '100%', border: 'none', boxShadow: 'none', background: 'none', mt: 2 }}>
+          <TableBody>
+            <TableRow>
+              <TableCell colSpan={columns.length} align="right" sx={{ border: 'none', background: 'none', color: ARTIFACT_RED, fontWeight: 500, fontSize: FONT_SIZES.MEDIUM }}>
+                {`${table.getFilteredRowModel().rows.length} of ${table.getPreFilteredRowModel().rows.length} rows`}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      )}
     </Box>
   );
 
