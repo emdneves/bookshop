@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Box, Typography, Menu, MenuItem } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Typography } from '@mui/material';
 import { useApiData } from '../hooks/useApiData';
 import { usePageLayout } from '../hooks/usePageLayout';
 import { useSubheaderData } from '../hooks/useSubheaderData';
@@ -7,14 +7,14 @@ import { CONTENT_TYPE_IDS } from '../constants/contentTypes';
 import { Column } from '../components/DataTable';
 import DataTable from '../components/DataTable';
 import AuthGuard from '../components/AuthGuard';
-import Pill from '../components/Pill';
 import { formatSimpleDate } from '../utils/dateFormatter';
 import EditableField from '../components/EditableField';
 import { getCardsPerRow } from '../utils/helpers';
 import { getBorderStyle } from '../constants/colors';
-import { FONT_SIZES } from '../constants/typography';
 import { API_BASE_URL } from '../config/api';
 import { useAuth } from '../context/AuthContext';
+import Dropdown from '../components/Dropdown';
+import Pill from '../components/Pill';
 
 interface SellProps {
   setSubheaderData?: (data: any[]) => void;
@@ -24,11 +24,9 @@ interface SellProps {
 const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
   const { cardsPerRow, totalColumns, gridTemplateColumns } = usePageLayout();
   const { token } = useAuth();
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [refreshOrders, setRefreshOrders] = useState(false);
 
-  // Fetch books created by the current user
+  // Fetch all books created by the current user
   const { data: books } = useApiData({
     contentTypeId: CONTENT_TYPE_IDS.BOOKS,
     endpoint: 'list-by-user',
@@ -55,20 +53,53 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
     setTargetElement
   });
 
-  const handleStatusClick = (event: React.MouseEvent<HTMLElement>, orderId: string) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedOrderId(orderId);
-  };
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
+    try {
+      // Find the existing order to preserve its data - use same pattern as counter offer
+      const existingOrder = userOrders.find((order: any) => order.id === orderId);
+      if (!existingOrder) {
+        throw new Error('Order not found');
+      }
 
-  const handleStatusClose = () => {
-    setAnchorEl(null);
-    setSelectedOrderId(null);
-  };
+      // Ensure all required fields are present
+      const updatedData = {
+        ...existingOrder.data, // Preserve all existing data
+        status: newStatus // Only update the status
+      };
 
-  const handleStatusChange = (newStatus: string) => {
-    // TODO: Implement API call to update order status
-    console.log(`Updating order ${selectedOrderId} status to ${newStatus}`);
-    handleStatusClose();
+
+      const requestBody = {
+        id: orderId,
+        data: updatedData
+      };
+
+
+      const response = await fetch(`${API_BASE_URL}/content/update`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+ 
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'API returned error');
+      }
+      
+      // Force refresh by updating the dependency
+      setRefreshOrders(prev => !prev);
+    } catch (error) {
+    }
   };
 
   const handleCounterOfferUpdate = async (orderId: string, newCounterOffer: string) => {
@@ -79,26 +110,32 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
         throw new Error('Order not found');
       }
 
+      const updatedData = {
+        ...existingOrder.data, // Preserve all existing data
+        counter: parseFloat(newCounterOffer) // Only update the counter
+      };
+
+      const requestBody = {
+        id: orderId,
+        data: updatedData
+      };
+
       const response = await fetch(`${API_BASE_URL}/content/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          id: orderId,
-          data: {
-            ...existingOrder.data, // Preserve all existing data
-            counter: parseFloat(newCounterOffer) // Only update the counter
-          }
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const result = await response.json();
+      
       if (!result.success) {
         throw new Error(result.error || 'API returned error');
       }
@@ -106,11 +143,14 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
       // Force refresh by updating the dependency
       setRefreshOrders(prev => !prev);
     } catch (error) {
-      console.error('Error updating counter offer:', error);
     }
   };
 
-  const statusOptions = ['Pending', 'Accepted', 'Rejected', 'Completed'];
+  const statusOptions = [
+    { value: 'received', label: 'received' },
+    { value: 'approved', label: 'approved' },
+    { value: 'rejected', label: 'rejected' }
+  ];
 
   // Column definitions for Sell page
   const renderPrice = (value: any, row: any) => {
@@ -163,15 +203,30 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
       key: 'status',
       label: 'Status',
       render: (value: any, row: any) => {
-        const currentStatus = row.data?.status || 'Pending';
+        const currentStatus = row.data?.status || 'pending';
         return (
-          <Pill
-            onClick={(e) => e && handleStatusClick(e, row.id)}
-            fullWidth
-            sx={{ cursor: 'pointer' }}
-          >
-            {currentStatus}
-          </Pill>
+          <Dropdown
+            trigger={
+              <Pill
+                fullWidth
+                sx={{ 
+                  cursor: 'pointer',
+                  width: '100%',
+                  display: 'flex'
+                }}
+              >
+                {currentStatus}
+              </Pill>
+            }
+            options={statusOptions}
+            onSelect={(newStatus) => {
+              if (newStatus === currentStatus) {
+                return;
+              }
+              handleStatusChange(row.id, newStatus);
+            }}
+            sx={{ width: '100%' }}
+          />
         );
       }
     },
@@ -210,32 +265,6 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
         {/* Side column right */}
         <Box sx={{ borderLeft: getBorderStyle(), height: '100%' }} />
       </Box>
-      
-      {/* Status dropdown menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleStatusClose}
-        PaperProps={{
-          sx: {
-            mt: 1,
-            minWidth: 120,
-          }
-        }}
-      >
-        {statusOptions.map((status) => (
-          <MenuItem
-            key={status}
-            onClick={() => handleStatusChange(status)}
-                      sx={{
-              fontSize: FONT_SIZES.SMALL,
-              py: 1,
-            }}
-          >
-            {status}
-          </MenuItem>
-        ))}
-      </Menu>
     </AuthGuard>
   );
 };
