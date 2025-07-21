@@ -27,14 +27,14 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
   const [refreshOrders, setRefreshOrders] = useState(false);
 
   // Fetch all books created by the current user
-  const { data: books } = useApiData({
+  const { data: books, loading: loadingBooks } = useApiData({
     contentTypeId: CONTENT_TYPE_IDS.BOOKS,
     endpoint: 'list-by-user',
     requireAuth: true
   });
 
   // Fetch all orders (offers) for books created by the current user
-  const { data: allOrders, loading } = useApiData({
+  const { data: allOrders, loading: loadingOrders } = useApiData({
     contentTypeId: CONTENT_TYPE_IDS.ORDERS,
     endpoint: 'list',
     requireAuth: false,
@@ -204,6 +204,10 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
       label: 'Status',
       render: (value: any, row: any) => {
         const currentStatus = row.data?.status || 'pending';
+        const reorderedStatusOptions = [
+          { value: currentStatus, label: currentStatus },
+          ...statusOptions.filter(opt => opt.value !== currentStatus)
+        ];
         return (
           <Dropdown
             trigger={
@@ -218,7 +222,7 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
                 {currentStatus}
               </Pill>
             }
-            options={statusOptions}
+            options={reorderedStatusOptions}
             onSelect={(newStatus) => {
               if (newStatus === currentStatus) {
                 return;
@@ -237,21 +241,23 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
     }
   ];
 
+  const loading = loadingBooks || loadingOrders;
+
   return (
     <AuthGuard
       title="Login Required"
       description="You must be logged in to view offers for your books. Redirecting to login..."
     >
-    <Box
-      sx={{
-        width: '100%',
-        display: 'grid',
+      <Box
+        sx={{
+          width: '100%',
+          display: 'grid',
           gridTemplateColumns: gridTemplateColumns,
-        background: 'none',
-      }}
-    >
-      {/* Side column left */}
-      <Box sx={{ borderRight: getBorderStyle(), height: '100%' }} />
+          background: 'none',
+        }}
+      >
+        {/* Side column left */}
+        <Box sx={{ borderRight: getBorderStyle(), height: '100%' }} />
         {/* Center columns: table */}
         <DataTable
           cardsPerRow={cardsPerRow}
@@ -259,7 +265,7 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
           data={userOrders}
           columns={columns}
           loading={loading}
-          emptyMessage="No offers found for your books."
+          emptyMessage={!loading ? "No offers found for your books." : undefined}
           rowKey="id"
         />
         {/* Side column right */}

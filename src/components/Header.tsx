@@ -24,9 +24,13 @@ import {
   Logout as LogoutIcon,
   Settings as SettingsIcon,
   ShoppingCartOutlined as ShoppingCartOutlinedIcon,
+  ShoppingCart as ShoppingCartFilledIcon,
   StoreOutlined as StoreOutlinedIcon,
+  Store as StoreFilledIcon,
   MenuBookOutlined as MenuBookOutlinedIcon,
+  MenuBook as MenuBookFilledIcon,
   AccountCircleOutlined as AccountCircleOutlinedIcon,
+  AccountCircle as AccountCircleFilledIcon,
   PowerSettingsNew as PowerSettingsNewIcon
 } from '@mui/icons-material';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -131,7 +135,7 @@ const Header: React.FC = () => {
   };
 
   // Reusable function to create navigation icons
-  const createNavIcon = (to: string, label: string, icon: React.ReactNode, tooltip: string, isMobile: boolean = false) => {
+  const createNavIcon = (to: string, label: string, outlinedIcon: React.ReactNode, filledIcon: React.ReactNode, tooltip: string, isMobile: boolean = false) => {
     const isActive = location.pathname === to;
     const baseIconStyle = isMobile ? iconStyle : desktopIconStyle;
     
@@ -158,7 +162,7 @@ const Header: React.FC = () => {
               }),
             }}
           >
-            {icon}
+            {isActive ? filledIcon : outlinedIcon}
           </IconButton>
         </Link>
       </Tooltip>
@@ -231,10 +235,10 @@ const Header: React.FC = () => {
                 >
                   {user ? (
                     <>
-                      {createNavIcon('/buy', 'buy', <ShoppingCartOutlinedIcon />, 'Compras', true)}
-                      {createNavIcon('/sell', 'sell', <StoreOutlinedIcon />, 'Vendas', true)}
-                      {createNavIcon('/books', 'mybooks', <MenuBookOutlinedIcon />, 'Ofertas', true)}
-                      {createNavIcon('/account', 'account', <AccountCircleOutlinedIcon />, 'Account', true)}
+                      {createNavIcon('/buy', 'buy', <ShoppingCartOutlinedIcon />, <ShoppingCartFilledIcon />, 'Compras', true)}
+                      {createNavIcon('/sell', 'sell', <StoreOutlinedIcon />, <StoreFilledIcon />, 'Vendas', true)}
+                      {createNavIcon('/books', 'mybooks', <MenuBookOutlinedIcon />, <MenuBookFilledIcon />, 'Ofertas', true)}
+                      {createNavIcon('/account', 'account', <AccountCircleOutlinedIcon />, <AccountCircleFilledIcon />, 'Account', true)}
                       <Tooltip title="Logout" arrow>
                         <Box 
                           onClick={handleLogout}
@@ -301,10 +305,10 @@ const Header: React.FC = () => {
             >
               {user ? (
                 <>
-                  {createNavIcon('/buy', 'buy', <ShoppingCartOutlinedIcon />, 'Compras', false)}
-                  {createNavIcon('/sell', 'Sell', <StoreOutlinedIcon />, 'Vendas', false)}
-                  {createNavIcon('/books', 'mybooks', <MenuBookOutlinedIcon />, 'Ofertas', false)}
-                  {createNavIcon('/account', 'account', <AccountCircleOutlinedIcon />, 'Account', false)}
+                  {createNavIcon('/buy', 'buy', <ShoppingCartOutlinedIcon />, <ShoppingCartFilledIcon />, 'Compras', false)}
+                  {createNavIcon('/sell', 'Sell', <StoreOutlinedIcon />, <StoreFilledIcon />, 'Vendas', false)}
+                  {createNavIcon('/books', 'mybooks', <MenuBookOutlinedIcon />, <MenuBookFilledIcon />, 'Ofertas', false)}
+                  {createNavIcon('/account', 'account', <AccountCircleOutlinedIcon />, <AccountCircleFilledIcon />, 'Account', false)}
                   <Tooltip title="Logout" arrow>
                     <Box 
                       onClick={handleLogout}

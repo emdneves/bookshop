@@ -241,8 +241,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
                     background: ARTIFACT_RED_DARK,
                   },
                   transition: 'all 0.2s ease',
-                }}
-              >
+                  }}
+                >
                 {loading ? 'logging in...' : 'login'}
               </Pill>
             </>
@@ -379,8 +379,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
                     background: ARTIFACT_RED_DARK,
                   },
                   transition: 'all 0.2s ease',
-                }}
-              >
+                  }}
+                >
                 {loading ? 'creating account...' : 'create account'}
               </Pill>
             </>
