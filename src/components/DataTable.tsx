@@ -430,16 +430,12 @@ const DataTable = <T extends Record<string, any>>({
                             <Dropdown
                               trigger={
                                 <Pill fullWidth>
-                                  {(() => {
-                                    const val = header.column.getFilterValue();
-                                    if (!val) return 'All';
-                                    return val;
-                                  })()}
+                                  {String((column && header.column && typeof header.column.getFilterValue === 'function' && header.column.getFilterValue()) || 'All')}
                                 </Pill>
                               }
                               options={[
                                 { value: '', label: 'All' },
-                                ...getUniqueValues(column.key === 'status' ? 'data.status' : column.key).map((value) => ({
+                                ...((column && getUniqueValues(column.key === 'status' ? 'data.status' : column.key)) || []).map((value) => ({
                                   value,
                                   label: value
                                 }))
