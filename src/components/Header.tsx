@@ -131,23 +131,39 @@ const Header: React.FC = () => {
   };
 
   // Reusable function to create navigation icons
-  const createNavIcon = (to: string, label: string, icon: React.ReactNode, tooltip: string, isMobile: boolean = false) => (
-    <Tooltip title={tooltip} arrow>
-      <Link to={to} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
-        <Typography variant="caption" sx={{ 
-          fontSize: isMobile ? FONT_SIZES.SMALL : FONT_SIZES.SMALL, 
-                      fontWeight: FONT_WEIGHTS.SEMIBOLD, 
-          color: '#222', 
-          mb: isMobile ? 0.25 : 0.5 
-        }}>
-          {label}
-        </Typography>
-        <IconButton {...(isMobile ? iconStyle : desktopIconStyle)}>
-          {icon}
-        </IconButton>
-      </Link>
-    </Tooltip>
-  );
+  const createNavIcon = (to: string, label: string, icon: React.ReactNode, tooltip: string, isMobile: boolean = false) => {
+    const isActive = location.pathname === to;
+    const baseIconStyle = isMobile ? iconStyle : desktopIconStyle;
+    
+    return (
+      <Tooltip title={tooltip} arrow>
+        <Link to={to} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
+          <Typography variant="caption" sx={{ 
+            fontSize: isMobile ? FONT_SIZES.SMALL : FONT_SIZES.SMALL, 
+                        fontWeight: FONT_WEIGHTS.SEMIBOLD, 
+            color: isActive ? ARTIFACT_RED : '#222', 
+            mb: isMobile ? 0.25 : 0.5 
+          }}>
+            {label}
+          </Typography>
+          <IconButton 
+            {...baseIconStyle}
+            sx={{
+              ...baseIconStyle.sx,
+              ...(isActive && {
+                border: `1px solid ${ARTIFACT_RED}`,
+                '& svg': {
+                  color: ARTIFACT_RED,
+                },
+              }),
+            }}
+          >
+            {icon}
+          </IconButton>
+        </Link>
+      </Tooltip>
+    );
+  };
 
   return (
     <Box
