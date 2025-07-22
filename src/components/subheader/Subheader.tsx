@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, TextField, IconButton, Popover, Button, Typography } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import { SHARED_BG } from '../../constants/colors';
+import { SHARED_BG, getBorderStyle } from '../../constants/colors';
 
 interface SubheaderProps {
   cardsPerRow: number;
@@ -59,14 +59,14 @@ const Subheader: React.FC<SubheaderProps> = ({
           minHeight: 40,
           maxHeight: 40,
           background: SHARED_BG,
-          borderBottom: '0.5px dashed #d32f2f',
+          borderBottom: getBorderStyle(),
           position: 'sticky',
           top: cardsPerRow === 1 ? '120px' : '80px', // Responsive header height
           zIndex: 9,
         }}
       >
         {/* Side column left */}
-        <Box sx={{ borderRight: '0.5px dashed #d32f2f', height: '100%' }} />
+        <Box sx={{ borderRight: getBorderStyle(), height: '100%' }} />
         {/* Center columns */}
         {Array.from({ length: cardsPerRow }).map((_, i) => {
           // Single column: merge left and right into center slot
@@ -82,7 +82,7 @@ const Subheader: React.FC<SubheaderProps> = ({
                   height: '100%',
                   minHeight: 40,
                   maxHeight: 40,
-                  borderRight: '0.5px dashed #d32f2f',
+                  borderRight: getBorderStyle(),
                   gap: 1,
                   minWidth: 0,
                 }}
@@ -122,7 +122,7 @@ const Subheader: React.FC<SubheaderProps> = ({
                     height: '100%',
                     minHeight: 40,
                     maxHeight: 40,
-                    borderRight: '0.5px dashed #d32f2f',
+                    borderRight: getBorderStyle(),
                     width: '100%',
                     minWidth: 0,
                     overflow: 'hidden',
@@ -144,7 +144,7 @@ const Subheader: React.FC<SubheaderProps> = ({
                     height: '100%',
                     minHeight: 40,
                     maxHeight: 40,
-                    borderRight: '0.5px dashed #d32f2f',
+                    borderRight: getBorderStyle(),
                     width: '100%',
                     minWidth: 0,
                     overflow: 'hidden',
@@ -155,7 +155,7 @@ const Subheader: React.FC<SubheaderProps> = ({
               );
             }
             // Should never hit this, but just in case
-            return <Box key={i} sx={{ borderRight: '0.5px dashed #d32f2f', height: '100%', minHeight: 40, maxHeight: 40 }} />;
+            return <Box key={i} sx={{ borderRight: getBorderStyle(), height: '100%', minHeight: 40, maxHeight: 40 }} />;
           }
           // Multiple columns: left in first, right in last
           if (i === 0) {
@@ -170,7 +170,7 @@ const Subheader: React.FC<SubheaderProps> = ({
                   height: '100%',
                   minHeight: 40,
                   maxHeight: 40,
-                  borderRight: '0.5px dashed #d32f2f',
+                  borderRight: getBorderStyle(),
                   width: '100%',
                   minWidth: 0,
                   overflow: 'hidden',
@@ -192,7 +192,7 @@ const Subheader: React.FC<SubheaderProps> = ({
                   height: '100%',
                   minHeight: 40,
                   maxHeight: 40,
-                  borderRight: '0.5px dashed #d32f2f',
+                  // borderRight: getBorderStyle(), // Removed to avoid double border
                   width: '100%',
                   minWidth: 0,
                   overflow: 'hidden',
@@ -207,7 +207,7 @@ const Subheader: React.FC<SubheaderProps> = ({
             <Box
               key={i}
               sx={{
-                borderRight: '0.5px dashed #d32f2f',
+                borderRight: getBorderStyle(),
                 height: '100%',
                 minHeight: 40,
                 maxHeight: 40,
@@ -216,7 +216,7 @@ const Subheader: React.FC<SubheaderProps> = ({
           );
         })}
         {/* Side column right */}
-        <Box sx={{ borderLeft: '0.5px dashed #d32f2f', height: '100%' }} />
+        <Box sx={{ borderLeft: getBorderStyle(), height: '100%' }} />
       </Box>
     </>
   );

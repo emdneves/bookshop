@@ -304,7 +304,7 @@ const DataTable = <T extends Record<string, any>>({
                         <span>{column?.label || header.id}</span>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                           {sortInfo.sortable && (
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0, '& > *:last-child': { mt: -1 } }}>
                               <KeyboardArrowUpIcon
                                 fontSize="medium"
                                 sx={{

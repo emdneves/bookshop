@@ -105,16 +105,16 @@ const GridItem = styled(Box)<{
   width: '100%',
   boxSizing: 'border-box',
   background: 'none',
-  borderRight: col < colCount - 1 ? `1px dashed ${ARTIFACT_RED}` : 'none',
-  borderBottom: row < rowCount - 1 ? `1px dashed ${ARTIFACT_RED}` : 'none',
+  borderRight: col < colCount - 1 ? getBorderStyle() : 'none',
+  borderBottom: row < rowCount - 1 ? getBorderStyle() : 'none',
   padding: '8px',
   overflow: 'hidden',
   display: 'flex',
   alignItems: 'stretch',
   justifyContent: 'stretch',
   [theme.breakpoints.down('sm')]: {
-    borderRight: col < colCount - 1 ? `0.5px solid ${ARTIFACT_RED}` : 'none',
-    borderBottom: row < rowCount - 1 ? `0.5px solid ${ARTIFACT_RED}` : 'none',
+    borderRight: col < colCount - 1 ? getBorderStyle() : 'none',
+    borderBottom: row < rowCount - 1 ? getBorderStyle() : 'none',
   },
 }));
 

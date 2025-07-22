@@ -30,7 +30,7 @@ const Footer: React.FC<FooterProps> = ({ children }) => {
       }}
     >
       {/* Side column left */}
-      <Box sx={{ height: '100%' }} />
+      <Box sx={{ borderRight: getBorderStyle(), height: '100%' }} />
       {/* Center columns */}
       {Array.from({ length: cardsPerRow }).map((_, i) => {
         if (i === 0) {

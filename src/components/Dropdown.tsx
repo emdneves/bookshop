@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Box, SxProps, Theme } from '@mui/material';
 import { createPortal } from 'react-dom';
-import { ARTIFACT_RED, ARTIFACT_RED_TRANSPARENT_05 } from '../constants/colors';
+import { ARTIFACT_RED, ARTIFACT_RED_TRANSPARENT_05, getBorderStyle } from '../constants/colors';
 import { FONT_SIZES } from '../constants/typography';
 
 interface DropdownOption {
@@ -126,7 +126,7 @@ const Dropdown: React.FC<DropdownProps> = ({
             left: position.left,
             width: position.width,
             background: 'white',
-            border: `1px solid ${ARTIFACT_RED}`,
+            border: getBorderStyle(),
             borderRadius: '8px',
             boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
             zIndex: 99999,
@@ -142,7 +142,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                 padding: '8px 12px',
                 cursor: 'pointer',
                 fontSize: FONT_SIZES.SMALL,
-                borderBottom: `1px solid ${ARTIFACT_RED_TRANSPARENT_05}`,
+                borderBottom: getBorderStyle(),
                 background: focusedIndex === idx ? ARTIFACT_RED_TRANSPARENT_05 : 'white',
                 fontWeight: focusedIndex === idx ? 700 : 400,
                 '&:hover': {

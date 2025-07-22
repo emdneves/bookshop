@@ -7,7 +7,7 @@ import { API_BASE_URL } from '../config/api';
 import Subheader from '../components/subheader/Subheader';
 import Breadcrumbs from '../components/subheader/Breadcrumbs';
 import Pill from '../components/Pill';
-import { ARTIFACT_RED, ARTIFACT_RED_DARK } from '../constants/colors';
+import { ARTIFACT_RED, ARTIFACT_RED_DARK, getBorderStyle, getHoverBorderStyle } from '../constants/colors';
 import { FONT_SIZES, FONT_WEIGHTS } from '../constants/typography';
 
 
@@ -168,9 +168,9 @@ const renderInfoCard = (loading: boolean, book: any, orders: any[], onMakeOffer:
             fullWidth
             background="white"
             sx={{
-              border: `1px dashed ${ARTIFACT_RED}`,
+              border: getBorderStyle(),
               '&:hover': { 
-                border: `1px solid ${ARTIFACT_RED}`,
+                border: getHoverBorderStyle(),
               }
             }}
           >
@@ -471,8 +471,8 @@ const Product: React.FC = () => {
   const rowCount = columns === 1 ? 4 : columns === 2 ? 6 : 4;
 
   const getCellBorder = (col: number, row: number): React.CSSProperties => ({
-    borderRight: col < colCount - 1 ? `1px dashed ${ARTIFACT_RED}` : 'none',
-    borderBottom: row < rowCount - 1 ? `1px dashed ${ARTIFACT_RED}` : 'none',
+    borderRight: col < colCount - 1 ? getBorderStyle() : 'none',
+    borderBottom: row < rowCount - 1 ? getBorderStyle() : 'none',
     borderLeft: 'none',
     borderTop: 'none',
     display: 'flex',
