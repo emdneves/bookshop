@@ -15,6 +15,10 @@ export const ARTIFACT_RED_TRANSPARENT_03 = 'rgba(139, 0, 0, 0.03)'; // 3% opacit
 export const ARTIFACT_RED_DARK = '#660000'; // Darker version for hover states
 export const ARTIFACT_RED_DARKER = '#4A0000'; // Even darker for active states
 
+// Cancel button colors for modals
+export const CANCEL_BLACK = '#333333'; // Dark gray/black for cancel buttons
+export const CANCEL_BLACK_HOVER = '#222222'; // Darker version for hover states
+
 // Line types based on breakpoints
 // For 1-2 columns (mobile/tablet): solid lines
 // For 3+ columns (desktop): dashed lines

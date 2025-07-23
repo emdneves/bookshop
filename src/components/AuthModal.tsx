@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import Pill from './Pill';
-import { ARTIFACT_RED, ARTIFACT_RED_DARK, ARTIFACT_RED_TRANSPARENT_10, SHARED_BG } from '../constants/colors';
+import { ARTIFACT_RED, ARTIFACT_RED_DARK, ARTIFACT_RED_TRANSPARENT_10, SHARED_BG, CANCEL_BLACK, CANCEL_BLACK_HOVER } from '../constants/colors';
 import { FONT_SIZES, FONT_WEIGHTS } from '../constants/typography';
 
 interface AuthModalProps {
@@ -389,13 +389,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
           {/* Cancel Button */}
           <Pill
             fullWidth
-            background={ARTIFACT_RED}
+            background={CANCEL_BLACK}
             color="white"
             onClick={handleClose}
             sx={{
               cursor: 'pointer',
               '&:hover': {
-                background: ARTIFACT_RED_DARK,
+                background: CANCEL_BLACK_HOVER,
               },
               transition: 'all 0.2s ease',
             }}
