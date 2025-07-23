@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 import { useApiData } from '../hooks/useApiData';
 import { usePageLayout } from '../hooks/usePageLayout';
 import { useSubheaderData } from '../hooks/useSubheaderData';
@@ -15,16 +15,33 @@ import { API_BASE_URL } from '../config/api';
 import { useAuth } from '../context/AuthContext';
 import Dropdown from '../components/Dropdown';
 import Pill from '../components/Pill';
+import SellBookModal from '../components/SellBookModal';
+import SellButton from '../components/subheader/SellButton';
+import SearchBar from '../components/subheader/SearchBar';
 
 interface SellProps {
   setSubheaderData?: (data: any[]) => void;
   setTargetElement?: (element: string) => void;
+  sellModalOpen?: boolean;
+  setSellModalOpen?: (open: boolean) => void;
 }
 
-const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
+// Subheader slot components for Sell page
+export const SellSubheaderLeft = ({ fullWidth }: { fullWidth?: boolean }) => (
+  <SearchBar fullWidth={fullWidth} />
+);
+
+export const SellSubheaderRight = ({ onClick }: { onClick?: () => void }) => (
+  <SellButton onClick={onClick} fullWidth={true} />
+);
+
+const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement, sellModalOpen: propSellModalOpen, setSellModalOpen: propSetSellModalOpen }) => {
   const { cardsPerRow, totalColumns, gridTemplateColumns } = usePageLayout();
   const { token } = useAuth();
   const [refreshOrders, setRefreshOrders] = useState(false);
+  const [internalSellModalOpen, setInternalSellModalOpen] = useState(false);
+  const sellModalOpen = propSellModalOpen !== undefined ? propSellModalOpen : internalSellModalOpen;
+  const setSellModalOpen = propSetSellModalOpen || setInternalSellModalOpen;
 
   // Fetch all books created by the current user
   const { data: books, loading: loadingBooks } = useApiData({
@@ -52,6 +69,18 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
     setSubheaderData,
     setTargetElement
   });
+
+  // Set SellButton in the subheader right slot
+  useEffect(() => {
+    if (setSubheaderData) {
+      setSubheaderData([
+        {
+          key: 'right',
+          element: <SellButton onClick={() => setSellModalOpen(true)} />,
+        },
+      ]);
+    }
+  }, [setSubheaderData]);
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
@@ -168,6 +197,11 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
     return book?.data?.name || row.data.book || 'Book';
   };
 
+  const renderBookOriginalPrice = (books: any[]) => (value: any, row: any) => {
+    const book = books.find((b: any) => b.id === row.data.book);
+    return book?.data && book.data['Original price'] ? `€${book.data['Original price']}` : '-';
+  };
+
   const renderBuyer = (value: any, row: any) => {
     return row.created_by || 'Unknown';
   };
@@ -177,6 +211,11 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
       key: 'book',
       label: 'Book',
       render: renderBookName(books)
+    },
+    {
+      key: 'price_original',
+      label: 'Original',
+      render: renderBookOriginalPrice(books)
     },
     {
       key: 'buyer',
@@ -243,11 +282,44 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement }) => {
 
   const loading = loadingBooks || loadingOrders;
 
+  // Handler to create a new book
+  const handleSellBook = async (fields: any) => {
+    const bookData = {
+      name: fields.name,
+      author: fields.author,
+      publisher: fields.publisher,
+      isbn: fields.isbn,
+      'Original price': Number(fields.originalPrice),
+      Cover: fields.coverUrl || '',
+      Pages: 1,
+      Description: '',
+      'publication date': new Date().toISOString(),
+    };
+    const input = {
+      content_type_id: CONTENT_TYPE_IDS.BOOKS,
+      data: bookData,
+    };
+    await fetch(`${API_BASE_URL}/content/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(input),
+    });
+    setRefreshOrders(prev => !prev); // Refresh data
+  };
+
   return (
     <AuthGuard
       title="Login Required"
       description="You must be logged in to view offers for your books. Redirecting to login..."
     >
+      <SellBookModal
+        open={sellModalOpen}
+        onClose={() => setSellModalOpen(false)}
+        onSubmit={handleSellBook}
+      />
       <Box
         sx={{
           width: '100%',

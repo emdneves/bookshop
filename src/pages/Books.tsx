@@ -85,13 +85,26 @@ const Books: React.FC<BooksProps> = ({ setSubheaderData, setTargetElement }) => 
     },
     {
       key: 'price',
-      label: 'Price',
-      render: (value: any, row: any) => `€${row.data?.price || 0}`
+      label: 'Original',
+      render: (value: any, row: any) => row.data && row.data['Original price'] ? `€${row.data['Original price']}` : '-'
     },
     {
-      key: 'offers',
+      key: 'offers_count',
       label: 'Offers',
-      render: renderOffers(orders)
+      render: (value: any, row: any) => {
+        const bookOffers = orders.filter(order => order.data.book === row.id);
+        return bookOffers.length;
+      }
+    },
+    {
+      key: 'highest_offer',
+      label: 'Highest',
+      render: (value: any, row: any) => {
+        const bookOffers = orders.filter(order => order.data.book === row.id);
+        if (bookOffers.length === 0) return '-';
+        const highest = Math.max(...bookOffers.map((offer: any) => offer.data.price));
+        return `€${highest}`;
+      }
     },
     {
       key: 'created_at',

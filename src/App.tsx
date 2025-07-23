@@ -6,7 +6,7 @@ import Layout from './components/Layout';
 import Home, { HomeSubheaderLeft, HomeSubheaderRight } from './pages/Home';
 import Product from './pages/Product';
 import Buy from './pages/Buy';
-import Sell from './pages/Sell';
+import Sell, { SellSubheaderLeft, SellSubheaderRight } from './pages/Sell';
 import Books from './pages/Books';
 import Account from './pages/Account';
 import { FONT_SIZES } from './constants/typography';
@@ -30,6 +30,7 @@ const theme = createTheme({
 
 const App: React.FC = () => {
   const location = useLocation();
+  const [sellModalOpen, setSellModalOpen] = useState(false);
   
   // Scroll to top when location changes
   useEffect(() => {
@@ -39,7 +40,13 @@ const App: React.FC = () => {
   // Determine if current page should show subheader
   const showSubheader = location.pathname === '/' || location.pathname === '/buy' || location.pathname === '/sell' || location.pathname === '/books';
   
-
+  // Determine subheader left and right buttons
+  let subheaderLeft = <HomeSubheaderLeft />;
+  let subheaderRight = <HomeSubheaderRight />;
+  if (location.pathname === '/sell') {
+    subheaderLeft = <SellSubheaderLeft />;
+    subheaderRight = <SellSubheaderRight onClick={() => setSellModalOpen(true)} />;
+  }
 
   return (
     <HelmetProvider>
@@ -49,15 +56,15 @@ const App: React.FC = () => {
         <Layout
           showSubheader={showSubheader}
           subheaderProps={{
-            left: <HomeSubheaderLeft />,
-            right: <HomeSubheaderRight />,
+            left: subheaderLeft,
+            right: subheaderRight,
           }}
         >
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/book/:id" element={<Product />} />
             <Route path="/buy" element={<Buy />} />
-            <Route path="/sell" element={<Sell />} />
+            <Route path="/sell" element={<Sell sellModalOpen={sellModalOpen} setSellModalOpen={setSellModalOpen} />} />
             <Route path="/books" element={<Books />} />
             <Route path="/account" element={<Account />} />
 

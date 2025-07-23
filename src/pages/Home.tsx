@@ -16,7 +16,6 @@ import { API_BASE_URL } from '../config/api';
 import SEO from '../utils/seo';
 import Subheader from '../components/subheader/Subheader';
 import SearchBar from '../components/subheader/SearchBar';
-import FilterButton from '../components/subheader/FilterButton';
 import { getCardsPerRow, getTotalColumns } from '../utils/helpers';
 import { ARTIFACT_RED, getBorderStyle, getHoverBorderStyle } from '../constants/colors';
 import { FONT_SIZES, FONT_WEIGHTS } from '../constants/typography';
@@ -199,13 +198,11 @@ const PlaceholderImage = styled(Box)({
 interface HomeProps {}
 
 // Subheader slot components for Home
-const HomeSubheaderLeft = ({ fullWidth }: { fullWidth?: boolean }) => (
-          <SearchBar fullWidth={fullWidth} />
+export const HomeSubheaderLeft = ({ fullWidth }: { fullWidth?: boolean }) => (
+  <SearchBar fullWidth={fullWidth} />
 );
+export const HomeSubheaderRight = () => <></>;
 
-const HomeSubheaderRight = ({ fullWidth }: { fullWidth?: boolean }) => (
-          <FilterButton fullWidth={fullWidth} />
-);
 
 const Home: React.FC<HomeProps> = () => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -551,5 +548,4 @@ const Home: React.FC<HomeProps> = () => {
   );
 };
 
-export { HomeSubheaderLeft, HomeSubheaderRight };
 export default Home;

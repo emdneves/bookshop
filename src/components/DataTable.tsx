@@ -160,9 +160,9 @@ const DataTable = <T extends Record<string, any>>({
     // Auto-determine filterability and type based on column key
     if (column.key === 'status') {
       return { filterable: true, filterType: 'select' };
-    } else if (['book', 'name', 'author', 'publisher', 'buyer', 'seller'].includes(column.key)) {
+    } else if (['book', 'name', 'author', 'publisher', 'buyer', 'seller', 'isbn'].includes(column.key)) {
       return { filterable: true, filterType: 'text' };
-    } else if (['price', 'counter', 'my_offer', 'proposal'].includes(column.key)) {
+    } else if (['price', 'counter', 'my_offer', 'proposal', 'price_original', 'offers_count', 'highest_offer'].includes(column.key)) {
       return { filterable: true, filterType: 'number' };
     } else if (column.key === 'created_at') {
       return { filterable: true, filterType: 'date' };
@@ -240,29 +240,38 @@ const DataTable = <T extends Record<string, any>>({
   // Check if we're on the 2 smallest breakpoints
   const isSmallBreakpoint = cardsPerRow <= 2;
 
+  // Calculate min-width based on cardsPerRow (columns)
+  let minWidth = '100%';
+  if (cardsPerRow >= 5) {
+    minWidth = '83.333vw'; // 5/6
+  } else if (cardsPerRow === 4) {
+    minWidth = '80vw'; // 4/5
+  } else if (cardsPerRow === 3) {
+    minWidth = '66.666vw'; // 2/3
+  } else {
+    minWidth = 'unset'; // Let it scroll naturally for 2 or fewer
+  }
+
   const tableContent = (
-    <Box sx={{ width: '100%' }}>
+    <Box sx={{ width: '100%', overflowX: minWidth ? 'auto' : 'visible' }}>
       <Table 
         size={size} 
         sx={{
           ...sx,
-          // Use TanStack Table's column sizing system
           tableLayout: 'fixed',
           width: '100%',
-          // Ensure proper text handling on mobile
+          minWidth: minWidth,
           '& th, & td': {
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
             ...(isSmallBreakpoint && {
-              padding: '8px 4px', // Reduced padding on mobile
-              fontSize: FONT_SIZES.SMALL, // Smaller font on mobile
-              wordBreak: 'break-word', // Allow word breaking
-              whiteSpace: 'normal', // Allow text wrapping
-              overflow: 'visible', // Show all content
-              textOverflow: 'clip', // Don't clip text
-            }),
-            ...(!isSmallBreakpoint && {
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+              padding: '8px 4px',
+              fontSize: FONT_SIZES.SMALL,
+              wordBreak: 'break-word',
+              whiteSpace: 'normal',
+              overflow: 'visible',
+              textOverflow: 'clip',
             })
           }
         }}
