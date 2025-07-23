@@ -16,9 +16,10 @@ interface PillProps {
   fullWidth?: boolean;
   onClick?: (event?: React.MouseEvent<HTMLElement>) => void;
   sx?: SxProps<Theme>;
+  hoverBackground?: string;
 }
 
-const Pill: React.FC<PillProps> = ({ children, color = ARTIFACT_RED, background = 'transparent', fullWidth = false, onClick, sx }) => {
+const Pill: React.FC<PillProps> = ({ children, color = ARTIFACT_RED, background = 'transparent', fullWidth = false, onClick, sx, hoverBackground }) => {
   const [active, setActive] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const pillRef = useRef<HTMLDivElement>(null);
@@ -104,8 +105,8 @@ const Pill: React.FC<PillProps> = ({ children, color = ARTIFACT_RED, background 
         ...(fullWidth && { width: '100%' }),
         // Only allow width-related sx overrides
         ...widthSx,
-        '&:hover': onClick ? {
-          background: active ? ARTIFACT_RED_TRANSPARENT_10 : ARTIFACT_RED_TRANSPARENT_05,
+        '&:hover': onClick || hoverBackground ? {
+          background: hoverBackground || (active ? ARTIFACT_RED_TRANSPARENT_10 : ARTIFACT_RED_TRANSPARENT_05),
           border: getHoverBorderStyle().replace(ARTIFACT_RED, color),
         } : {},
       }}
