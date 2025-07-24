@@ -62,11 +62,112 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
     }
     setPrefillLoading(true);
     setError(null);
+    setNoCoverFound(false);
+    
+    // Helper function to try different ISBN formats
+    const tryISBNVariants = async (baseISBN: string, apiCall: (isbn: string) => Promise<any>) => {
+      const variants = [
+        baseISBN,
+        baseISBN.replace(/-/g, ''),
+        baseISBN.replace(/\s/g, ''),
+        baseISBN.length === 10 ? `978${baseISBN.slice(0, -1)}` : baseISBN,
+        baseISBN.length === 13 && baseISBN.startsWith('978') ? baseISBN.slice(3, -1) : baseISBN,
+      ].filter((variant, index, arr) => arr.indexOf(variant) === index);
+      
+      for (const variant of variants) {
+        try {
+          const result = await apiCall(variant);
+          if (result) return result;
+        } catch (err) {
+          console.log(`[ISBN Variant] Failed for ${variant}:`, err);
+        }
+      }
+      return null;
+    };
+    
+    let data = null;
+    let bookFound = false;
+    let sourceName = '';
+    
+    // Primary Source: Open Library API
     try {
-      const res = await fetch(`https://openlibrary.org/isbn/${isbn}.json`);
-      if (!res.ok) throw new Error('Book not found for this ISBN');
-      const data = await res.json();
-      console.log('[OpenLibrary API] Response for ISBN', isbn, data);
+      const openLibraryCall = async (isbn: string) => {
+        const res = await fetch(`https://openlibrary.org/isbn/${isbn}.json`);
+        if (res.ok) {
+          const bookData = await res.json();
+          console.log('[OpenLibrary API] Found book:', bookData);
+          return {
+            title: bookData.title,
+            by_statement: bookData.by_statement || '',
+            authors: bookData.authors || [],
+            publishers: bookData.publishers || [],
+            publish_date: bookData.publish_date,
+            description: bookData.description,
+            number_of_pages: bookData.number_of_pages,
+            language: bookData.language,
+            languages: bookData.languages || [],
+            subjects: bookData.subjects || [],
+            edition_name: bookData.edition_name,
+            covers: bookData.covers || [],
+            source: 'openlibrary'
+          };
+        }
+        return null;
+      };
+      
+      data = await tryISBNVariants(isbn, openLibraryCall);
+      if (data) {
+        bookFound = true;
+        sourceName = 'Open Library';
+      }
+    } catch (err) {
+      console.log('[OpenLibrary API] Failed:', err);
+    }
+    
+    // Fallback Source: Google Books API
+    if (!bookFound) {
+      try {
+        const googleBooksCall = async (isbn: string) => {
+          const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
+          if (res.ok) {
+            const googleData = await res.json();
+            if (googleData.items && googleData.items.length > 0) {
+              const book = googleData.items[0].volumeInfo;
+              console.log('[Google Books API] Found book:', book);
+              return {
+                title: book.title,
+                by_statement: book.authors ? book.authors.join(', ') : '',
+                authors: book.authors || [],
+                publishers: book.publisher ? [book.publisher] : [],
+                publish_date: book.publishedDate,
+                description: book.description,
+                number_of_pages: book.pageCount,
+                language: book.language,
+                categories: book.categories || [],
+                imageLinks: book.imageLinks,
+                source: 'googlebooks'
+              };
+            }
+          }
+          return null;
+        };
+        
+        data = await tryISBNVariants(isbn, googleBooksCall);
+        if (data) {
+          bookFound = true;
+          sourceName = 'Google Books';
+        }
+      } catch (err) {
+        console.log('[Google Books API] Failed:', err);
+      }
+    }
+    
+    // Only show error if both sources failed
+    if (!bookFound) {
+      throw new Error(`Book not found for ISBN: ${isbn}. Please check the ISBN or enter book details manually.`);
+    }
+    
+    try {
       // Optionally fetch cover image (always set preview to Open Library cover if available)
       let coverUrl = '';
       let coverFound = false;
@@ -449,11 +550,6 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
                     </div>
                   )}
                 </div>
-                {noCoverFound && (
-                  <Typography variant="caption" sx={{ color: ARTIFACT_RED, fontWeight: FONT_WEIGHTS.BOLD, textAlign: 'center', mt: 1 }}>
-                    No cover found for this book. You can upload one below.
-                  </Typography>
-                )}
                 
                 {fields.coverFile && (
                   <Pill fullWidth background={ARTIFACT_RED_TRANSPARENT_10} color={ARTIFACT_RED}>

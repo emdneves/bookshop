@@ -24,6 +24,7 @@ interface SellProps {
   setTargetElement?: (element: string) => void;
   sellModalOpen?: boolean;
   setSellModalOpen?: (open: boolean) => void;
+  refreshBooks?: boolean;
 }
 
 // Subheader slot components for Sell page
@@ -35,7 +36,7 @@ export const SellSubheaderRight = ({ onClick }: { onClick?: () => void }) => (
   <SellButton onClick={onClick} fullWidth={true} />
 );
 
-const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement, sellModalOpen: propSellModalOpen, setSellModalOpen: propSetSellModalOpen }) => {
+const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement, sellModalOpen: propSellModalOpen, setSellModalOpen: propSetSellModalOpen, refreshBooks }) => {
   const { cardsPerRow, totalColumns, gridTemplateColumns } = usePageLayout();
   const { token } = useAuth();
   const [refreshOrders, setRefreshOrders] = useState(false);
@@ -47,7 +48,8 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement, sellMod
   const { data: books, loading: loadingBooks } = useApiData({
     contentTypeId: CONTENT_TYPE_IDS.BOOKS,
     endpoint: 'list-by-user',
-    requireAuth: true
+    requireAuth: true,
+    dependencies: [refreshBooks]
   });
 
   // Fetch all orders (offers) for books created by the current user
@@ -55,7 +57,7 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement, sellMod
     contentTypeId: CONTENT_TYPE_IDS.ORDERS,
     endpoint: 'list',
     requireAuth: false,
-    dependencies: [refreshOrders]
+    dependencies: [refreshBooks]
   });
 
   // Filter orders for books created by the current user

@@ -17,6 +17,8 @@ import AuthModal from './components/AuthModal';
 import { useAuth } from './context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { SearchProvider } from './context/SearchContext';
+import { API_BASE_URL } from './config/api';
+import { CONTENT_TYPE_IDS } from './constants/contentTypes';
 
 const theme = createTheme({
   typography: {
@@ -36,9 +38,10 @@ const theme = createTheme({
 const App: React.FC = () => {
   const location = useLocation();
   const [sellModalOpen, setSellModalOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, token } = useAuth();
   const navigate = useNavigate();
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [refreshBooks, setRefreshBooks] = useState(false);
   
   // Scroll to top when location changes
   useEffect(() => {
@@ -79,6 +82,42 @@ const App: React.FC = () => {
     );
   }
 
+  // Handler to create a new book (moved from Sell.tsx)
+  const handleSellBook = async (fields: any) => {
+    const bookData = {
+      name: fields.name,
+      author: fields.author,
+      publisher: fields.publisher,
+      isbn: fields.isbn ? Number(fields.isbn) : undefined,
+      'Original price': fields['Original price'] ? Number(fields['Original price']) : undefined,
+      Cover: fields.Cover || '',
+      Pages: fields.Pages ? Number(fields.Pages) : undefined,
+      Description: fields.Description || '',
+      'publication date': fields['publication date'] ? new Date(fields['publication date']).toISOString() : undefined,
+      ed: fields.ed ? Number(fields.ed) : undefined,
+      Language: fields.Language || '',
+    };
+    Object.keys(bookData).forEach(key => {
+      if (bookData[key as keyof typeof bookData] === undefined) {
+        delete (bookData as any)[key];
+      }
+    });
+    const input = {
+      content_type_id: CONTENT_TYPE_IDS.BOOKS,
+      data: bookData,
+    };
+    await fetch(`${API_BASE_URL}/content/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(input),
+    });
+    setSellModalOpen(false);
+    setRefreshBooks(prev => !prev);
+  };
+
   return (
     <HelmetProvider>
     <ThemeProvider theme={theme}>
@@ -87,7 +126,7 @@ const App: React.FC = () => {
         <SellBookModal
           open={sellModalOpen}
           onClose={() => setSellModalOpen(false)}
-          onSubmit={async () => { setSellModalOpen(false); }} // The actual onSubmit logic is handled in Sell page, here just close
+          onSubmit={handleSellBook}
         />
         <AuthModal
           open={authModalOpen}
@@ -102,10 +141,10 @@ const App: React.FC = () => {
           }}
         >
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Home refreshBooks={refreshBooks} />} />
             <Route path="/book/:id" element={<Product />} />
             <Route path="/buy" element={<Buy />} />
-            <Route path="/sell" element={<Sell sellModalOpen={sellModalOpen} setSellModalOpen={setSellModalOpen} />} />
+            <Route path="/sell" element={<Sell sellModalOpen={sellModalOpen} setSellModalOpen={setSellModalOpen} refreshBooks={refreshBooks} />} />
             <Route path="/books" element={<Books />} />
             <Route path="/account" element={<Account />} />
           </Routes>

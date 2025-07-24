@@ -195,7 +195,9 @@ const PlaceholderImage = styled(Box)({
 
 
 
-interface HomeProps {}
+interface HomeProps {
+  refreshBooks?: boolean;
+}
 
 // Subheader slot components for Home
 export const HomeSubheaderLeft = ({ fullWidth }: { fullWidth?: boolean }) => (
@@ -204,7 +206,7 @@ export const HomeSubheaderLeft = ({ fullWidth }: { fullWidth?: boolean }) => (
 export const HomeSubheaderRight = () => <></>;
 
 
-const Home: React.FC<HomeProps> = () => {
+const Home: React.FC<HomeProps> = ({ refreshBooks }) => {
   const { user, logout, isAuthenticated } = useAuth();
   const [bookCards, setBookCards] = useState<BookCard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -293,7 +295,7 @@ const Home: React.FC<HomeProps> = () => {
     const handleResize = () => setCardsPerRow(getCardsPerRow());
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []); // ✅ Only run once on mount
+  }, [refreshBooks]);
 
   // Update book cards when orders change (without causing infinite loops)
   useEffect(() => {
