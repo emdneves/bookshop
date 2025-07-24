@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Box, Typography, Skeleton } from '@mui/material';
 import Pill from './Pill';
 import { ARTIFACT_RED, ARTIFACT_RED_DARK, ARTIFACT_RED_TRANSPARENT_10, SHARED_BG, CANCEL_BLACK, CANCEL_BLACK_HOVER } from '../constants/colors';
 import { FONT_SIZES, FONT_WEIGHTS } from '../constants/typography';
+// Import zxing-js/browser for barcode recognition
+import { BrowserMultiFormatReader, NotFoundException } from '@zxing/library';
 
 interface SellBookModalProps {
   open: boolean;
@@ -29,6 +31,11 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [prefillLoading, setPrefillLoading] = useState(false);
+  const [isbnInput, setIsbnInput] = useState('');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [noCoverFound, setNoCoverFound] = useState(false);
 
   // Upload image to S3 via backend
   const uploadCoverImage = async (file: File): Promise<string> => {
@@ -44,6 +51,105 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
     const data = await response.json();
     if (!data.success || !data.urls || !data.urls[0]?.url) throw new Error('Image upload failed');
     return data.urls[0].url;
+  };
+
+  // Prefill handler
+  const handlePrefillFromISBN = async () => {
+    const isbn = isbnInput.trim();
+    if (!isbn) {
+      setError('Please enter an ISBN or barcode.');
+      return;
+    }
+    setPrefillLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`https://openlibrary.org/isbn/${isbn}.json`);
+      if (!res.ok) throw new Error('Book not found for this ISBN');
+      const data = await res.json();
+      console.log('[OpenLibrary API] Response for ISBN', isbn, data);
+      // Optionally fetch cover image (always set preview to Open Library cover if available)
+      let coverUrl = '';
+      let coverFound = false;
+      // Try cover by cover ID
+      if (data.covers && data.covers.length > 0) {
+        coverUrl = `https://covers.openlibrary.org/b/id/${data.covers[0]}-L.jpg`;
+        // Test if image exists
+        try {
+          const resp = await fetch(coverUrl, { method: 'HEAD' });
+          if (resp.ok) {
+            setImagePreview(coverUrl);
+            coverFound = true;
+            setNoCoverFound(false);
+          }
+        } catch {}
+      }
+      // Fallback: Try cover by ISBN if not found
+      if (!coverFound && isbn) {
+        const isbnCoverUrl = `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`;
+        try {
+          const resp = await fetch(isbnCoverUrl, { method: 'HEAD' });
+          if (resp.ok) {
+            coverUrl = isbnCoverUrl;
+            setImagePreview(coverUrl);
+            coverFound = true;
+            setNoCoverFound(false);
+          }
+        } catch {}
+      }
+      if (!coverFound) {
+        coverUrl = '';
+        setImagePreview(null);
+        setNoCoverFound(true);
+      }
+      // Use by_statement for author if present, otherwise fetch author names
+      let author = data.by_statement || '';
+      if (!author && Array.isArray(data.authors) && data.authors.length > 0) {
+        try {
+          const authorNames = await Promise.all(
+            data.authors.map(async (a: any) => {
+              if (!a.key) return '';
+              const resp = await fetch(`https://openlibrary.org${a.key}.json`);
+              if (!resp.ok) return '';
+              const authorData = await resp.json();
+              return authorData.name || '';
+            })
+          );
+          author = authorNames.filter(Boolean).join(', ');
+        } catch {}
+      }
+      // Use language code
+      let language = '';
+      if (Array.isArray(data.languages) && data.languages.length > 0) {
+        try {
+          const langKey = data.languages[0].key; // e.g. '/languages/por'
+          language = langKey.split('/').pop() || '';
+        } catch {}
+      }
+      // Subjects as comma-separated string
+      let subjects = '';
+      if (Array.isArray(data.subjects) && data.subjects.length > 0) {
+        subjects = data.subjects.join(', ');
+      }
+      setFields(f => ({
+        ...f,
+        name: data.title || '',
+        author: author,
+        publisher: Array.isArray(data.publishers) && data.publishers.length > 0 ? data.publishers[0] : '',
+        isbn: isbn,
+        'publication date': data.publish_date ? new Date(data.publish_date).toISOString().slice(0, 10) : '',
+        Description: typeof data.description === 'string' ? data.description : (data.description?.value || ''),
+        Cover: coverUrl,
+        Pages: data.number_of_pages || '',
+        ed: data.edition_name || '',
+        Language: language,
+        // Optionally fill Description with subjects if Description is empty
+        ...(subjects && !(typeof data.description === 'string' ? data.description : (data.description?.value || '')) ? { Description: subjects } : {}),
+      }));
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch book info');
+    } finally {
+      setPrefillLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -68,6 +174,68 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
     document.getElementById('cover-upload')?.click();
   };
 
+  // Barcode/ISBN image scan handler (does NOT set cover preview or Cover field)
+  const handleImageInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    setScanning(true);
+    setError(null);
+    try {
+      const file = e.target.files[0];
+      const imageUrl = URL.createObjectURL(file);
+      const img = new window.Image();
+      img.src = imageUrl;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+      const codeReader = new BrowserMultiFormatReader();
+      try {
+        const result = await codeReader.decodeFromImage(img);
+        if (result && result.getText()) {
+          setIsbnInput(result.getText());
+          // handlePrefillFromISBN will be triggered by useEffect below
+        } else {
+          setError('No barcode or ISBN found in the image.');
+          setScanning(false);
+        }
+      } catch (err) {
+        if (err instanceof NotFoundException) {
+          setError('No barcode or ISBN found in the image.');
+        } else {
+          setError('Failed to recognize barcode/ISBN in the image.');
+        }
+        setScanning(false);
+      }
+    } catch (err: any) {
+      setError('Failed to recognize barcode/ISBN in the image.');
+      setScanning(false);
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  // Dedicated cover upload handler (this is the only place user-uploaded cover sets the preview)
+  const handleCoverFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setFields(f => ({ ...f, coverFile: file }));
+      // Create preview URL for user-uploaded cover
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setImagePreview(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Auto-prefill when isbnInput is set by scanning
+  React.useEffect(() => {
+    if (scanning && isbnInput) {
+      handlePrefillFromISBN();
+      setScanning(false);
+    }
+  }, [isbnInput, scanning]);
+
   const handleSubmit = async () => {
     setLoading(true);
     setError(null);
@@ -75,9 +243,11 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
     try {
       // If a cover file is provided, upload it and get the URL
       let coverUrl = fields.Cover;
+      // Only upload the image if the user uploaded a file (coverFile)
       if (fields.coverFile) {
         coverUrl = await uploadCoverImage(fields.coverFile);
       }
+      // Submit the book with the correct Cover URL
       await onSubmit({
         ...fields,
         Cover: coverUrl,
@@ -144,6 +314,64 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
         onClick={e => e.stopPropagation()}
       >
         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* ISBN/Barcode input and Prefill button */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+            <Pill fullWidth hoverBackground="#f9eaea">
+              <input
+                type="text"
+                name="isbnInput"
+                placeholder="ISBN or Barcode"
+                value={isbnInput}
+                onChange={e => setIsbnInput(e.target.value)}
+                style={{ ...pillInputStyle, flex: 1 }}
+              />
+            </Pill>
+            {/* Hidden file input for image upload */}
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              onChange={handleImageInputChange}
+            />
+            <Pill
+              background={ARTIFACT_RED_TRANSPARENT_10}
+              color={ARTIFACT_RED}
+              sx={{
+                border: '1px solid ' + ARTIFACT_RED,
+                borderRadius: 6,
+                padding: '6px 12px',
+                fontWeight: FONT_WEIGHTS.BOLD,
+                fontSize: FONT_SIZES.MEDIUM,
+                cursor: scanning ? 'not-allowed' : 'pointer',
+                opacity: scanning ? 0.7 : 1,
+                minWidth: 120,
+                textAlign: 'center',
+              }}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={scanning}
+            >
+              {scanning ? 'Scanning...' : 'Scan Image'}
+            </Pill>
+            <Pill
+              background={ARTIFACT_RED}
+              color="white"
+              sx={{
+                borderRadius: 6,
+                padding: '6px 16px',
+                fontWeight: FONT_WEIGHTS.BOLD,
+                fontSize: FONT_SIZES.MEDIUM,
+                cursor: prefillLoading ? 'not-allowed' : 'pointer',
+                opacity: prefillLoading ? 0.7 : 1,
+                minWidth: 120,
+                textAlign: 'center',
+              }}
+              onClick={handlePrefillFromISBN}
+              disabled={prefillLoading}
+            >
+              {prefillLoading ? 'Prefilling...' : 'Prefill'}
+            </Pill>
+          </div>
           {/* Modal Title */}
           <div style={{
             textAlign: 'center',
@@ -170,7 +398,7 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
                   accept="image/*"
                   id="cover-upload"
                   style={{ display: 'none' }}
-                  onChange={handleFileChange}
+                  onChange={handleCoverFileChange}
                 />
                 
                 <div
@@ -223,6 +451,11 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
                     </div>
                   )}
                 </div>
+                {noCoverFound && (
+                  <Typography variant="caption" sx={{ color: ARTIFACT_RED, fontWeight: FONT_WEIGHTS.BOLD, textAlign: 'center', mt: 1 }}>
+                    No cover found for this book. You can upload one below.
+                  </Typography>
+                )}
                 
                 {fields.coverFile && (
                   <Pill fullWidth background={ARTIFACT_RED_TRANSPARENT_10} color={ARTIFACT_RED}>
@@ -241,6 +474,8 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
                   cursor: 'pointer',
                   '&:hover': { background: CANCEL_BLACK_HOVER },
                   transition: 'all 0.2s ease',
+                  minWidth: 120,
+                  textAlign: 'center',
                 }}
               >
                 Cancel
@@ -272,6 +507,17 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
                     value={fields.author}
                     onChange={handleChange}
                     required
+                    style={pillInputStyle}
+                  />
+                </Pill>
+                {/* Publisher - Full Width */}
+                <Pill fullWidth hoverBackground="#f9eaea">
+                  <input
+                    type="text"
+                    name="publisher"
+                    placeholder="Publisher"
+                    value={fields.publisher}
+                    onChange={handleChange}
                     style={pillInputStyle}
                   />
                 </Pill>
@@ -364,11 +610,14 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
                 background={ARTIFACT_RED}
                 color="white"
                 onClick={handleSubmit}
+                disabled={loading}
                 sx={{
                   cursor: loading ? 'not-allowed' : 'pointer',
                   opacity: loading ? 0.7 : 1,
                   '&:hover': { background: ARTIFACT_RED_DARK },
                   transition: 'all 0.2s ease',
+                  minWidth: 120,
+                  textAlign: 'center',
                 }}
               >
                 {loading ? 'Listing...' : 'List Book'}
