@@ -348,8 +348,7 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
                 minWidth: 120,
                 textAlign: 'center',
               }}
-              onClick={() => fileInputRef.current?.click()}
-              disabled={scanning}
+              onClick={scanning ? undefined : () => fileInputRef.current?.click()}
             >
               {scanning ? 'Scanning...' : 'Scan Image'}
             </Pill>
@@ -366,8 +365,7 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
                 minWidth: 120,
                 textAlign: 'center',
               }}
-              onClick={handlePrefillFromISBN}
-              disabled={prefillLoading}
+              onClick={prefillLoading ? undefined : handlePrefillFromISBN}
             >
               {prefillLoading ? 'Prefilling...' : 'Prefill'}
             </Pill>
@@ -609,8 +607,7 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
                 fullWidth
                 background={ARTIFACT_RED}
                 color="white"
-                onClick={handleSubmit}
-                disabled={loading}
+                onClick={loading ? undefined : handleSubmit}
                 sx={{
                   cursor: loading ? 'not-allowed' : 'pointer',
                   opacity: loading ? 0.7 : 1,
