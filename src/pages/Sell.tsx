@@ -284,17 +284,26 @@ const Sell: React.FC<SellProps> = ({ setSubheaderData, setTargetElement, sellMod
 
   // Handler to create a new book
   const handleSellBook = async (fields: any) => {
+    // Build the book data object, mapping and type-casting as needed
     const bookData = {
       name: fields.name,
       author: fields.author,
       publisher: fields.publisher,
-      isbn: fields.isbn,
-      'Original price': Number(fields.originalPrice),
-      Cover: fields.coverUrl || '',
-      Pages: 1,
-      Description: '',
-      'publication date': new Date().toISOString(),
+      isbn: fields.isbn ? Number(fields.isbn) : undefined,
+      'Original price': fields['Original price'] ? Number(fields['Original price']) : undefined,
+      Cover: fields.Cover || '',
+      Pages: fields.Pages ? Number(fields.Pages) : undefined,
+      Description: fields.Description || '',
+      'publication date': fields['publication date'] ? new Date(fields['publication date']).toISOString() : undefined,
+      ed: fields.ed ? Number(fields.ed) : undefined,
+      Language: fields.Language || '',
     };
+    // Remove undefined fields
+    Object.keys(bookData).forEach(key => {
+      if (bookData[key as keyof typeof bookData] === undefined) {
+        delete (bookData as any)[key];
+      }
+    });
     const input = {
       content_type_id: CONTENT_TYPE_IDS.BOOKS,
       data: bookData,

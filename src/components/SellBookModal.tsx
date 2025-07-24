@@ -30,6 +30,22 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
   const [success, setSuccess] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
+  // Upload image to S3 via backend
+  const uploadCoverImage = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('Cover', file);
+    // Book content_type_id
+    const contentTypeId = '481a065c-8733-4e97-9adf-dc64acacf5fb';
+    const response = await fetch(`/api/content/upload?content_type_id=${contentTypeId}`, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!response.ok) throw new Error('Image upload failed');
+    const data = await response.json();
+    if (!data.success || !data.urls || !data.urls[0]?.url) throw new Error('Image upload failed');
+    return data.urls[0].url;
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFields({ ...fields, [e.target.name]: e.target.value });
   };
@@ -60,27 +76,10 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
       // If a cover file is provided, upload it and get the URL
       let coverUrl = fields.Cover;
       if (fields.coverFile) {
-        // Assume uploadAndProcessImage is globally available or imported
-        const result = await (window as any).uploadAndProcessImage(
-          fields.coverFile,
-          'Cover',
-          '481a065c-8733-4e97-9adf-dc64acacf5fb',
-          'book',
-          fields.name
-        );
-        coverUrl = result.url;
+        coverUrl = await uploadCoverImage(fields.coverFile);
       }
       await onSubmit({
-        name: fields.name,
-        isbn: fields.isbn,
-        publisher: fields.publisher,
-        author: fields.author,
-        'publication date': fields['publication date'],
-        ed: fields.ed,
-        'Original price': fields['Original price'],
-        Description: fields.Description,
-        Pages: fields.Pages,
-        Language: fields.Language,
+        ...fields,
         Cover: coverUrl,
       });
       setSuccess('Book listed successfully!');
