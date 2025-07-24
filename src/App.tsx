@@ -3,7 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { HelmetProvider } from 'react-helmet-async';
 import Layout from './components/Layout';
-import Home, { HomeSubheaderLeft, HomeSubheaderRight } from './pages/Home';
+import Home, { HomeSubheaderLeft } from './pages/Home';
 import Product from './pages/Product';
 import Buy from './pages/Buy';
 import Sell, { SellSubheaderLeft, SellSubheaderRight } from './pages/Sell';
@@ -11,6 +11,11 @@ import Books from './pages/Books';
 import Account from './pages/Account';
 import { FONT_SIZES } from './constants/typography';
 
+import SellBookModal from './components/SellBookModal';
+import SellButton from './components/subheader/SellButton';
+import AuthModal from './components/AuthModal';
+import { useAuth } from './context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { SearchProvider } from './context/SearchContext';
 
 const theme = createTheme({
@@ -31,6 +36,9 @@ const theme = createTheme({
 const App: React.FC = () => {
   const location = useLocation();
   const [sellModalOpen, setSellModalOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   
   // Scroll to top when location changes
   useEffect(() => {
@@ -42,10 +50,33 @@ const App: React.FC = () => {
   
   // Determine subheader left and right buttons
   let subheaderLeft = <HomeSubheaderLeft />;
-  let subheaderRight = <HomeSubheaderRight />;
+  let subheaderRight = (
+    <SellButton
+      fullWidth
+      onClick={() => {
+        if (isAuthenticated) {
+          setSellModalOpen(true);
+        } else {
+          setAuthModalOpen(true);
+        }
+      }}
+    />
+  );
   if (location.pathname === '/sell') {
     subheaderLeft = <SellSubheaderLeft />;
-    subheaderRight = <SellSubheaderRight onClick={() => setSellModalOpen(true)} />;
+    // Use the same button/modal logic for consistency
+    subheaderRight = (
+      <SellButton
+        fullWidth
+        onClick={() => {
+          if (isAuthenticated) {
+            setSellModalOpen(true);
+          } else {
+            setAuthModalOpen(true);
+          }
+        }}
+      />
+    );
   }
 
   return (
@@ -53,6 +84,16 @@ const App: React.FC = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <SearchProvider>
+        <SellBookModal
+          open={sellModalOpen}
+          onClose={() => setSellModalOpen(false)}
+          onSubmit={async () => { setSellModalOpen(false); }} // The actual onSubmit logic is handled in Sell page, here just close
+        />
+        <AuthModal
+          open={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          onSuccess={() => setAuthModalOpen(false)}
+        />
         <Layout
           showSubheader={showSubheader}
           subheaderProps={{
@@ -67,7 +108,6 @@ const App: React.FC = () => {
             <Route path="/sell" element={<Sell sellModalOpen={sellModalOpen} setSellModalOpen={setSellModalOpen} />} />
             <Route path="/books" element={<Books />} />
             <Route path="/account" element={<Account />} />
-
           </Routes>
         </Layout>
       </SearchProvider>
