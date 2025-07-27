@@ -9,6 +9,7 @@ interface BookData {
   'publication date': string;
   ed: string;
   'Original price': string;
+  'Price source': string; // Add price source field
   Description: string;
   Pages: string;
   Language: string;
@@ -208,7 +209,6 @@ export const useBookData = (): BookDataResult => {
 
       // Enhanced publisher/editor handling
       let publisher = '';
-      console.log('Raw publishers data:', data.publishers);
       if (Array.isArray(data.publishers) && data.publishers.length > 0) {
         // Handle both string publishers and object publishers
         const firstPublisher = data.publishers[0];
@@ -217,7 +217,6 @@ export const useBookData = (): BookDataResult => {
         } else if (firstPublisher && typeof firstPublisher === 'object' && firstPublisher.name) {
           publisher = firstPublisher.name;
         }
-        console.log('Publisher extracted:', publisher);
       } else if (data.editors && Array.isArray(data.editors) && data.editors.length > 0) {
         // If no publisher, try editors
         const firstEditor = data.editors[0];
@@ -226,7 +225,6 @@ export const useBookData = (): BookDataResult => {
         } else if (firstEditor && typeof firstEditor === 'object' && firstEditor.name) {
           publisher = firstEditor.name;
         }
-        console.log('Editor extracted as publisher:', publisher);
       } else if (data.contributors && Array.isArray(data.contributors) && data.contributors.length > 0) {
         // If no editors, try contributors
         const contributors = data.contributors.filter((c: any) => 
@@ -239,7 +237,6 @@ export const useBookData = (): BookDataResult => {
           } else if (firstContributor && typeof firstContributor === 'object' && firstContributor.name) {
             publisher = firstContributor.name;
           }
-          console.log('Contributor extracted as publisher:', publisher);
         }
       }
 
@@ -274,47 +271,36 @@ export const useBookData = (): BookDataResult => {
 
       // Enhanced description handling - try multiple sources
       let description = '';
-      console.log('Raw description data:', data.description);
-      console.log('Raw excerpt data:', data.excerpt);
       
       // Try description first (could be string or object with value)
       if (typeof data.description === 'string' && data.description.trim()) {
         description = data.description.trim();
-        console.log('Description extracted from description field');
       } else if (data.description && typeof data.description === 'object' && data.description.value) {
         description = data.description.value.trim();
-        console.log('Description extracted from description.value');
       }
       
       // If no description, try excerpt
       if (!description && data.excerpt) {
         if (typeof data.excerpt === 'string' && data.excerpt.trim()) {
           description = data.excerpt.trim();
-          console.log('Description extracted from excerpt field');
         } else if (data.excerpt && typeof data.excerpt === 'object' && data.excerpt.value) {
           description = data.excerpt.value.trim();
-          console.log('Description extracted from excerpt.value');
         }
       }
       
       // If still no description, try subjects
       if (!description && subjects) {
         description = subjects;
-        console.log('Description extracted from subjects');
       }
       
       // If still no description, try other potential fields
       if (!description && data.notes) {
         if (typeof data.notes === 'string' && data.notes.trim()) {
           description = data.notes.trim();
-          console.log('Description extracted from notes field');
         } else if (data.notes && typeof data.notes === 'object' && data.notes.value) {
           description = data.notes.value.trim();
-          console.log('Description extracted from notes.value');
         }
       }
-      
-      console.log('Final description extracted:', description);
 
       // Transform data to match form fields
       const transformedData: BookData = {
@@ -325,26 +311,14 @@ export const useBookData = (): BookDataResult => {
         'publication date': publicationDate,
         ed: data.edition_name || '',
         'Original price': pricingResult.price, // Use the price result directly
+        'Price source': pricingResult.source, // Add the price source
         Description: description,
         Pages: data.number_of_pages ? data.number_of_pages.toString() : '',
         Language: language,
         Cover: '',
       };
 
-      // Log all found data
-      console.log('=== BOOK DATA FOUND ===');
-      console.log('Title:', transformedData.name || 'NOT FOUND');
-      console.log('Author:', transformedData.author || 'NOT FOUND');
-      console.log('Publisher/Editor:', transformedData.publisher || 'NOT FOUND');
-      console.log('ISBN:', transformedData.isbn || 'NOT FOUND');
-      console.log('Publication Date:', transformedData['publication date'] || 'NOT FOUND');
-      console.log('Edition:', transformedData.ed || 'NOT FOUND');
-      console.log('Original Price:', transformedData['Original price'] || 'NOT FOUND');
-      console.log('Pages:', transformedData.Pages || 'NOT FOUND');
-      console.log('Language:', transformedData.Language || 'NOT FOUND');
-      console.log('Description:', transformedData.Description ? 'FOUND' : 'NOT FOUND');
-      console.log('Price Source:', pricingResult.source || 'NOT FOUND');
-      console.log('========================');
+
 
       setBookData(transformedData);
     } catch (err: any) {

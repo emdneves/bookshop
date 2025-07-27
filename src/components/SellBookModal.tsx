@@ -15,7 +15,7 @@ interface SellBookModalProps {
 const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }) => {
   const [fields, setFields] = useState({
     name: '', isbn: '', publisher: '', author: '', 'publication date': '', 
-    ed: '', 'Original price': '', Description: '', Pages: '', Language: '', 
+    ed: '', 'Original price': '', 'Price source': '', Description: '', Pages: '', Language: '', 
     Cover: '', coverFile: null as File | null,
   });
   const [loading, setLoading] = useState(false);
@@ -76,11 +76,9 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
   const handleImageInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.[0]) return;
     
-    console.log('🔄 Starting image scan...');
     setScanning(true);
     try {
       const file = e.target.files[0];
-      console.log('📁 File selected:', file.name);
       const imageUrl = URL.createObjectURL(file);
       const img = new window.Image();
       img.src = imageUrl;
@@ -90,24 +88,18 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
         img.onerror = reject;
       });
       
-      console.log('🔍 Scanning for barcode/ISBN...');
       const codeReader = new BrowserMultiFormatReader();
       const result = await codeReader.decodeFromImage(img);
       
       if (result?.getText()) {
         const scannedText = result.getText();
-        console.log('✅ Barcode/ISBN found:', scannedText);
         setIsbnInput(scannedText);
-      } else {
-        console.log('❌ No barcode/ISBN found in image');
       }
     } catch (err) {
-      console.log('❌ Image scan error:', err);
       if (!(err instanceof NotFoundException)) {
         // Handle other errors if needed
       }
     } finally {
-      console.log('🏁 Image scan completed');
       setScanning(false);
       // Reset file input to allow same file to be selected again
       if (fileInputRef.current) {
@@ -135,14 +127,16 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
       if (bookData.name) found.push('Title');
       if (bookData.author) found.push('Author');
       if (bookData.publisher) found.push('Publisher/Editor');
-      if (bookData['Original price']) found.push('Price');
+      if (bookData['Original price'] && bookData['Original price'].trim() !== '') {
+        found.push(`Price (${bookData['Price source'] || 'Unknown source'})`);
+      }
       if (bookData.ed) found.push('Edition');
       if (bookData.Language) found.push('Language');
       if (bookData.Pages) found.push('Page count');
       if (bookData.Description) found.push('Description');
       
       if (!bookData.publisher) missing.push('Publisher/Editor');
-      if (!bookData['Original price']) missing.push('Price');
+      if (!bookData['Original price'] || bookData['Original price'].trim() === '') missing.push('Price');
       if (!bookData.ed) missing.push('Edition');
       if (!bookData.Language) missing.push('Language');
       if (!bookData.Pages) missing.push('Page count');
@@ -187,7 +181,7 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
   const handleCancel = () => {
     setFields({
       name: '', isbn: '', publisher: '', author: '', 'publication date': '', 
-      ed: '', 'Original price': '', Description: '', Pages: '', Language: '', 
+      ed: '', 'Original price': '', 'Price source': '', Description: '', Pages: '', Language: '', 
       Cover: '', coverFile: null
     });
     setSuccess(null);
@@ -247,6 +241,7 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
               <div onClick={() => setActiveTab(activeTab === 0 ? 1 : 0)} style={{
                 width: '48px', height: '24px', backgroundColor: activeTab === 1 ? ARTIFACT_RED : '#ccc',
                 borderRadius: '12px', cursor: 'pointer', position: 'relative', transition: 'background-color 0.2s ease',
+                border: `1px solid ${activeTab === 1 ? ARTIFACT_RED : '#999'}`,
               }}>
                 <div style={{
                   width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '50%',
@@ -359,6 +354,8 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
                   <Pill fullWidth hoverBackground="#f9eaea" sx={{ width: '100%', minWidth: 0 }}><input type="number" name="Original price" placeholder="Original Price" value={fields['Original price']} onChange={handleChange} style={pillInputStyle} /></Pill>
                 </div>
 
+
+
                 {/* Pages, Language */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', width: '100%' }}>
                   <Pill fullWidth hoverBackground="#f9eaea" sx={{ width: '100%', minWidth: 0 }}><input type="number" name="Pages" placeholder="Pages" value={fields.Pages} onChange={handleChange} style={pillInputStyle} /></Pill>
@@ -409,6 +406,34 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
               </div>
             </div>
           </div>
+
+          {/* Price Source Information - Full Width Section */}
+          {fields['Price source'] && fields['Original price'] && fields['Original price'].trim() !== '' && (
+            <div style={{ 
+              width: '100%', 
+              padding: '16px', 
+              marginTop: '16px',
+              background: '#e8f5e8', 
+              border: '1px solid #2e7d32',
+              borderRadius: '12px',
+              textAlign: 'center'
+            }}>
+              <div style={{ 
+                fontSize: FONT_SIZES.MEDIUM, 
+                fontWeight: FONT_WEIGHTS.BOLD, 
+                color: '#2e7d32',
+                marginBottom: '4px'
+              }}>
+                💰 Price Information
+              </div>
+              <div style={{ 
+                fontSize: FONT_SIZES.SMALL, 
+                color: '#2e7d32'
+              }}>
+                Original price: ${fields['Original price']} | Source: {fields['Price source']}
+              </div>
+            </div>
+          )}
 
           {/* Footer */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexShrink: 0, paddingTop: '16px', borderTop: '1px solid #eee' }}>

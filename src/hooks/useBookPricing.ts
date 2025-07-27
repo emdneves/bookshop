@@ -68,146 +68,78 @@ export const useBookPricing = (): BookPricingResult => {
     
     // Generate all possible ISBN variants
     const isbnVariants = generateISBNVariants(isbn);
-    console.log('=== PRICING SEARCH STARTED ===');
-    console.log('Searching for ISBN:', isbn);
-    console.log('Title:', title || 'NOT PROVIDED');
-    console.log('ISBN Variants to try:', isbnVariants);
     
     // Source 1: Google Books API (most reliable open source)
-    console.log('--- Trying Google Books API ---');
-    for (const variant of isbnVariants) {
-      try {
-        console.log(`Trying Google Books with ISBN: ${variant}`);
-        const googleResponse = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${variant}`);
-        if (googleResponse.ok) {
-          const googleData = await googleResponse.json();
-          console.log('Google Books response:', googleData);
-          if (googleData.items && googleData.items.length > 0) {
-            const book = googleData.items[0];
-            console.log('Google Books book found:', book.title);
-            if (book.saleInfo) {
-              console.log('Google Books sale info:', book.saleInfo);
-              if (book.saleInfo.listPrice) {
-                price = book.saleInfo.listPrice.amount.toString();
-                source = 'Google Books (List Price)';
-                console.log(`✅ Price found: $${price} from ${source}`);
-                return { price, source };
-              } else if (book.saleInfo.retailPrice) {
-                price = book.saleInfo.retailPrice.amount.toString();
-                source = 'Google Books (Retail Price)';
-                console.log(`✅ Price found: $${price} from ${source}`);
-                return { price, source };
-              } else if (book.saleInfo.offers && book.saleInfo.offers.length > 0) {
-                price = book.saleInfo.offers[0].listPrice?.amount?.toString() || '';
-                if (price) {
-                  source = 'Google Books (Offer Price)';
-                  console.log(`✅ Price found: $${price} from ${source}`);
+          for (const variant of isbnVariants) {
+        try {
+          const googleResponse = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${variant}`);
+          if (googleResponse.ok) {
+            const googleData = await googleResponse.json();
+            if (googleData.items && googleData.items.length > 0) {
+              const book = googleData.items[0];
+              if (book.saleInfo) {
+                if (book.saleInfo.listPrice) {
+                  price = book.saleInfo.listPrice.amount.toString();
+                  source = 'Google Books (List Price)';
                   return { price, source };
+                } else if (book.saleInfo.retailPrice) {
+                  price = book.saleInfo.retailPrice.amount.toString();
+                  source = 'Google Books (Retail Price)';
+                  return { price, source };
+                } else if (book.saleInfo.offers && book.saleInfo.offers.length > 0) {
+                  price = book.saleInfo.offers[0].listPrice?.amount?.toString() || '';
+                  if (price) {
+                    source = 'Google Books (Offer Price)';
+                    return { price, source };
+                  }
                 }
               }
-            } else {
-              console.log('❌ No sale info in Google Books response');
             }
-          } else {
-            console.log('❌ No items found in Google Books response');
           }
-        } else {
-          console.log(`❌ Google Books API failed with status: ${googleResponse.status}`);
+        } catch (err) {
+          // Google Books failed for this variant, continue to next
         }
-      } catch (err) {
-        console.log(`❌ Google Books API error for ISBN ${variant}:`, err);
-        // Google Books failed for this variant, continue to next
       }
-    }
     
     // Source 2: OpenLibrary (try all variants)
-    console.log('--- Trying OpenLibrary API ---');
     for (const variant of isbnVariants) {
       try {
-        console.log(`Trying OpenLibrary with ISBN: ${variant}`);
         const openLibraryResponse = await fetch(`https://openlibrary.org/isbn/${variant}.json`);
         if (openLibraryResponse.ok) {
           const openLibraryData = await openLibraryResponse.json();
-          console.log('OpenLibrary response:', openLibraryData);
           if (openLibraryData.price) {
             price = openLibraryData.price.toString();
             source = 'OpenLibrary';
-            console.log(`✅ Price found: $${price} from ${source}`);
             return { price, source };
-          } else {
-            console.log('❌ No price found in OpenLibrary response');
           }
-        } else {
-          console.log(`❌ OpenLibrary API failed with status: ${openLibraryResponse.status}`);
         }
       } catch (err) {
-        console.log(`❌ OpenLibrary API error for ISBN ${variant}:`, err);
         // OpenLibrary failed for this variant, continue to next
       }
     }
 
     // Source 3: Google Books by title search
-    console.log('--- Trying Google Books Title Search ---');
     if (title) {
       try {
         const searchQuery = encodeURIComponent(title);
-        console.log(`Searching Google Books by title: "${title}"`);
         const googleResponse = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${searchQuery}`);
         if (googleResponse.ok) {
           const googleData = await googleResponse.json();
-          console.log('Google Books title search response:', googleData);
           if (googleData.items && googleData.items.length > 0) {
             const book = googleData.items[0];
-            console.log('Google Books title search book found:', book.title);
             if (book.saleInfo && book.saleInfo.listPrice) {
               price = book.saleInfo.listPrice.amount.toString();
               source = 'Google Books (Title Search)';
-              console.log(`✅ Price found: $${price} from ${source}`);
               return { price, source };
-            } else {
-              console.log('❌ No sale info or list price in Google Books title search');
             }
-          } else {
-            console.log('❌ No items found in Google Books title search');
           }
-        } else {
-          console.log(`❌ Google Books title search failed with status: ${googleResponse.status}`);
         }
       } catch (err) {
-        console.log('❌ Google Books title search error:', err);
         // Title search failed
       }
-    } else {
-      console.log('❌ No title provided for Google Books title search');
     }
 
-    // Source 4: Price estimation based on publication year
-    console.log('--- Trying Price Estimation ---');
-    try {
-      const currentYear = new Date().getFullYear();
-      const publicationYear = title ? parseInt(title.match(/\b(19|20)\d{2}\b/)?.[0] || currentYear.toString()) : currentYear;
-      const yearsOld = currentYear - publicationYear;
-      
-      console.log(`Current year: ${currentYear}, Publication year: ${publicationYear}, Years old: ${yearsOld}`);
-      
-      if (yearsOld < 5) {
-        price = '25';
-      } else if (yearsOld < 15) {
-        price = '20';
-      } else if (yearsOld < 30) {
-        price = '15';
-      } else {
-        price = '10';
-      }
-      source = 'Estimated (Based on Publication Year)';
-      console.log(`✅ Estimated price: $${price} from ${source}`);
-      return { price, source };
-    } catch (err) {
-      console.log('❌ Price estimation failed:', err);
-      // Estimation failed
-    }
-
-    console.log('❌ No price found from any source');
+    // No price found from any real source
     return { price: '', source: '' };
   };
 
@@ -222,11 +154,7 @@ export const useBookPricing = (): BookPricingResult => {
       setPrice(result.price);
       setPriceSource(result.source);
       
-      if (result.price) {
-        console.log(`Price found: $${result.price} from ${result.source}`);
-      } else {
-        console.log(`No price found for ISBN ${isbn}`);
-      }
+
       
       return result;
     } catch (err: any) {

@@ -94,9 +94,6 @@ export const useBookCoverImage = (): BookCoverImageResult => {
     return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
-        console.log(`Validating Google Books image: ${url}`);
-        console.log(`Image dimensions: ${img.naturalWidth}x${img.naturalHeight}`);
-        
         // Check if the URL contains "no image available" indicators
         if (url.includes('no-image-available') || 
             url.includes('noimage') ||
@@ -106,25 +103,20 @@ export const useBookCoverImage = (): BookCoverImageResult => {
             url.includes('default') ||
             url.includes('books.google.com/books/content') ||
             url.includes('gbs_api')) {
-          console.log('❌ Rejected: URL contains placeholder indicators');
           resolve(false);
           return;
         }
 
         // Check if image is too small (likely a placeholder)
         if (img.naturalWidth < 50 || img.naturalHeight < 50) {
-          console.log('❌ Rejected: Image too small');
           resolve(false);
           return;
         }
         
         // More aggressive check: if it's a Google Books image, be extra strict
         if (url.includes('books.google.com') || url.includes('googleusercontent.com')) {
-          console.log('⚠️ Google Books image detected - applying strict validation');
-          
           // For Google Books, reject if image is too small or has suspicious dimensions
           if (img.naturalWidth < 200 || img.naturalHeight < 200) {
-            console.log('❌ Rejected: Google Books image too small for strict validation');
             resolve(false);
             return;
           }
@@ -166,19 +158,14 @@ export const useBookCoverImage = (): BookCoverImageResult => {
             const transparentRatio = transparentPixels / totalPixels;
             const lightRatio = lightPixels / totalPixels;
             
-            console.log(`Transparent pixels: ${transparentPixels}/${totalPixels} (${(transparentRatio * 100).toFixed(1)}%)`);
-            console.log(`Light pixels: ${lightPixels}/${totalPixels} (${(lightRatio * 100).toFixed(1)}%)`);
-            
             // If more than 80% is transparent, it's likely a placeholder
             if (transparentRatio > 0.8) {
-              console.log('❌ Rejected: Too many transparent pixels');
               resolve(false);
               return;
             }
             
             // If more than 70% is very light, it might be a placeholder with text
             if (lightRatio > 0.7) {
-              console.log('❌ Rejected: Too many light pixels (likely placeholder text)');
               resolve(false);
               return;
             }
@@ -202,24 +189,19 @@ export const useBookCoverImage = (): BookCoverImageResult => {
             }
             
             const consistentLightRatio = consistentLightAreas / sampleSize;
-            console.log(`Consistent light areas: ${consistentLightAreas}/${sampleSize} (${(consistentLightRatio * 100).toFixed(1)}%)`);
             
             if (consistentLightRatio > 0.6) {
-              console.log('❌ Rejected: Too many consistent light areas (likely placeholder text)');
               resolve(false);
               return;
             }
           }
         } catch (err) {
-          console.log('Canvas analysis failed:', err);
           // If canvas analysis fails, assume it's valid
         }
         
-        console.log('✅ Google Books image validation passed');
         resolve(true);
       };
       img.onerror = () => {
-        console.log('❌ Google Books image failed to load');
         resolve(false);
       };
       img.src = url;
@@ -231,92 +213,63 @@ export const useBookCoverImage = (): BookCoverImageResult => {
     setNoCoverFound(false);
     setImageUrl(null);
 
-    console.log('=== COVER IMAGE SEARCH STARTED ===');
-    console.log('Searching for ISBN:', isbn);
-    console.log('Title:', title || 'NOT PROVIDED');
+
 
     try {
       let coverUrl = '';
       let coverFound = false;
 
       // Source 1: Open Library Cover ID
-      console.log('--- Trying Open Library Cover ID ---');
       if (!coverFound) {
         try {
           const openLibraryCall = async (isbn: string) => {
-            console.log(`Trying Open Library Cover ID with ISBN: ${isbn}`);
             const res = await fetch(`https://openlibrary.org/isbn/${isbn}.json`);
             if (res.ok) {
               const bookData = await res.json();
-              console.log('Open Library Cover ID response:', bookData);
               return {
                 covers: bookData.covers || [],
                 source: 'openlibrary'
               };
             }
-            console.log(`❌ Open Library Cover ID failed with status: ${res.status}`);
             return null;
           };
           
           const data = await tryISBNVariants(isbn, openLibraryCall);
           if (data?.result?.covers && data.result.covers.length > 0) {
             coverUrl = `https://covers.openlibrary.org/b/id/${data.result.covers[0]}-L.jpg`;
-            console.log(`Trying Open Library Cover ID URL: ${coverUrl}`);
             const isValid = await validateImage(coverUrl);
             if (isValid) {
-              console.log(`✅ Cover found: Open Library Cover ID`);
               setImageUrl(coverUrl);
               coverFound = true;
-            } else {
-              console.log('❌ Open Library Cover ID image validation failed');
             }
-          } else {
-            console.log('❌ No covers found in Open Library Cover ID response');
           }
         } catch (err) {
-          console.log('❌ Open Library Cover ID error:', err);
           // Open Library cover ID image failed, try next source
         }
       }
 
       // Source 2: Open Library ISBN (try all variants)
-      console.log('--- Trying Open Library ISBN ---');
       if (!coverFound) {
         const isbnVariants = generateISBNVariants(isbn);
         for (const variant of isbnVariants) {
           try {
             const isbnCoverUrl = `https://covers.openlibrary.org/b/isbn/${variant}-L.jpg`;
-            console.log(`Trying Open Library ISBN URL: ${isbnCoverUrl}`);
             const isValid = await validateImage(isbnCoverUrl);
             if (isValid) {
-              console.log(`✅ Cover found: Open Library ISBN`);
               coverUrl = isbnCoverUrl;
               setImageUrl(coverUrl);
               coverFound = true;
               break; // Found a valid cover, exit the loop
-            } else {
-              console.log(`❌ Open Library ISBN image validation failed for ${variant}`);
             }
           } catch (err) {
-            console.log(`❌ Open Library ISBN error for ${variant}:`, err);
             // Open Library ISBN cover image failed for this variant, continue to next
           }
         }
       }
 
-      // Source 3: Google Books by ISBN (try all variants) - SKIP FOR NOW
-      // Google Books often returns placeholder images, so we'll skip this source
-      console.log('--- Skipping Google Books ISBN search (too many placeholders) ---');
-      
-      // Source 3: Google Books by title - SKIP FOR NOW
-      // Google Books often returns placeholder images, so we'll skip this source
-      console.log('--- Skipping Google Books title search (too many placeholders) ---');
 
-      // Source 4: Google Books by title - SKIPPED
-      // Google Books often returns placeholder images, so we'll skip this source
-      if (!coverFound && title) {
-        console.log('--- Skipping Google Books title search (too many placeholders) ---');
-      }
+
+
 
       // Source 5: Amazon (try all variants)
       if (!coverFound) {
@@ -351,14 +304,10 @@ export const useBookCoverImage = (): BookCoverImageResult => {
 
       // If no cover found, set the state to show "no image found" message
       if (!coverFound) {
-        console.log('❌ No cover image found from any source');
         setImageUrl(null);
         setNoCoverFound(true);
-      } else {
-        console.log(`✅ Cover image search completed successfully`);
       }
     } catch (err) {
-      console.log('❌ Cover image search error:', err);
       setImageUrl(null);
       setNoCoverFound(true);
     } finally {
