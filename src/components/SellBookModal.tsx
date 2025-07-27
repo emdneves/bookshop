@@ -1,10 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { Box, Typography, Skeleton } from '@mui/material';
 import Pill from './Pill';
-import { ARTIFACT_RED, ARTIFACT_RED_DARK, ARTIFACT_RED_TRANSPARENT_10, SHARED_BG, CANCEL_BLACK, CANCEL_BLACK_HOVER } from '../constants/colors';
+import { ARTIFACT_RED, ARTIFACT_RED_DARK, ARTIFACT_RED_TRANSPARENT_10, ARTIFACT_RED_TRANSPARENT_05, CANCEL_BLACK, CANCEL_BLACK_HOVER, getBorderStyle, getHoverBorderStyle } from '../constants/colors';
 import { FONT_SIZES, FONT_WEIGHTS } from '../constants/typography';
-// Import zxing-js/browser for barcode recognition
 import { BrowserMultiFormatReader, NotFoundException } from '@zxing/library';
+import { useBookData } from '../hooks/useBookData';
+import { useBookCoverImage } from '../hooks/useBookCoverImage';
 
 interface SellBookModalProps {
   open: boolean;
@@ -14,322 +14,97 @@ interface SellBookModalProps {
 
 const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }) => {
   const [fields, setFields] = useState({
-    name: '',
-    isbn: '',
-    publisher: '',
-    author: '',
-    'publication date': '',
-    ed: '',
-    'Original price': '',
-    Description: '',
-    Pages: '',
-    Language: '',
-    Cover: '',
-    coverFile: null as File | null,
+    name: '', isbn: '', publisher: '', author: '', 'publication date': '', 
+    ed: '', 'Original price': '', Description: '', Pages: '', Language: '', 
+    Cover: '', coverFile: null as File | null,
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [prefillLoading, setPrefillLoading] = useState(false);
   const [isbnInput, setIsbnInput] = useState('');
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState('');
   const [scanning, setScanning] = useState(false);
-  const [noCoverFound, setNoCoverFound] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+  
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const coverInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Upload image to S3 via backend
+  // Custom hooks
+  const { bookData, isLoading: prefillLoading, error, fetchBookData, reset: resetBookData } = useBookData();
+  const { imageUrl: imagePreview, isSearching: imageSearching, noCoverFound, searchForCover, reset: resetCoverImage } = useBookCoverImage();
+
+  // Upload cover image
   const uploadCoverImage = async (file: File): Promise<string> => {
     const formData = new FormData();
     formData.append('Cover', file);
-    // Book content_type_id
     const contentTypeId = '481a065c-8733-4e97-9adf-dc64acacf5fb';
     const response = await fetch(`/api/content/upload?content_type_id=${contentTypeId}`, {
-      method: 'POST',
-      body: formData,
+      method: 'POST', body: formData,
     });
     if (!response.ok) throw new Error('Image upload failed');
     const data = await response.json();
-    if (!data.success || !data.urls || !data.urls[0]?.url) throw new Error('Image upload failed');
+    if (!data.success || !data.urls?.[0]?.url) throw new Error('Image upload failed');
     return data.urls[0].url;
   };
 
-  // Prefill handler
+  // Prefill book data
   const handlePrefillFromISBN = async () => {
     const isbn = isbnInput.trim();
-    if (!isbn) {
-      setError('Please enter an ISBN or barcode.');
-      return;
-    }
-    setPrefillLoading(true);
-    setError(null);
-    setNoCoverFound(false);
+    if (!isbn) return;
     
-    // Helper function to try different ISBN formats
-    const tryISBNVariants = async (baseISBN: string, apiCall: (isbn: string) => Promise<any>) => {
-      const variants = [
-        baseISBN,
-        baseISBN.replace(/-/g, ''),
-        baseISBN.replace(/\s/g, ''),
-        baseISBN.length === 10 ? `978${baseISBN.slice(0, -1)}` : baseISBN,
-        baseISBN.length === 13 && baseISBN.startsWith('978') ? baseISBN.slice(3, -1) : baseISBN,
-      ].filter((variant, index, arr) => arr.indexOf(variant) === index);
-      
-      for (const variant of variants) {
-        try {
-          const result = await apiCall(variant);
-          if (result) return result;
-        } catch (err) {
-          console.log(`[ISBN Variant] Failed for ${variant}:`, err);
-        }
-      }
-      return null;
-    };
-    
-    let data = null;
-    let bookFound = false;
-    let sourceName = '';
-    
-    // Primary Source: Open Library API
     try {
-      const openLibraryCall = async (isbn: string) => {
-        const res = await fetch(`https://openlibrary.org/isbn/${isbn}.json`);
-        if (res.ok) {
-          const bookData = await res.json();
-          console.log('[OpenLibrary API] Found book:', bookData);
-          return {
-            title: bookData.title,
-            by_statement: bookData.by_statement || '',
-            authors: bookData.authors || [],
-            publishers: bookData.publishers || [],
-            publish_date: bookData.publish_date,
-            description: bookData.description,
-            number_of_pages: bookData.number_of_pages,
-            language: bookData.language,
-            languages: bookData.languages || [],
-            subjects: bookData.subjects || [],
-            edition_name: bookData.edition_name,
-            covers: bookData.covers || [],
-            source: 'openlibrary'
-          };
-        }
-        return null;
-      };
-      
-      data = await tryISBNVariants(isbn, openLibraryCall);
-      if (data) {
-        bookFound = true;
-        sourceName = 'Open Library';
-      }
+      await Promise.all([fetchBookData(isbn), searchForCover(isbn)]);
     } catch (err) {
-      console.log('[OpenLibrary API] Failed:', err);
-    }
-    
-    // Fallback Source: Google Books API
-    if (!bookFound) {
-      try {
-        const googleBooksCall = async (isbn: string) => {
-          const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
-          if (res.ok) {
-            const googleData = await res.json();
-            if (googleData.items && googleData.items.length > 0) {
-              const book = googleData.items[0].volumeInfo;
-              console.log('[Google Books API] Found book:', book);
-              return {
-                title: book.title,
-                by_statement: book.authors ? book.authors.join(', ') : '',
-                authors: book.authors || [],
-                publishers: book.publisher ? [book.publisher] : [],
-                publish_date: book.publishedDate,
-                description: book.description,
-                number_of_pages: book.pageCount,
-                language: book.language,
-                categories: book.categories || [],
-                imageLinks: book.imageLinks,
-                source: 'googlebooks'
-              };
-            }
-          }
-          return null;
-        };
-        
-        data = await tryISBNVariants(isbn, googleBooksCall);
-        if (data) {
-          bookFound = true;
-          sourceName = 'Google Books';
-        }
-      } catch (err) {
-        console.log('[Google Books API] Failed:', err);
-      }
-    }
-    
-    // Only show error if both sources failed
-    if (!bookFound) {
-      throw new Error(`Book not found for ISBN: ${isbn}. Please check the ISBN or enter book details manually.`);
-    }
-    
-    try {
-      // Optionally fetch cover image (always set preview to Open Library cover if available)
-      let coverUrl = '';
-      let coverFound = false;
-      // Try cover by cover ID
-      if (data.covers && data.covers.length > 0) {
-        coverUrl = `https://covers.openlibrary.org/b/id/${data.covers[0]}-L.jpg`;
-        // Test if image exists
-        try {
-          const resp = await fetch(coverUrl, { method: 'HEAD' });
-          if (resp.ok) {
-            setImagePreview(coverUrl);
-            coverFound = true;
-            setNoCoverFound(false);
-          }
-        } catch {}
-      }
-      // Fallback: Try cover by ISBN if not found
-      if (!coverFound && isbn) {
-        const isbnCoverUrl = `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`;
-        try {
-          const resp = await fetch(isbnCoverUrl, { method: 'HEAD' });
-          if (resp.ok) {
-            coverUrl = isbnCoverUrl;
-            setImagePreview(coverUrl);
-            coverFound = true;
-            setNoCoverFound(false);
-          }
-        } catch {}
-      }
-      if (!coverFound) {
-        coverUrl = '';
-        setImagePreview(null);
-        setNoCoverFound(true);
-      }
-      // Use by_statement for author if present, otherwise fetch author names
-      let author = data.by_statement || '';
-      if (!author && Array.isArray(data.authors) && data.authors.length > 0) {
-        try {
-          const authorNames = await Promise.all(
-            data.authors.map(async (a: any) => {
-              if (!a.key) return '';
-              const resp = await fetch(`https://openlibrary.org${a.key}.json`);
-              if (!resp.ok) return '';
-              const authorData = await resp.json();
-              return authorData.name || '';
-            })
-          );
-          author = authorNames.filter(Boolean).join(', ');
-        } catch {}
-      }
-      // Use language code
-      let language = '';
-      if (Array.isArray(data.languages) && data.languages.length > 0) {
-        try {
-          const langKey = data.languages[0].key; // e.g. '/languages/por'
-          language = langKey.split('/').pop() || '';
-        } catch {}
-      }
-      // Subjects as comma-separated string
-      let subjects = '';
-      if (Array.isArray(data.subjects) && data.subjects.length > 0) {
-        subjects = data.subjects.join(', ');
-      }
-      setFields(f => ({
-        ...f,
-        name: data.title || '',
-        author: author,
-        publisher: Array.isArray(data.publishers) && data.publishers.length > 0 ? data.publishers[0] : '',
-        isbn: isbn,
-        'publication date': data.publish_date ? new Date(data.publish_date).toISOString().slice(0, 10) : '',
-        Description: typeof data.description === 'string' ? data.description : (data.description?.value || ''),
-        Cover: coverUrl,
-        Pages: data.number_of_pages || '',
-        ed: data.edition_name || '',
-        Language: language,
-        // Optionally fill Description with subjects if Description is empty
-        ...(subjects && !(typeof data.description === 'string' ? data.description : (data.description?.value || '')) ? { Description: subjects } : {}),
-      }));
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch book info');
-    } finally {
-      setPrefillLoading(false);
+      // Error handling done by hooks
     }
   };
 
+  // Handle form field changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFields({ ...fields, [e.target.name]: e.target.value });
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setFields({ ...fields, coverFile: file });
-      
-      // Create preview URL
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setImagePreview(event.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+  // Handle cover file upload
+  const handleCoverFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      setFields({ ...fields, coverFile: e.target.files[0] });
+      resetCoverImage();
     }
   };
 
-  const handleImageAreaClick = () => {
-    document.getElementById('cover-upload')?.click();
-  };
-
-  // Barcode/ISBN image scan handler (does NOT set cover preview or Cover field)
+  // Handle barcode scanning
   const handleImageInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
+    if (!e.target.files?.[0]) return;
+    
     setScanning(true);
-    setError(null);
     try {
       const file = e.target.files[0];
       const imageUrl = URL.createObjectURL(file);
       const img = new window.Image();
       img.src = imageUrl;
+      
       await new Promise((resolve, reject) => {
         img.onload = resolve;
         img.onerror = reject;
       });
+      
       const codeReader = new BrowserMultiFormatReader();
-      try {
-        const result = await codeReader.decodeFromImage(img);
-        if (result && result.getText()) {
-          setIsbnInput(result.getText());
-          // handlePrefillFromISBN will be triggered by useEffect below
-        } else {
-          setError('No barcode or ISBN found in the image.');
-          setScanning(false);
-        }
-      } catch (err) {
-        if (err instanceof NotFoundException) {
-          setError('No barcode or ISBN found in the image.');
-        } else {
-          setError('Failed to recognize barcode/ISBN in the image.');
-        }
-        setScanning(false);
+      const result = await codeReader.decodeFromImage(img);
+      
+      if (result?.getText()) {
+        setIsbnInput(result.getText());
       }
-    } catch (err: any) {
-      setError('Failed to recognize barcode/ISBN in the image.');
-      setScanning(false);
+    } catch (err) {
+      if (!(err instanceof NotFoundException)) {
+        // Handle other errors if needed
+      }
     } finally {
+      setScanning(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
-  // Dedicated cover upload handler (this is the only place user-uploaded cover sets the preview)
-  const handleCoverFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setFields(f => ({ ...f, coverFile: file }));
-      // Create preview URL for user-uploaded cover
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setImagePreview(event.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Auto-prefill when isbnInput is set by scanning
+  // Auto-prefill when ISBN is set by scanning
   React.useEffect(() => {
     if (scanning && isbnInput) {
       handlePrefillFromISBN();
@@ -337,427 +112,432 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
     }
   }, [isbnInput, scanning]);
 
+  // Update form fields and show feedback when book data changes
+  React.useEffect(() => {
+    if (bookData) {
+      setFields(prev => ({ ...prev, ...bookData }));
+      
+      // Create feedback message
+      const found = [];
+      const missing = [];
+      
+      if (bookData.name) found.push('Title');
+      if (bookData.author) found.push('Author');
+      if (bookData.publisher) found.push('Publisher/Editor');
+      if (bookData['Original price']) found.push('Price');
+      if (bookData.ed) found.push('Edition');
+      if (bookData.Language) found.push('Language');
+      if (bookData.Pages) found.push('Page count');
+      if (bookData.Description) found.push('Description');
+      
+      if (!bookData.publisher) missing.push('Publisher/Editor');
+      if (!bookData['Original price']) missing.push('Price');
+      if (!bookData.ed) missing.push('Edition');
+      if (!bookData.Language) missing.push('Language');
+      if (!bookData.Pages) missing.push('Page count');
+      
+      let message = '';
+      if (found.length > 0) message += `✅ Found: ${found.join(', ')}`;
+      if (missing.length > 0) {
+        if (message) message += '\n';
+        message += `⚠️ Missing: ${missing.join(', ')}`;
+      }
+      
+      setFeedbackMessage(message);
+      setShowFeedbackPopup(true);
+      setTimeout(() => {
+        setShowFeedbackPopup(false);
+        setFeedbackMessage('');
+      }, 3000);
+    }
+  }, [bookData]);
+
+  // Submit form
   const handleSubmit = async () => {
     setLoading(true);
-    setError(null);
-    setSuccess(null);
     try {
-      // If a cover file is provided, upload it and get the URL
-      let coverUrl = fields.Cover;
-      // Only upload the image if the user uploaded a file (coverFile)
+      let coverUrl = '';
       if (fields.coverFile) {
         coverUrl = await uploadCoverImage(fields.coverFile);
       }
-      // Submit the book with the correct Cover URL
-      await onSubmit({
-        ...fields,
-        Cover: coverUrl,
-      });
+
+      const bookData = { ...fields, Cover: coverUrl || imagePreview || '' };
+      await onSubmit(bookData);
       setSuccess('Book listed successfully!');
-      setTimeout(() => {
-        setSuccess(null);
-        onClose();
-        setFields({
-          name: '', isbn: '', publisher: '', author: '', 'publication date': '', ed: '', 'Original price': '', Description: '', Pages: '', Language: '', Cover: '', coverFile: null
-        });
-        setImagePreview(null);
-      }, 1200);
+      setTimeout(() => handleCancel(), 1200);
     } catch (err: any) {
-      setError(err.message || 'Failed to create book');
+      // Handle error
     } finally {
       setLoading(false);
     }
   };
 
+  // Reset and close modal
   const handleCancel = () => {
-    setError(null);
-    setSuccess(null);
     setFields({
-      name: '', isbn: '', publisher: '', author: '', 'publication date': '', ed: '', 'Original price': '', Description: '', Pages: '', Language: '', Cover: '', coverFile: null
+      name: '', isbn: '', publisher: '', author: '', 'publication date': '', 
+      ed: '', 'Original price': '', Description: '', Pages: '', Language: '', 
+      Cover: '', coverFile: null
     });
-    setImagePreview(null);
+    setSuccess(null);
+    setShowFeedbackPopup(false);
+    setFeedbackMessage('');
+    resetCoverImage();
+    resetBookData();
+    setIsbnInput('');
+    setActiveTab(0);
     onClose();
   };
 
   if (!open) return null;
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-      }}
-      onClick={handleCancel}
-    >
-      <div
-        style={{
-          background: SHARED_BG,
-          borderRadius: '12px',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255,255,255,0.2)',
-          width: '800px',
-          maxWidth: '90vw',
-          maxHeight: '90vh',
-          overflow: 'hidden',
-          fontSize: FONT_SIZES.MEDIUM,
-          fontWeight: FONT_WEIGHTS.BOLD,
-          color: '#222',
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* ISBN/Barcode input and Prefill button */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-            <Pill fullWidth hoverBackground="#f9eaea">
-              <input
-                type="text"
-                name="isbnInput"
-                placeholder="ISBN or Barcode"
-                value={isbnInput}
-                onChange={e => setIsbnInput(e.target.value)}
-                style={{ ...pillInputStyle, flex: 1 }}
-              />
-            </Pill>
-            {/* Hidden file input for image upload */}
-            <input
-              type="file"
-              accept="image/*"
-              ref={fileInputRef}
-              style={{ display: 'none' }}
-              onChange={handleImageInputChange}
-            />
-            <Pill
-              background={ARTIFACT_RED_TRANSPARENT_10}
-              color={ARTIFACT_RED}
-              sx={{
-                border: '1px solid ' + ARTIFACT_RED,
-                borderRadius: 6,
-                padding: '6px 12px',
-                fontWeight: FONT_WEIGHTS.BOLD,
-                fontSize: FONT_SIZES.MEDIUM,
-                cursor: scanning ? 'not-allowed' : 'pointer',
-                opacity: scanning ? 0.7 : 1,
-                minWidth: 120,
-                textAlign: 'center',
-              }}
-              onClick={scanning ? undefined : () => fileInputRef.current?.click()}
-            >
-              {scanning ? 'Scanning...' : 'Scan Image'}
-            </Pill>
-            <Pill
-              background={ARTIFACT_RED}
-              color="white"
-              sx={{
-                borderRadius: 6,
-                padding: '6px 16px',
-                fontWeight: FONT_WEIGHTS.BOLD,
-                fontSize: FONT_SIZES.MEDIUM,
-                cursor: prefillLoading ? 'not-allowed' : 'pointer',
-                opacity: prefillLoading ? 0.7 : 1,
-                minWidth: 120,
-                textAlign: 'center',
-              }}
-              onClick={prefillLoading ? undefined : handlePrefillFromISBN}
-            >
-              {prefillLoading ? 'Prefilling...' : 'Prefill'}
-            </Pill>
-          </div>
-          {/* Modal Title */}
-          <div style={{
-            textAlign: 'center',
-            marginBottom: '8px',
-            fontSize: FONT_SIZES.XLARGE,
-            fontWeight: FONT_WEIGHTS.BOLD,
-            color: ARTIFACT_RED,
-          }}>
-            List a Book for Sale
+    <>
+      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      
+      {/* Modal Overlay */}
+      <div style={{
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex',
+        alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+      }} onClick={onClose}>
+        
+        {/* Modal Content */}
+        <div style={{
+          backgroundColor: 'white', borderRadius: '12px', padding: '24px',
+          maxWidth: '800px', width: '90%', maxHeight: '95vh', overflow: 'hidden',
+          position: 'relative', display: 'flex', flexDirection: 'column',
+        }} onClick={(e) => e.stopPropagation()}>
+          
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: '24px', flexShrink: 0 }}>
+            <h2 style={{ fontWeight: FONT_WEIGHTS.BOLD, color: ARTIFACT_RED, margin: 0 }}>
+              List a Book for Sale
+            </h2>
           </div>
 
-          {/* Two-column layout */}
+          {/* Quick Fill Section */}
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '24px',
-            minHeight: '400px',
+            background: 'rgba(211, 47, 47, 0.05)', border: `1px solid ${ARTIFACT_RED_TRANSPARENT_10}`,
+            borderRadius: '8px', padding: '16px', marginBottom: '24px', flexShrink: 0,
           }}>
-            {/* Left Column - Image Area */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <input
-                  type="file"
-                  accept="image/*"
-                  id="cover-upload"
-                  style={{ display: 'none' }}
-                  onChange={handleCoverFileChange}
-                />
-                
-                <div
-                  onClick={handleImageAreaClick}
-                  style={{
-                    width: '100%',
-                    height: '300px',
-                    border: `2px dashed ${ARTIFACT_RED}`,
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    overflow: 'hidden',
-                    position: 'relative',
-                  }}
-                >
-                  {imagePreview ? (
-                    <img
-                      src={imagePreview}
-                      alt="Book cover preview"
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'contain',
-                      }}
-                    />
-                  ) : (
-                    <div style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      color: ARTIFACT_RED,
-                    }}>
-                      <Skeleton
-                        variant="rectangular"
-                        width="80%"
-                        height="80%"
-                        sx={{
-                          borderRadius: '4px',
-                          bgcolor: 'rgba(211, 47, 47, 0.1)',
-                        }}
-                      />
-                      <Typography variant="caption" sx={{ color: ARTIFACT_RED, fontWeight: FONT_WEIGHTS.BOLD }}>
-                        Click to upload cover image
-                      </Typography>
-                    </div>
-                  )}
-                </div>
-                
-                {fields.coverFile && (
-                  <Pill fullWidth background={ARTIFACT_RED_TRANSPARENT_10} color={ARTIFACT_RED}>
-                    {fields.coverFile.name}
-                  </Pill>
-                )}
+            <div style={{
+              fontSize: FONT_SIZES.MEDIUM, fontWeight: FONT_WEIGHTS.BOLD, color: ARTIFACT_RED,
+              marginBottom: '12px', textAlign: 'center',
+            }}>
+              Quick Fill - Enter ISBN or Scan Barcode
+            </div>
+            
+            {/* Toggle Switch */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '12px' }}>
+              <span style={{ fontSize: FONT_SIZES.SMALL, color: activeTab === 0 ? ARTIFACT_RED : '#666', fontWeight: activeTab === 0 ? FONT_WEIGHTS.BOLD : FONT_WEIGHTS.NORMAL }}>
+                scan image
+              </span>
+              <div onClick={() => setActiveTab(activeTab === 0 ? 1 : 0)} style={{
+                width: '48px', height: '24px', backgroundColor: activeTab === 1 ? ARTIFACT_RED : '#ccc',
+                borderRadius: '12px', cursor: 'pointer', position: 'relative', transition: 'background-color 0.2s ease',
+              }}>
+                <div style={{
+                  width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '50%',
+                  position: 'absolute', top: '2px', left: activeTab === 0 ? '2px' : '26px',
+                  transition: 'left 0.2s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                }} />
               </div>
+              <span style={{ fontSize: FONT_SIZES.SMALL, color: activeTab === 1 ? ARTIFACT_RED : '#666', fontWeight: activeTab === 1 ? FONT_WEIGHTS.BOLD : FONT_WEIGHTS.NORMAL }}>
+                manual entry
+              </span>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
+              {activeTab === 0 ? (
+                <Pill sx={{ width: '50%', textAlign: 'center', cursor: scanning ? 'not-allowed' : 'pointer', opacity: scanning ? 0.7 : 1, '&:hover': { background: ARTIFACT_RED_TRANSPARENT_10 }, transition: 'all 0.2s ease' }} background="transparent" color={ARTIFACT_RED} onClick={scanning ? undefined : () => fileInputRef.current?.click()}>
+                  {scanning ? 'scanning...' : 'upload image to scan'}
+                </Pill>
+              ) : (
+                <Pill sx={{ width: '50%', textAlign: 'center' }} fullWidth>
+                  <input type="text" name="isbnInput" placeholder="enter ISBN or barcode" value={isbnInput} onChange={e => setIsbnInput(e.target.value)} style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: 'inherit', fontWeight: FONT_WEIGHTS.BOLD, fontSize: FONT_SIZES.MEDIUM, lineHeight: 'inherit', textAlign: 'center' }} />
+                </Pill>
+              )}
               
-              {/* Cancel Button */}
-              <Pill
-                fullWidth
-                background={CANCEL_BLACK}
-                color="white"
-                onClick={handleCancel}
-                sx={{
+              <Pill sx={{ width: '50%', textAlign: 'center', cursor: prefillLoading ? 'not-allowed' : 'pointer', opacity: prefillLoading ? 0.7 : 1, '&:hover': { background: ARTIFACT_RED_DARK }, transition: 'all 0.2s ease' }} background={ARTIFACT_RED} color="white" onClick={prefillLoading ? undefined : handlePrefillFromISBN}>
+                {prefillLoading ? 'prefilling...' : 'prefill book details'}
+              </Pill>
+            </div>
+            
+            <input type="file" accept="image/*" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImageInputChange} />
+          </div>
+
+          {/* Main Content */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', flex: 1, overflow: 'auto', paddingRight: '8px', marginBottom: '24px', alignItems: 'start' }}>
+            
+            {/* Left Column - Square Image Upload */}
+            <div style={{ width: '100%', aspectRatio: '1', maxWidth: '400px', justifySelf: 'center' }}>
+              <div 
+                onClick={() => coverInputRef.current?.click()} 
+                style={{
+                  width: '100%', 
+                  height: '100%', 
+                  border: getBorderStyle(), 
+                  borderRadius: '16px',
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
                   cursor: 'pointer',
-                  '&:hover': { background: CANCEL_BLACK_HOVER },
-                  transition: 'all 0.2s ease',
-                  minWidth: 120,
-                  textAlign: 'center',
+                  transition: 'all 0.2s ease', 
+                  overflow: 'hidden', 
+                  position: 'relative',
+                  background: 'white',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.border = getHoverBorderStyle();
+                  e.currentTarget.style.background = ARTIFACT_RED_TRANSPARENT_05;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.border = getBorderStyle();
+                  e.currentTarget.style.background = 'white';
                 }}
               >
-                Cancel
-              </Pill>
+                {imageSearching ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', color: ARTIFACT_RED }}>
+                    <div style={{ width: '40px', height: '40px', border: `3px solid ${ARTIFACT_RED_TRANSPARENT_10}`, borderTop: `3px solid ${ARTIFACT_RED}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                    <div style={{ fontSize: FONT_SIZES.MEDIUM, fontWeight: FONT_WEIGHTS.BOLD, color: ARTIFACT_RED, textAlign: 'center' }}>
+                      Searching for cover image...
+                    </div>
+                  </div>
+                ) : imagePreview ? (
+                  <img src={imagePreview} alt="Book cover preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                ) : noCoverFound ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', color: ARTIFACT_RED, textAlign: 'center', padding: '20px' }}>
+                    <div style={{ width: '120px', height: '160px', border: `2px dashed ${ARTIFACT_RED}`, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(211, 47, 47, 0.05)' }}>
+                      <span style={{ fontSize: '48px', opacity: 0.5 }}>📚</span>
+                    </div>
+                    <div style={{ fontSize: FONT_SIZES.MEDIUM, fontWeight: FONT_WEIGHTS.BOLD, color: ARTIFACT_RED }}>
+                      No cover image found
+                    </div>
+                    <div style={{ fontSize: FONT_SIZES.SMALL, color: '#666', maxWidth: '200px' }}>
+                      Click to upload your own cover image
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', color: ARTIFACT_RED }}>
+                    <span style={{ fontSize: '48px' }}>📚</span>
+                    <div style={{ fontSize: FONT_SIZES.MEDIUM, fontWeight: FONT_WEIGHTS.BOLD }}>
+                      Upload Book Cover
+                    </div>
+                    <div style={{ fontSize: FONT_SIZES.SMALL, color: '#666', textAlign: 'center' }}>
+                      Click to upload or use Quick Fill below
+                    </div>
+                  </div>
+                )}
+              </div>
+              <input id="cover-upload" type="file" accept="image/*" style={{ display: 'none' }} ref={coverInputRef} onChange={handleCoverFileChange} />
             </div>
 
             {/* Right Column - Form Fields */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto', maxHeight: '400px' }}>
-                {/* Title - Full Width */}
+            <div style={{ width: '100%', aspectRatio: '1', maxWidth: '400px', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, overflow: 'auto', paddingRight: '8px' }}>
+                {/* Title */}
                 <Pill fullWidth hoverBackground="#f9eaea">
-                  <input
-                    type="text"
-                    name="name"
-                    placeholder="Title"
-                    value={fields.name}
-                    onChange={handleChange}
-                    required
-                    style={pillInputStyle}
-                  />
+                  <input type="text" name="name" placeholder="Title" value={fields.name} onChange={handleChange} required style={pillInputStyle} />
                 </Pill>
-                
-                {/* Author - Full Width */}
-                <Pill fullWidth hoverBackground="#f9eaea">
-                  <input
-                    type="text"
-                    name="author"
-                    placeholder="Author"
-                    value={fields.author}
-                    onChange={handleChange}
-                    required
-                    style={pillInputStyle}
-                  />
-                </Pill>
-                {/* Publisher - Full Width */}
-                <Pill fullWidth hoverBackground="#f9eaea">
-                  <input
-                    type="text"
-                    name="publisher"
-                    placeholder="Publisher"
-                    value={fields.publisher}
-                    onChange={handleChange}
-                    style={pillInputStyle}
-                  />
-                </Pill>
-                
-                {/* ISBN, Published Date, Edition - Three Columns */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                  <Pill fullWidth hoverBackground="#f9eaea" sx={{ width: '100%' }}>
-                    <input
-                      type="number"
-                      name="isbn"
-                      placeholder="ISBN"
-                      value={fields.isbn}
-                      onChange={handleChange}
-                      required
-                      style={{ ...pillInputStyle, width: '100%' }}
-                    />
-                  </Pill>
-                  <Pill fullWidth hoverBackground="#f9eaea" sx={{ width: '100%' }}>
-                    <input
-                      type="date"
-                      name="publication date"
-                      placeholder="Publication Date"
-                      value={fields['publication date']}
-                      onChange={handleChange}
-                      required
-                      style={{ ...pillInputStyle, width: '100%' }}
-                    />
-                  </Pill>
-                  <Pill fullWidth hoverBackground="#f9eaea" sx={{ width: '100%' }}>
-                    <input
-                      type="number"
-                      name="ed"
-                      placeholder="Edition"
-                      value={fields.ed}
-                      onChange={handleChange}
-                      style={{ ...pillInputStyle, width: '100%' }}
-                    />
-                  </Pill>
+
+                {/* Author, Publisher, ISBN */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', width: '100%' }}>
+                  <Pill fullWidth hoverBackground="#f9eaea" sx={{ width: '100%', minWidth: 0 }}><input type="text" name="author" placeholder="Author" value={fields.author} onChange={handleChange} required style={pillInputStyle} /></Pill>
+                  <Pill fullWidth hoverBackground="#f9eaea" sx={{ width: '100%', minWidth: 0 }}><input type="text" name="publisher" placeholder="Publisher/Editor" value={fields.publisher} onChange={handleChange} style={pillInputStyle} /></Pill>
+                  <Pill fullWidth hoverBackground="#f9eaea" sx={{ width: '100%', minWidth: 0 }}><input type="text" name="isbn" placeholder="ISBN" value={fields.isbn} onChange={handleChange} required style={pillInputStyle} /></Pill>
+                </div>
+
+                {/* Date, Edition, Price */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', width: '100%' }}>
+                  <Pill fullWidth hoverBackground="#f9eaea" sx={{ width: '100%', minWidth: 0 }}><input type="date" name="publication date" placeholder="Publication Date" value={fields['publication date']} onChange={handleChange} required style={pillInputStyle} /></Pill>
+                  <Pill fullWidth hoverBackground="#f9eaea" sx={{ width: '100%', minWidth: 0 }}><input type="number" name="ed" placeholder="Edition" value={fields.ed} onChange={handleChange} style={pillInputStyle} /></Pill>
+                  <Pill fullWidth hoverBackground="#f9eaea" sx={{ width: '100%', minWidth: 0 }}><input type="number" name="Original price" placeholder="Original Price" value={fields['Original price']} onChange={handleChange} style={pillInputStyle} /></Pill>
+                </div>
+
+                {/* Pages, Language */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', width: '100%' }}>
+                  <Pill fullWidth hoverBackground="#f9eaea" sx={{ width: '100%', minWidth: 0 }}><input type="number" name="Pages" placeholder="Pages" value={fields.Pages} onChange={handleChange} style={pillInputStyle} /></Pill>
+                  <Pill fullWidth hoverBackground="#f9eaea" sx={{ width: '100%', minWidth: 0 }}><input type="text" name="Language" placeholder="Language" value={fields.Language} onChange={handleChange} style={pillInputStyle} /></Pill>
                 </div>
                 
-                {/* Original Price, Pages, Language - Three Columns */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                  <Pill fullWidth hoverBackground="#f9eaea" sx={{ width: '100%' }}>
-                    <input
-                      type="number"
-                      name="Original price"
-                      placeholder="Original Price"
-                      value={fields['Original price']}
-                      onChange={handleChange}
-                      style={{ ...pillInputStyle, width: '100%' }}
-                    />
-                  </Pill>
-                  <Pill fullWidth hoverBackground="#f9eaea" sx={{ width: '100%' }}>
-                    <input
-                      type="number"
-                      name="Pages"
-                      placeholder="Pages"
-                      value={fields.Pages}
-                      onChange={handleChange}
-                      style={{ ...pillInputStyle, width: '100%' }}
-                    />
-                  </Pill>
-                  <Pill fullWidth hoverBackground="#f9eaea" sx={{ width: '100%' }}>
-                    <input
-                      type="text"
-                      name="Language"
-                      placeholder="Language"
-                      value={fields.Language}
-                      onChange={handleChange}
-                      style={{ ...pillInputStyle, width: '100%' }}
-                    />
-                  </Pill>
-                </div>
-                
-                {/* Description - Full Width */}
-                <Pill fullWidth hoverBackground="#f9eaea">
-                  <textarea
-                    name="Description"
-                    placeholder="Description"
-                    value={fields.Description}
-                    onChange={handleChange}
-                    style={{ ...pillInputStyle, minHeight: 48, resize: 'vertical', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '16px' }}
-                  />
-                </Pill>
-              </div>
-              
-              {/* List Book Button */}
-              <Pill
-                fullWidth
-                background={ARTIFACT_RED}
-                color="white"
-                onClick={loading ? undefined : handleSubmit}
-                sx={{
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  opacity: loading ? 0.7 : 1,
-                  '&:hover': { background: ARTIFACT_RED_DARK },
-                  transition: 'all 0.2s ease',
-                  minWidth: 120,
-                  textAlign: 'center',
+                {/* Description - Flexible to fill remaining space */}
+                <div style={{ 
+                  width: '100%', 
+                  border: getBorderStyle(), 
+                  borderRadius: '16px', 
+                  padding: '12px', 
+                  background: 'white', 
+                  minHeight: '120px',
+                  flex: 1,
+                  transition: 'all 0.2s ease'
                 }}
-              >
-                {loading ? 'Listing...' : 'List Book'}
-              </Pill>
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.border = getHoverBorderStyle();
+                  e.currentTarget.style.background = ARTIFACT_RED_TRANSPARENT_05;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.border = getBorderStyle();
+                  e.currentTarget.style.background = 'white';
+                }}
+                >
+                  <textarea 
+                    name="Description" 
+                    placeholder="Description" 
+                    value={fields.Description} 
+                    onChange={handleChange} 
+                    style={{ 
+                      width: '100%', 
+                      height: '100%',
+                      minHeight: '100px', 
+                      border: 'none', 
+                      outline: 'none', 
+                      background: 'transparent', 
+                      color: 'inherit', 
+                      fontWeight: FONT_WEIGHTS.BOLD, 
+                      fontSize: FONT_SIZES.MEDIUM, 
+                      lineHeight: '1.4', 
+                      resize: 'none', 
+                      fontFamily: 'inherit'
+                    }} 
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
+          {/* Footer */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexShrink: 0, paddingTop: '16px', borderTop: '1px solid #eee' }}>
+            <Pill background={CANCEL_BLACK} color="white" onClick={handleCancel} sx={{ cursor: 'pointer', '&:hover': { background: CANCEL_BLACK_HOVER }, transition: 'all 0.2s ease', minWidth: 120, textAlign: 'center' }}>
+              Cancel
+            </Pill>
+            <Pill background={ARTIFACT_RED} color="white" onClick={loading ? undefined : handleSubmit} sx={{ cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, '&:hover': { background: ARTIFACT_RED_DARK }, transition: 'all 0.2s ease', minWidth: 120, textAlign: 'center' }}>
+              {loading ? 'Listing...' : 'List Book'}
+            </Pill>
+          </div>
+
           {/* Error/Success Messages */}
-          {error && (
-            <Pill
-              fullWidth
-              background="#ffebee"
-              color="#c62828"
-              sx={{ border: '1px solid #ffcdd2', fontWeight: FONT_WEIGHTS.BOLD }}
-            >
-              {error}
-            </Pill>
-          )}
-          {success && (
-            <Pill
-              fullWidth
-              background="#e8f5e8"
-              color="#2e7d32"
-              sx={{ border: '1px solid #c8e6c9', fontWeight: FONT_WEIGHTS.BOLD }}
-            >
-              {success}
-            </Pill>
-          )}
-
-
+          {error && <Pill fullWidth background="#ffebee" color="#c62828" sx={{ border: '1px solid #ffcdd2', fontWeight: FONT_WEIGHTS.BOLD }}>{error}</Pill>}
+          {success && <Pill fullWidth background="#e8f5e8" color="#2e7d32" sx={{ border: '1px solid #c8e6c9', fontWeight: FONT_WEIGHTS.BOLD }}>{success}</Pill>}
         </div>
       </div>
-    </div>
+
+      {/* Feedback Popup */}
+      {showFeedbackPopup && (
+        <div style={{
+          position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+          backgroundColor: 'white', borderRadius: '12px', padding: '32px',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)', zIndex: 2000, 
+          minWidth: '500px', maxWidth: '600px', border: '1px solid #e0e0e0',
+        }}>
+          <div style={{ 
+            fontSize: FONT_SIZES.LARGE, 
+            fontWeight: FONT_WEIGHTS.BOLD, 
+            color: ARTIFACT_RED, 
+            marginBottom: '24px', 
+            textAlign: 'center' 
+          }}>
+            Book Data Results
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {/* Found Data - Top Section */}
+            {feedbackMessage.includes('Found:') && (
+              <div style={{ width: '100%' }}>
+                <div style={{ 
+                  fontSize: FONT_SIZES.MEDIUM, 
+                  fontWeight: FONT_WEIGHTS.BOLD, 
+                  color: '#2e7d32', 
+                  marginBottom: '16px',
+                  textAlign: 'center'
+                }}>
+                  Found Data
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {feedbackMessage.split('Found:')[1]?.split(',')?.map((item, index) => (
+                    <Pill
+                      key={index}
+                      fullWidth
+                      background="#e8f5e8"
+                      color="#2e7d32"
+                      sx={{ 
+                        border: '1px solid #c8e6c9',
+                        fontSize: FONT_SIZES.MEDIUM,
+                        fontWeight: FONT_WEIGHTS.BOLD,
+                        textAlign: 'center',
+                        padding: '12px 16px',
+                      }}
+                    >
+                      {item.trim()}
+                    </Pill>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Missing Data - Bottom Section */}
+            {feedbackMessage.includes('Missing:') && (
+              <div style={{ width: '100%' }}>
+                <div style={{ 
+                  fontSize: FONT_SIZES.MEDIUM, 
+                  fontWeight: FONT_WEIGHTS.BOLD, 
+                  color: '#f57c00', 
+                  marginBottom: '16px',
+                  textAlign: 'center'
+                }}>
+                  Missing Data
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {feedbackMessage.split('Missing:')[1]?.split(',')?.map((item, index) => (
+                    <Pill
+                      key={index}
+                      fullWidth
+                      background="#fff3e0"
+                      color="#f57c00"
+                      sx={{ 
+                        border: '1px solid #ffcc02',
+                        fontSize: FONT_SIZES.MEDIUM,
+                        fontWeight: FONT_WEIGHTS.BOLD,
+                        textAlign: 'center',
+                        padding: '12px 16px',
+                      }}
+                    >
+                      {item.trim()}
+                    </Pill>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Loading Spinner */}
+      {(prefillLoading || imageSearching) && (
+        <div style={{
+          position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+          backgroundColor: 'rgba(0, 0, 0, 0.8)', borderRadius: '12px', padding: '24px',
+          zIndex: 2000, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px',
+        }}>
+          <div style={{
+            width: '40px', height: '40px', border: '4px solid rgba(255, 255, 255, 0.3)',
+            borderTop: '4px solid white', borderRadius: '50%', animation: 'spin 1s linear infinite',
+          }} />
+          <div style={{ color: 'white', fontSize: FONT_SIZES.MEDIUM, fontWeight: FONT_WEIGHTS.BOLD }}>
+            {prefillLoading ? 'Searching for book data...' : 'Searching for cover image...'}
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
 const pillInputStyle: React.CSSProperties = {
-  width: '100%',
-  background: 'transparent',
-  border: 'none',
-  outline: 'none',
-  color: 'inherit',
-  fontWeight: FONT_WEIGHTS.BOLD,
-  fontSize: FONT_SIZES.MEDIUM,
-  lineHeight: 'inherit',
-  textAlign: 'center',
-  padding: '8px 0',
+  width: '100%', background: 'transparent', border: 'none', outline: 'none',
+  color: 'inherit', fontWeight: FONT_WEIGHTS.BOLD, fontSize: FONT_SIZES.MEDIUM,
+  lineHeight: 'inherit', textAlign: 'center', padding: '8px 0',
+  textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap',
 };
 
 export default SellBookModal; 
