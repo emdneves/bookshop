@@ -76,9 +76,11 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
   const handleImageInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.[0]) return;
     
+    console.log('🔄 Starting image scan...');
     setScanning(true);
     try {
       const file = e.target.files[0];
+      console.log('📁 File selected:', file.name);
       const imageUrl = URL.createObjectURL(file);
       const img = new window.Image();
       img.src = imageUrl;
@@ -88,27 +90,36 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
         img.onerror = reject;
       });
       
+      console.log('🔍 Scanning for barcode/ISBN...');
       const codeReader = new BrowserMultiFormatReader();
       const result = await codeReader.decodeFromImage(img);
       
       if (result?.getText()) {
-        setIsbnInput(result.getText());
+        const scannedText = result.getText();
+        console.log('✅ Barcode/ISBN found:', scannedText);
+        setIsbnInput(scannedText);
+      } else {
+        console.log('❌ No barcode/ISBN found in image');
       }
     } catch (err) {
+      console.log('❌ Image scan error:', err);
       if (!(err instanceof NotFoundException)) {
         // Handle other errors if needed
       }
     } finally {
+      console.log('🏁 Image scan completed');
       setScanning(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      // Reset file input to allow same file to be selected again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
   // Auto-prefill when ISBN is set by scanning
   React.useEffect(() => {
-    if (scanning && isbnInput) {
+    if (isbnInput && !scanning) {
       handlePrefillFromISBN();
-      setScanning(false);
     }
   }, [isbnInput, scanning]);
 
@@ -309,9 +320,6 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
                   <img src={imagePreview} alt="Book cover preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                 ) : noCoverFound ? (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', color: ARTIFACT_RED, textAlign: 'center', padding: '20px' }}>
-                    <div style={{ width: '120px', height: '160px', border: `2px dashed ${ARTIFACT_RED}`, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(211, 47, 47, 0.05)' }}>
-                      <span style={{ fontSize: '48px', opacity: 0.5 }}>📚</span>
-                    </div>
                     <div style={{ fontSize: FONT_SIZES.MEDIUM, fontWeight: FONT_WEIGHTS.BOLD, color: ARTIFACT_RED }}>
                       No cover image found
                     </div>
@@ -320,15 +328,10 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', color: ARTIFACT_RED }}>
-                    <span style={{ fontSize: '48px' }}>📚</span>
                     <div style={{ fontSize: FONT_SIZES.MEDIUM, fontWeight: FONT_WEIGHTS.BOLD }}>
                       Upload Book Cover
                     </div>
-                    <div style={{ fontSize: FONT_SIZES.SMALL, color: '#666', textAlign: 'center' }}>
-                      Click to upload or use Quick Fill below
-                    </div>
-                  </div>
+                  
                 )}
               </div>
               <input id="cover-upload" type="file" accept="image/*" style={{ display: 'none' }} ref={coverInputRef} onChange={handleCoverFileChange} />
