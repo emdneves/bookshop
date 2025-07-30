@@ -47,6 +47,28 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
     return data.urls[0].url;
   };
 
+  // Download image from URL and upload to S3
+  const downloadAndUploadImage = async (imageUrl: string): Promise<string> => {
+    try {
+      // Fetch the image from the external URL
+      const response = await fetch(imageUrl);
+      if (!response.ok) throw new Error('Failed to fetch image from URL');
+      
+      // Get the image as a blob
+      const blob = await response.blob();
+      
+      // Create a File object from the blob
+      const fileName = `book-cover-${Date.now()}.jpg`;
+      const file = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
+      
+      // Upload the file to S3 using the existing upload function
+      return await uploadCoverImage(file);
+    } catch (error) {
+      console.error('Error downloading and uploading image:', error);
+      throw new Error('Failed to process cover image');
+    }
+  };
+
   // Prefill book data
   const handlePrefillFromISBN = async () => {
     const isbn = isbnInput.trim();
@@ -162,11 +184,17 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
     setLoading(true);
     try {
       let coverUrl = '';
+      
+      // If user manually uploaded a file, use that
       if (fields.coverFile) {
         coverUrl = await uploadCoverImage(fields.coverFile);
       }
+      // If there's an image preview from API (prefill), download and upload it to S3
+      else if (imagePreview) {
+        coverUrl = await downloadAndUploadImage(imagePreview);
+      }
 
-      const bookData = { ...fields, Cover: coverUrl || imagePreview || '' };
+      const bookData = { ...fields, Cover: coverUrl || '' };
       await onSubmit(bookData);
       setSuccess('Book listed successfully!');
       setTimeout(() => handleCancel(), 1200);
@@ -419,18 +447,26 @@ const SellBookModal: React.FC<SellBookModalProps> = ({ open, onClose, onSubmit }
               textAlign: 'center'
             }}>
               <div style={{ 
-                fontSize: FONT_SIZES.MEDIUM, 
-                fontWeight: FONT_WEIGHTS.BOLD, 
-                color: '#2e7d32',
-                marginBottom: '4px'
-              }}>
-                💰 Price Information
-              </div>
-              <div style={{ 
                 fontSize: FONT_SIZES.SMALL, 
                 color: '#2e7d32'
               }}>
-                Original price: ${fields['Original price']} | Source: {fields['Price source']}
+                Original price: ${fields['Original price']} | Source: 
+                {fields['Price source'].startsWith('http') ? (
+                  <a 
+                    href={fields['Price source']} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{ 
+                      color: '#2e7d32', 
+                      textDecoration: 'underline',
+                      marginLeft: '4px'
+                    }}
+                  >
+                    View Source
+                  </a>
+                ) : (
+                  <span style={{ marginLeft: '4px' }}>{fields['Price source']}</span>
+                )}
               </div>
             </div>
           )}

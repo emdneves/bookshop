@@ -61,7 +61,7 @@ export const useBookPricing = (): BookPricingResult => {
     return Array.from(variants).filter(variant => variant.length >= 10);
   };
 
-  // Helper function to get pricing information from multiple sources
+    // Helper function to get pricing information from multiple sources
   const getPricingInfo = async (isbn: string, title?: string): Promise<{ price: string; source: string }> => {
     let price = '';
     let source = '';
@@ -69,47 +69,26 @@ export const useBookPricing = (): BookPricingResult => {
     // Generate all possible ISBN variants
     const isbnVariants = generateISBNVariants(isbn);
     
-    // Source 1: Google Books API (most reliable open source)
-          for (const variant of isbnVariants) {
-        try {
-          const googleResponse = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${variant}`);
-          if (googleResponse.ok) {
-            const googleData = await googleResponse.json();
-            if (googleData.items && googleData.items.length > 0) {
-              const book = googleData.items[0];
-              if (book.saleInfo) {
-                if (book.saleInfo.listPrice) {
-                  price = book.saleInfo.listPrice.amount.toString();
-                  source = 'Google Books (List Price)';
-                  return { price, source };
-                } else if (book.saleInfo.retailPrice) {
-                  price = book.saleInfo.retailPrice.amount.toString();
-                  source = 'Google Books (Retail Price)';
-                  return { price, source };
-                } else if (book.saleInfo.offers && book.saleInfo.offers.length > 0) {
-                  price = book.saleInfo.offers[0].listPrice?.amount?.toString() || '';
-                  if (price) {
-                    source = 'Google Books (Offer Price)';
-                    return { price, source };
-                  }
-                }
-              }
-            }
-          }
-        } catch (err) {
-          // Google Books failed for this variant, continue to next
-        }
-      }
+    // Source 1: OpenLibrary (try all variants) - get book info first
+    let bookTitle = title;
+    let openLibraryData: any = null;
     
-    // Source 2: OpenLibrary (try all variants)
     for (const variant of isbnVariants) {
       try {
-        const openLibraryResponse = await fetch(`https://openlibrary.org/isbn/${variant}.json`);
+        const openLibraryUrl = `https://openlibrary.org/isbn/${variant}`;
+        const openLibraryResponse = await fetch(`${openLibraryUrl}.json`);
         if (openLibraryResponse.ok) {
-          const openLibraryData = await openLibraryResponse.json();
-          if (openLibraryData.price) {
-            price = openLibraryData.price.toString();
-            source = 'OpenLibrary';
+          const data = await openLibraryResponse.json();
+          openLibraryData = data; // Store the data for later use
+          
+          // Get the title if we don't have it
+          if (!bookTitle && data.title) {
+            bookTitle = data.title;
+          }
+          // Check for price
+          if (data.price) {
+            price = data.price.toString();
+            source = openLibraryUrl;
             return { price, source };
           }
         }
@@ -117,25 +96,52 @@ export const useBookPricing = (): BookPricingResult => {
         // OpenLibrary failed for this variant, continue to next
       }
     }
-
-    // Source 3: Google Books by title search
-    if (title) {
+    
+    // Source 2: Google Books API using title, subtitle, and author (if we have them)
+    if (bookTitle) {
       try {
-        const searchQuery = encodeURIComponent(title);
-        const googleResponse = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${searchQuery}`);
+        // Build a comprehensive search query with title, subtitle, and author
+        let searchQuery = bookTitle;
+        
+        // Add subtitle if available
+        if (openLibraryData?.subtitle) {
+          searchQuery += ` ${openLibraryData.subtitle}`;
+        }
+        
+        // Add author if available
+        if (openLibraryData?.authors && openLibraryData.authors.length > 0) {
+          const authorName = openLibraryData.authors[0].name || openLibraryData.authors[0];
+          searchQuery += ` ${authorName}`;
+        }
+        
+        const encodedQuery = encodeURIComponent(searchQuery);
+        const googleUrl = `https://www.googleapis.com/books/v1/volumes?q=${encodedQuery}`;
+        const googleResponse = await fetch(googleUrl);
         if (googleResponse.ok) {
           const googleData = await googleResponse.json();
           if (googleData.items && googleData.items.length > 0) {
             const book = googleData.items[0];
-            if (book.saleInfo && book.saleInfo.listPrice) {
-              price = book.saleInfo.listPrice.amount.toString();
-              source = 'Google Books (Title Search)';
-              return { price, source };
+            if (book.saleInfo) {
+              if (book.saleInfo.listPrice) {
+                price = book.saleInfo.listPrice.amount.toString();
+                source = `https://books.google.com/books?id=${book.id}`;
+                return { price, source };
+              } else if (book.saleInfo.retailPrice) {
+                price = book.saleInfo.retailPrice.amount.toString();
+                source = `https://books.google.com/books?id=${book.id}`;
+                return { price, source };
+              } else if (book.saleInfo.offers && book.saleInfo.offers.length > 0) {
+                price = book.saleInfo.offers[0].listPrice?.amount?.toString() || '';
+                if (price) {
+                  source = `https://books.google.com/books?id=${book.id}`;
+                  return { price, source };
+                }
+              }
             }
           }
         }
       } catch (err) {
-        // Title search failed
+        // Google Books failed
       }
     }
 

@@ -301,6 +301,35 @@ export const useBookData = (): BookDataResult => {
           description = data.notes.value.trim();
         }
       }
+      
+      // If description is still empty or very short, try Google Books for better description
+      if (!description || description.length < 100) {
+        try {
+          // Build search query with title, subtitle, and author
+          let searchQuery = data.title;
+          if (data.subtitle) {
+            searchQuery += ` ${data.subtitle}`;
+          }
+          if (author) {
+            searchQuery += ` ${author}`;
+          }
+          
+          const encodedQuery = encodeURIComponent(searchQuery);
+          const googleResponse = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodedQuery}`);
+          
+          if (googleResponse.ok) {
+            const googleData = await googleResponse.json();
+            if (googleData.items && googleData.items.length > 0) {
+              const book = googleData.items[0].volumeInfo;
+              if (book.description && book.description.length > description.length) {
+                description = book.description;
+              }
+            }
+          }
+        } catch (err) {
+          // Google Books description fetch failed, continue with what we have
+        }
+      }
 
       // Transform data to match form fields
       const transformedData: BookData = {
