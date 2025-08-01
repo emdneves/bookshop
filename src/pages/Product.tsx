@@ -3,9 +3,11 @@ import { Box, Skeleton, Button, Modal, TextField, Alert, Snackbar, Typography, T
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AuthModal from '../components/AuthModal';
+import SellBookModal from '../components/SellBookModal';
 import { API_BASE_URL } from '../config/api';
 import Subheader from '../components/subheader/Subheader';
 import Breadcrumbs from '../components/subheader/Breadcrumbs';
+import SellButton from '../components/subheader/SellButton';
 import Pill from '../components/Pill';
 import { ARTIFACT_RED, ARTIFACT_RED_DARK, getBorderStyle, getHoverBorderStyle } from '../constants/colors';
 import { FONT_SIZES, FONT_WEIGHTS } from '../constants/typography';
@@ -335,6 +337,7 @@ const Product: React.FC = () => {
     message: '',
     severity: 'success'
   });
+  const [sellModalOpen, setSellModalOpen] = React.useState(false);
 
   // Fetch orders for this book
   const fetchOrders = async () => {
@@ -419,6 +422,41 @@ const Product: React.FC = () => {
       });
     } finally {
       setSubmittingOffer(false);
+    }
+  };
+
+  // Handle sell book submission
+  const handleSellBook = async (bookData: Record<string, any>) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/content/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          content_type_id: '481a065c-8733-4e97-9adf-dc64acacf5fb',
+          data: bookData
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Failed to create book');
+      const data = await response.json();
+      if (!data.success) throw new Error('API returned error');
+      
+      setSnackbar({
+        open: true,
+        message: 'Book listed successfully!',
+        severity: 'success'
+      });
+      
+      setSellModalOpen(false);
+    } catch (err: any) {
+      setSnackbar({
+        open: true,
+        message: err.message || 'Failed to list book',
+        severity: 'error'
+      });
     }
   };
 
@@ -508,6 +546,7 @@ const Product: React.FC = () => {
       <Subheader 
         cardsPerRow={columns} 
         left={<Breadcrumbs bookName={bookName} />} 
+        right={<SellButton onClick={() => setSellModalOpen(true)} />}
       />
     <Box
       sx={{
@@ -607,6 +646,13 @@ const Product: React.FC = () => {
           onSuccess={() => {
             setAuthModalOpen(false);
           }}
+        />
+
+        {/* Sell Book Modal */}
+        <SellBookModal
+          open={sellModalOpen}
+          onClose={() => setSellModalOpen(false)}
+          onSubmit={handleSellBook}
         />
       </Box>
     </>
